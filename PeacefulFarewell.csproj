@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>PeacefulFarewell</RootNamespace>
+    <AssemblyName>PeacefulFarewell</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <Deterministic>true</Deterministic>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+    <!-- Path to the RimWorld install folder. Override with
+         -p:RimWorldPath="..." on the command line if it differs
+         from the default below. -->
+    <RimWorldPath Condition="'$(RimWorldPath)' == ''">H:\SteamLibrary\steamapps\common\RimWorld</RimWorldPath>
+    <RimWorldManagedPath>$(RimWorldPath)\RimWorldWin64_Data\Managed</RimWorldManagedPath>
+
+    <!-- Where the built mod is copied to after each build. -->
+    <ModDeployPath>$(RimWorldPath)\Mods\PeacefulFarewell</ModDeployPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(RimWorldManagedPath)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(RimWorldManagedPath)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(RimWorldManagedPath)\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Lib.Harmony" Version="2.3.3" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <!-- Copy the built assembly into the mod's own Assemblies folder,
+       then mirror the whole mod folder into the local RimWorld Mods
+       directory so it can be tested immediately. -->
+  <Target Name="CopyToModAssemblies" AfterTargets="Build">
+    <ItemGroup>
+      <ModAssemblies Include="$(TargetDir)PeacefulFarewell.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ModAssemblies)" DestinationFolder="$(ProjectDir)..\..\1.6\Assemblies" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="DeployToRimWorldMods" AfterTargets="CopyToModAssemblies" Condition="Exists('$(RimWorldPath)\Mods')">
+    <ItemGroup>
+      <ModFiles Include="$(ProjectDir)..\..\**\*" Exclude="$(ProjectDir)..\..\Source\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ModFiles)" DestinationFolder="$(ModDeployPath)\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>
