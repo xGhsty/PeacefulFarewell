@@ -158,7 +158,16 @@ namespace PeacefulFarewell
 
             try
             {
-                string[] lines = File.ReadAllLines(path);
+                // PF_FileLog/PF_WandererDebugLog keep their StreamWriter open
+                // for the whole session, so File.ReadAllLines (FileShare.Read)
+                // fails with a sharing violation - open with FileShare.ReadWrite
+                // to read alongside the live writer.
+                string[] lines;
+                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var reader = new StreamReader(fs))
+                {
+                    lines = reader.ReadToEnd().Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+                }
                 foreach (string line in lines.Skip(Math.Max(0, lines.Length - LogTailLines)))
                 {
                     sb.AppendLine(line);

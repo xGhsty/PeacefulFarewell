@@ -301,17 +301,79 @@ namespace PeacefulFarewell
 
         private void DoCheck()
         {
-            RecoverLostDepartedPawns();
-            CheckLettersFromAfar();
+            // Each stage isolated - an exception in one used to abort the whole
+            // DoCheck, and since the failing state persists, it would abort again
+            // on every check, silently freezing every wanderer's resolution.
+            try
+            {
+                RecoverLostDepartedPawns();
+            }
+            catch (System.Exception ex)
+            {
+                PF_Log.Error("Exception in PF_WandererTracker.RecoverLostDepartedPawns: " + ex);
+            }
+
+            try
+            {
+                CheckLettersFromAfar();
+            }
+            catch (System.Exception ex)
+            {
+                PF_Log.Error("Exception in PF_WandererTracker.CheckLettersFromAfar: " + ex);
+            }
 
             for (int i = wanderers.Count - 1; i >= 0; i--)
+            {
+                if (i >= wanderers.Count)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    CheckWanderer(i);
+                }
+                catch (System.Exception ex)
+                {
+                    // Per-pawn so one broken entry can't block every other
+                    // wanderer below it in the list from ever resolving.
+                    Pawn broken = i < wanderers.Count ? wanderers[i] : null;
+                    PF_Log.Error($"Exception checking wanderer {broken?.LabelShort ?? "null"} (slot {i}): " + ex);
+                    PF_WandererDebugLog.LogEvent($"EXCEPTION while checking {broken?.LabelShort ?? "null"} (slot {i}): {ex.Message}");
+                }
+            }
+
+            // Logged last, after every correction/resolution above has already
+            // run this check - logging first (the previous order) captured a
+            // pawn's faction mid-flight, e.g. right after vanilla's redress
+            // system assigned one out-of-band but before the loop above had a
+            // chance to revert it for still being under wandererMinCheckDays,
+            // which made the snapshot look like the min-days setting wasn't
+            // being honored when it actually was.
+            LogWandererSnapshot();
+        }
+
+        private void CheckWanderer(int i)
+        {
             {
                 Pawn pawn = wanderers[i];
 
                 if (pawn == null || pawn.Discarded)
                 {
                     RemoveAt(i);
-                    continue;
+                    return;
+                }
+
+                // Died while out wandering (world-pawn death, e.g. a quest or
+                // another mod) - nothing left to resolve. Without this a dead
+                // pawn could roll "return to colony" and get GenSpawn'd as a
+                // corpse-less dead pawn, throwing before RemoveAt and repeating
+                // every check.
+                if (pawn.Dead)
+                {
+                    PF_WandererDebugLog.LogEvent($"{pawn.LabelShort} DIED while wandering - stopped tracking.");
+                    RemoveAt(i);
+                    return;
                 }
 
                 // Something outside our control (e.g. another mod picking a factionless
@@ -335,7 +397,7 @@ namespace PeacefulFarewell
                             PF_Log.Message($"Wanderer {pawn.LabelShort} was assigned faction {pawn.Faction.Name} outside PF_WandererTracker before wandererMinCheckDays elapsed - reverting to factionless and continuing to wait.");
                         }
                         pawn.SetFaction(null);
-                        continue;
+                        return;
                     }
 
                     bool hostile = pawn.Faction.HostileTo(Faction.OfPlayer);
@@ -386,25 +448,16 @@ namespace PeacefulFarewell
                     }
 
                     RemoveAt(i);
-                    continue;
+                    return;
                 }
 
                 if (!Rand.Chance(ResolveChance(i)))
                 {
-                    continue;
+                    return;
                 }
 
                 ResolveOutcome(pawn, reasons[i], originMaps[i], i);
             }
-
-            // Logged last, after every correction/resolution above has already
-            // run this check - logging first (the previous order) captured a
-            // pawn's faction mid-flight, e.g. right after vanilla's redress
-            // system assigned one out-of-band but before the loop above had a
-            // chance to revert it for still being under wandererMinCheckDays,
-            // which made the snapshot look like the min-days setting wasn't
-            // being honored when it actually was.
-            LogWandererSnapshot();
         }
 
         // Writes a snapshot of every currently-tracked wanderer to
