@@ -201,7 +201,7 @@ namespace PeacefulFarewell
                     {
                         continue;
                     }
-                    if (PF_GameComponent.IsJoinRequestOnCooldown(colonist))
+                    if (PF_GameComponent.IsJoinRequestOnCooldown(colonist) || HasPendingRequestLetter(colonist))
                     {
                         continue;
                     }
@@ -287,6 +287,34 @@ namespace PeacefulFarewell
                 return false;
             }
             return true;
+        }
+
+        // Whether this pawn already has one of our request letters sitting
+        // undecided in the letter stack (e.g. postponed by the player). Such a
+        // pawn must not be offered another request on top of it - otherwise a
+        // later check stacks a duplicate (or a conflicting second departure)
+        // for the same colonist. Deliberately NOT part of IsEligibleColonist:
+        // the loneliness scan uses that too, and dropping a pawn from the scan
+        // would strip their "not liked here" thought while the letter waits.
+        public static bool HasPendingRequestLetter(Pawn pawn)
+        {
+            List<Letter> letters = Find.LetterStack?.LettersListForReading;
+            if (letters == null)
+            {
+                return false;
+            }
+
+            foreach (Letter letter in letters)
+            {
+                if ((letter is ChoiceLetter_WanderlustRequest w && !w.decided && w.colonist == pawn)
+                    || (letter is ChoiceLetter_LonelinessRequest l && !l.decided && l.colonist == pawn)
+                    || (letter is ChoiceLetter_JoinRequest j && !j.decided && j.colonist == pawn))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         // Leaving to join a visiting relation or out of loneliness is a decision
@@ -728,11 +756,14 @@ namespace PeacefulFarewell
                 pawn.DeSpawn(DestroyMode.Vanish);
             }
 
-            // Faction was already cleared in StartLeaveOutOfLonelinessJob, right when
-            // the player accepted the request.
-            Find.WorldPawns.PassToWorld(pawn, PawnDiscardDecideMode.KeepForever);
-
+            // Register BEFORE PassToWorld: vanilla Pawn.Notify_PassedToWorld hands
+            // every factionless humanlike "Free" world pawn a random faction on
+            // the spot, and only Patch_NotifyPassedToWorld (which keys off
+            // IsTracked) stops that. Faction was already cleared in
+            // StartLeaveOutOfLonelinessJob, right when the player accepted.
             Current.Game.World.GetComponent<PF_WandererTracker>().Register(pawn, PF_WandererReason.Loneliness, originMap);
+
+            Find.WorldPawns.PassToWorld(pawn, PawnDiscardDecideMode.KeepForever);
         }
 
         public static List<Pawn> FindWanderlustCandidates(Map map)
@@ -746,7 +777,7 @@ namespace PeacefulFarewell
 
             foreach (Pawn colonist in map.mapPawns.FreeColonistsSpawned)
             {
-                if (IsWanderlustEligible(colonist) && !PF_GameComponent.IsWanderlustRequestOnCooldown(colonist))
+                if (IsWanderlustEligible(colonist) && !PF_GameComponent.IsWanderlustRequestOnCooldown(colonist) && !HasPendingRequestLetter(colonist))
                 {
                     options.Add(colonist);
                 }
@@ -924,11 +955,11 @@ namespace PeacefulFarewell
                 pawn.DeSpawn(DestroyMode.Vanish);
             }
 
-            // Faction was already cleared in StartLeaveOutOfWanderlustJob, right when
-            // the player accepted the request.
-            Find.WorldPawns.PassToWorld(pawn, PawnDiscardDecideMode.KeepForever);
-
+            // Register BEFORE PassToWorld - see BecomeWanderer. Faction was already
+            // cleared in StartLeaveOutOfWanderlustJob, right when the player accepted.
             Current.Game.World.GetComponent<PF_WandererTracker>().Register(pawn, PF_WandererReason.Wanderlust, originMap);
+
+            Find.WorldPawns.PassToWorld(pawn, PawnDiscardDecideMode.KeepForever);
 
             if (PeacefulFarewellMod.Settings.debugMode)
             {

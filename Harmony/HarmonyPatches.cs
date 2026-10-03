@@ -166,4 +166,52 @@ namespace PeacefulFarewell
             return true;
         }
     }
+
+    // Vanilla Pawn.Notify_PassedToWorld (called from WorldPawns.PassToWorld)
+    // immediately gives any factionless humanlike world pawn whose situation
+    // is Free a random non-player faction - confirmed by decompiling 1.6.
+    // Our wanderers are exactly that for their whole min-max wait window, so
+    // without this they "join" a random faction the instant they leave the
+    // map. The prefix marks the pawn and Patch_WorldPawnsGetSituation reports
+    // it as non-Free for the duration of that one call, which skips only the
+    // faction-assignment block; everything else in the method still runs.
+    [HarmonyPatch(typeof(Pawn), nameof(Pawn.Notify_PassedToWorld))]
+    public static class Patch_NotifyPassedToWorld
+    {
+        internal static Pawn suppressFreeSituationFor;
+
+        public static void Prefix(Pawn __instance)
+        {
+            if (__instance.Faction != null || Current.Game?.World == null)
+            {
+                return;
+            }
+
+            if (Current.Game.World.GetComponent<PF_WandererTracker>()?.IsTracked(__instance) == true)
+            {
+                suppressFreeSituationFor = __instance;
+                if (PeacefulFarewellMod.Settings.debugMode)
+                {
+                    PF_Log.Message($"Blocked vanilla random-faction assignment on PassToWorld for tracked wanderer {__instance.LabelShort}.");
+                }
+            }
+        }
+
+        public static void Finalizer()
+        {
+            suppressFreeSituationFor = null;
+        }
+    }
+
+    [HarmonyPatch(typeof(WorldPawns), nameof(WorldPawns.GetSituation))]
+    public static class Patch_WorldPawnsGetSituation
+    {
+        public static void Postfix(Pawn p, ref WorldPawnSituation __result)
+        {
+            if (__result == WorldPawnSituation.Free && p != null && p == Patch_NotifyPassedToWorld.suppressFreeSituationFor)
+            {
+                __result = WorldPawnSituation.ReservedByQuest;
+            }
+        }
+    }
 }

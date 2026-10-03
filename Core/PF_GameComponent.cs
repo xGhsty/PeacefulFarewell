@@ -504,11 +504,12 @@ namespace PeacefulFarewell
                 }
 
                 CheckVisitorRequest(map);
-                if (runWanderlustCheck)
-                {
-                    CheckWanderlustRequest(map);
-                }
                 pendingLonelinessMaps.Enqueue(map);
+            }
+
+            if (runWanderlustCheck)
+            {
+                CheckWanderlustRequest();
             }
         }
 
@@ -627,7 +628,7 @@ namespace PeacefulFarewell
                 {
                     // Still stewing over a recent rejection - give the player the
                     // time that cooldown is meant for before asking again.
-                    if (!IsOnLonelinessDeniedCooldown(pawn))
+                    if (!IsOnLonelinessDeniedCooldown(pawn) && !FarewellUtility.HasPendingRequestLetter(pawn))
                     {
                         readyForLetter.Add(pawn);
                     }
@@ -684,21 +685,29 @@ namespace PeacefulFarewell
             }
         }
 
-        private void CheckWanderlustRequest(Map map)
+        // Pools candidates from every player home map before rolling, so the
+        // "one wanderlust request per check" cap is global. It used to run
+        // per map, which let each base send its own letter on the same tick -
+        // two or three wanderlust letters arriving at once in multi-base saves.
+        private void CheckWanderlustRequest()
         {
             if (!PeacefulFarewellMod.Settings.wanderlustEnabled)
             {
                 return;
             }
 
-            List<Pawn> candidates = FarewellUtility.FindWanderlustCandidates(map);
+            List<Pawn> candidates = new List<Pawn>();
+            foreach (Map map in Find.Maps)
+            {
+                candidates.AddRange(FarewellUtility.FindWanderlustCandidates(map));
+            }
             if (candidates.Count == 0)
             {
                 return;
             }
 
             float chance = PeacefulFarewellMod.Settings.wanderlustChancePerCheck;
-            foreach (Pawn pawn in candidates)
+            foreach (Pawn pawn in candidates.InRandomOrder())
             {
                 if (!Rand.Chance(chance))
                 {
