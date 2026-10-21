@@ -257,7 +257,8 @@ namespace PeacefulFarewell
             {
                 return false;
             }
-            if (!(lord.LordJob is LordJob_VisitColony) && !(lord.LordJob is LordJob_TradeWithColony))
+            if (!(lord.LordJob is LordJob_VisitColony) && !(lord.LordJob is LordJob_TradeWithColony)
+                && !IsHospitalityGuestLord(lord))
             {
                 return false;
             }
@@ -266,6 +267,26 @@ namespace PeacefulFarewell
                 return false;
             }
             return lord.ownedPawns.Any((Pawn p) => p.RaceProps.Humanlike);
+        }
+
+        // Hospitality guests run under the mod's own
+        // Hospitality.LordJob_VisitColony - same class name as vanilla's, but
+        // a separate type deriving straight from LordJob, so the vanilla `is`
+        // check above never matched them (user report, 2026-10-21: a
+        // colonist's son visiting as a Hospitality guest, "no candidate
+        // found"). Matched by type name to avoid a hard dependency.
+        private const string HospitalityGuestLordJobName = "Hospitality.LordJob_VisitColony";
+
+        public static bool IsHospitalityGuestLord(Lord lord)
+        {
+            for (System.Type type = lord?.LordJob?.GetType(); type != null; type = type.BaseType)
+            {
+                if (type.FullName == HospitalityGuestLordJobName)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public static bool IsEligibleColonist(Pawn pawn)
@@ -533,9 +554,14 @@ namespace PeacefulFarewell
                 // relation at all - an actively disliked relative shouldn't
                 // also get double-checked against the friend threshold using
                 // the same relation.
+                //
+                // RealFriendOpinionOf, not raw OpinionOf - per user report, a
+                // beautiful visitor plus one small chat (+41 raw, +1 real) was
+                // enough to trigger a join request. Passive/situational bonuses
+                // don't make someone a friend worth leaving the colony for.
                 if (!hasFormalRelation)
                 {
-                    float opinion = colonist.relations.OpinionOf(visitor);
+                    float opinion = RealFriendOpinionOf(colonist, visitor);
                     if (opinion >= bestFriendOpinion)
                     {
                         bestFriendOpinion = opinion;
@@ -547,13 +573,124 @@ namespace PeacefulFarewell
             return bestRelative ?? bestFriend;
         }
 
+        // What kind of bond made a colonist want to leave with a visitor -
+        // picks the join-request letter's wording and the matching reunion
+        // mood thought, so "reunited with my sister" doesn't read like
+        // "met a nice stranger".
+        public enum JoinBond
+        {
+            Spouse,
+            Fiance,
+            Lover,
+            Parent,
+            Child,
+            Sibling,
+            OtherFamily,
+            Friend
+        }
+
+        // Closest bond wins when several apply (e.g. a sibling who is also a
+        // lover counts as the partner). Any other formal relation that
+        // FindClosestRelation accepted (cousin, grandparent, ...) falls into
+        // OtherFamily, with its def returned so the letter can name it.
+        // Uses the same GetRelations/ExcludedFromJoinRequest rules as
+        // FindClosestRelation so the two never disagree on "is this family".
+        public static JoinBond GetJoinBond(Pawn colonist, Pawn related, out PawnRelationDef otherFamilyRelation)
+        {
+            otherFamilyRelation = null;
+            if (colonist?.relations == null || related == null)
+            {
+                return JoinBond.Friend;
+            }
+
+            List<PawnRelationDef> relations = PawnRelationUtility.GetRelations(colonist, related)
+                .Where((PawnRelationDef r) => !ExcludedFromJoinRequest.Contains(r))
+                .ToList();
+
+            if (relations.Contains(PawnRelationDefOf.Spouse))
+            {
+                return JoinBond.Spouse;
+            }
+            if (relations.Contains(PawnRelationDefOf.Fiance))
+            {
+                return JoinBond.Fiance;
+            }
+            if (relations.Contains(PawnRelationDefOf.Lover))
+            {
+                return JoinBond.Lover;
+            }
+            if (relations.Contains(PawnRelationDefOf.Parent))
+            {
+                return JoinBond.Parent;
+            }
+            if (relations.Contains(PawnRelationDefOf.Child))
+            {
+                return JoinBond.Child;
+            }
+            if (relations.Contains(PawnRelationDefOf.Sibling))
+            {
+                return JoinBond.Sibling;
+            }
+            if (relations.Count > 0)
+            {
+                otherFamilyRelation = relations.OrderByDescending((PawnRelationDef r) => r.importance).First();
+                return JoinBond.OtherFamily;
+            }
+
+            return JoinBond.Friend;
+        }
+
+        // Number of "PF_JoinRequest_{bond}_Text{n}" variants per bond in the
+        // Keyed files - must match every language's file.
+        private static int JoinRequestVariantCount(JoinBond bond)
+        {
+            return bond == JoinBond.Friend ? 4 : 3;
+        }
+
+        public static TaggedString MakeJoinRequestLabel(JoinBond bond)
+        {
+            switch (bond)
+            {
+                case JoinBond.Spouse:
+                case JoinBond.Fiance:
+                case JoinBond.Lover:
+                    return "PF_JoinRequestLabel_Partner".Translate();
+                case JoinBond.Friend:
+                    return "PF_JoinRequestLabel".Translate();
+                default:
+                    return "PF_JoinRequestLabel_Family".Translate();
+            }
+        }
+
+        // Argument order is part of the Keyed contract: PAWN, RELATED, {2} =
+        // faction name, RELATION = vanilla relation label (OtherFamily only,
+        // empty otherwise). The shared "what happens if you accept/refuse"
+        // paragraph is a separate key so every bond's variants stay short.
+        public static TaggedString MakeJoinRequestText(Pawn colonist, Pawn related, Faction faction, JoinBond bond, PawnRelationDef otherFamilyRelation)
+        {
+            string relationLabel = otherFamilyRelation != null ? otherFamilyRelation.GetGenderSpecificLabel(related) : "";
+            TaggedString body = PF_Text.Variant("PF_JoinRequest_" + bond + "_Text", JoinRequestVariantCount(bond),
+                colonist.Named("PAWN"), related.Named("RELATED"), faction.Name, relationLabel.Named("RELATION"));
+            TaggedString footer = "PF_JoinRequestFooter".Translate(colonist.Named("PAWN"), related.Named("RELATED"), faction.Name);
+            return body + "\n\n" + footer;
+        }
+
         public static void StartJoinJob(Pawn colonist, Pawn relatedPawn, Lord visitingLord, Faction targetFaction)
         {
-            // Captured before SetFaction(null) below wipes ownership, so
+            // Goodwill can change while the letter sits postponed - never hand
+            // a colonist over to a faction that has turned hostile meanwhile.
+            if (targetFaction == null || targetFaction.IsPlayer || targetFaction.HostileTo(Faction.OfPlayer))
+            {
+                SendDepartureFailedLetter(colonist);
+                return;
+            }
+
+            // Captured before SetFaction below wipes ownership, so
             // JobDriver_JoinVisitingFaction's room-visit toil can still find
-            // the pawn's own bed after they're already faction-less. Carried
-            // via targetB (targetA is already relatedPawn) since it's part of
-            // vanilla Job and survives save/load the same way targetA/lord do.
+            // the pawn's own bed after they've already left the player faction.
+            // Carried via targetB (targetA is already relatedPawn) since it's
+            // part of vanilla Job and survives save/load the same way
+            // targetA/lord do.
             Building_Bed ownedBed = colonist.ownership?.OwnedBed;
 
             // targetFaction (and vanilla's own Job.lord field) travel on the Job
@@ -567,11 +704,15 @@ namespace PeacefulFarewell
                 targetB = ownedBed
             };
 
-            // Cleared here, before the job starts - see the matching comment in
-            // StartLeaveOutOfLonelinessJob for why this can no longer happen
-            // from inside the job's own follow toil (SetFaction force-ends
+            // Joins the target faction right away (per user request - once the
+            // player says yes, the colonist already belongs to them while
+            // walking over), rather than being factionless until the map
+            // edge like the loneliness/wanderlust departures. Done here,
+            // before the job starts - see the matching comment in
+            // StartLeaveOutOfLonelinessJob for why this can't happen from
+            // inside the job's own follow toil (SetFaction force-ends
             // whatever job is currently running).
-            colonist.SetFaction(null);
+            colonist.SetFaction(targetFaction);
 
             bool tookJob = colonist.jobs.TryTakeOrderedJob(job, JobTag.Misc);
             if (PeacefulFarewellMod.Settings.debugMode)
@@ -582,13 +723,44 @@ namespace PeacefulFarewell
             {
                 // Something with higher priority (a mental break, medical emergency,
                 // forced job, etc.) blocked the job from actually starting. Faction
-                // was already cleared above, so it needs restoring here too.
+                // was already changed above, so it needs restoring here too.
                 colonist.SetFaction(Faction.OfPlayer);
                 SendDepartureFailedLetter(colonist);
                 return;
             }
 
+            GiveReunionThought(colonist, relatedPawn);
             TrySendBondedAnimalAlong(colonist);
+        }
+
+        private static ThoughtDef ReunionThoughtFor(JoinBond bond)
+        {
+            switch (bond)
+            {
+                case JoinBond.Spouse: return PF_ThoughtDefOf.PF_ReunitedSpouse;
+                case JoinBond.Fiance: return PF_ThoughtDefOf.PF_ReunitedFiance;
+                case JoinBond.Lover: return PF_ThoughtDefOf.PF_ReunitedLover;
+                case JoinBond.Parent: return PF_ThoughtDefOf.PF_ReunitedParent;
+                case JoinBond.Child: return PF_ThoughtDefOf.PF_ReunitedChild;
+                case JoinBond.Sibling: return PF_ThoughtDefOf.PF_ReunitedSibling;
+                case JoinBond.OtherFamily: return PF_ThoughtDefOf.PF_ReunitedFamily;
+                default: return PF_ThoughtDefOf.PF_ReunitedFriend;
+            }
+        }
+
+        // Granted on accept rather than at the map edge, so the player
+        // actually sees the boost while the colonist walks over - the old
+        // generic PF_ReunitedWithLovedOne was granted the instant they
+        // despawned, where nobody could see it.
+        private static void GiveReunionThought(Pawn colonist, Pawn relatedPawn)
+        {
+            if (colonist.needs?.mood == null || relatedPawn == null)
+            {
+                return;
+            }
+
+            JoinBond bond = GetJoinBond(colonist, relatedPawn, out _);
+            GainMemoryWithSubject(colonist, ReunionThoughtFor(bond), relatedPawn);
         }
 
         public static void SendDeniedThought(Pawn colonist)
@@ -606,13 +778,11 @@ namespace PeacefulFarewell
             Find.LetterStack.ReceiveLetter(label, text, LetterDefOf.NeutralEvent);
         }
 
+        // The departing pawn's own reunion thought is given earlier, in
+        // StartJoinJob (see GiveReunionThought) - this only handles the
+        // colonists left behind.
         public static void ApplyJoinVisitingFactionThoughts(Pawn departing)
         {
-            if (departing.needs?.mood != null)
-            {
-                departing.needs.mood.thoughts.memories.TryGainMemory(PF_ThoughtDefOf.PF_ReunitedWithLovedOne);
-            }
-
             Map map = departing.Map;
             if (map == null || departing.relations == null)
             {

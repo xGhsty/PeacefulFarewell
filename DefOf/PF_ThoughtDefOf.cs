@@ -18,6 +18,14 @@ namespace PeacefulFarewell
         public static ThoughtDef PF_WanderlustGreatJourney;
         public static ThoughtDef PF_WanderlustFamilyReturned;
         public static ThoughtDef PF_LetterFromAfar;
+        public static ThoughtDef PF_ReunitedSpouse;
+        public static ThoughtDef PF_ReunitedFiance;
+        public static ThoughtDef PF_ReunitedLover;
+        public static ThoughtDef PF_ReunitedParent;
+        public static ThoughtDef PF_ReunitedChild;
+        public static ThoughtDef PF_ReunitedSibling;
+        public static ThoughtDef PF_ReunitedFamily;
+        public static ThoughtDef PF_ReunitedFriend;
 
         static PF_ThoughtDefOf()
         {

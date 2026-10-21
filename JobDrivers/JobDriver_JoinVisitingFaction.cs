@@ -23,7 +23,8 @@ namespace PeacefulFarewell
 
         protected override IEnumerable<Toil> MakeNewToils()
         {
-            // Faction is already cleared by the time this job starts - see
+            // Pawn already belongs to the target faction by the time this job
+            // starts - see
             // FarewellUtility.StartJoinJob for why (SetFaction force-ends
             // whatever job is running via ClearMind_NewTemp, so it can't
             // safely happen from inside this job's own initAction).
@@ -138,6 +139,60 @@ namespace PeacefulFarewell
                 return;
             }
 
+            // Reached the visitors while they're still here: actually join
+            // their group so the pawn stays with them and walks off the map
+            // together when the caravan leaves. Previously the pawn was
+            // despawned on the spot right next to the visitors, which looked
+            // like they vanished/left alone while the caravan stayed behind
+            // (user report, 2026-10-04).
+            Lord visitingLord = job.lord;
+
+            // Hospitality guests can stay for days, and adding the pawn to
+            // their guest lord would turn them into a Hospitality guest
+            // (guest rooms, recruitable again, ...). Instead: having met
+            // their relative, the pawn goes ahead and walks off the map on
+            // their own, already a member of the target faction.
+            if (pawn.Spawned && FarewellUtility.IsHospitalityGuestLord(visitingLord)
+                && RCellFinder.TryFindBestExitSpot(pawn, out IntVec3 exitSpot))
+            {
+                if (pawn.Faction != targetFaction)
+                {
+                    pawn.SetFaction(targetFaction);
+                }
+
+                FarewellUtility.ApplyJoinVisitingFactionThoughts(pawn);
+                Job exitJob = JobMaker.MakeJob(JobDefOf.Goto, exitSpot);
+                exitJob.exitMapOnArrival = true;
+                exitJob.locomotionUrgency = LocomotionUrgency.Walk;
+                pawn.jobs.jobQueue.EnqueueFirst(exitJob);
+                if (PeacefulFarewellMod.Settings.debugMode)
+                {
+                    PF_Log.Message($"DoJoinFaction for {pawn.LabelShort}: met relative of Hospitality guest group, walking off the map to {exitSpot} as {targetFaction.Name}.");
+                }
+                FarewellUtility.SendJoinedLetter(pawn, targetFaction);
+                return;
+            }
+
+            if (pawn.Spawned && CanJoinLord(visitingLord, targetFaction))
+            {
+                if (pawn.Faction != targetFaction)
+                {
+                    pawn.SetFaction(targetFaction);
+                }
+
+                FarewellUtility.ApplyJoinVisitingFactionThoughts(pawn);
+                visitingLord.AddPawn(pawn);
+                if (PeacefulFarewellMod.Settings.debugMode)
+                {
+                    PF_Log.Message($"DoJoinFaction for {pawn.LabelShort}: joined visiting lord ({visitingLord.LordJob?.GetType().Name}, {visitingLord.ownedPawns.Count} pawns) of {targetFaction.Name}.");
+                }
+                FarewellUtility.SendJoinedLetter(pawn, targetFaction);
+                return;
+            }
+
+            // Fallback: the visitors already left (or the lord is gone), so
+            // there's no group to walk out with - the pawn has walked to the
+            // map edge on their own and leaves from there.
             FarewellUtility.ApplyJoinVisitingFactionThoughts(pawn);
 
             if (pawn.Spawned)
@@ -145,10 +200,26 @@ namespace PeacefulFarewell
                 pawn.DeSpawn(DestroyMode.Vanish);
             }
 
-            pawn.SetFaction(targetFaction);
+            // Normally already set in FarewellUtility.StartJoinJob - kept as a
+            // safety net for jobs saved mid-walk by an older mod version,
+            // when the pawn was still factionless at this point.
+            if (pawn.Faction != targetFaction)
+            {
+                pawn.SetFaction(targetFaction);
+            }
             Find.WorldPawns.PassToWorld(pawn, PawnDiscardDecideMode.KeepForever);
 
             FarewellUtility.SendJoinedLetter(pawn, targetFaction);
+        }
+
+        private bool CanJoinLord(Lord lord, Faction targetFaction)
+        {
+            return lord != null
+                && lord.faction == targetFaction
+                && lord.ownedPawns.Count > 0
+                && pawn.GetLord() == null
+                && lord.Map == pawn.Map
+                && !targetFaction.HostileTo(Faction.OfPlayer);
         }
     }
 }

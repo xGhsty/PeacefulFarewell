@@ -562,9 +562,10 @@ namespace PeacefulFarewell
                 return false;
             }
 
+            FarewellUtility.JoinBond bond = FarewellUtility.GetJoinBond(candidate.colonist, candidate.relatedPawn, out PawnRelationDef otherFamilyRelation);
             ChoiceLetter_JoinRequest letter = (ChoiceLetter_JoinRequest)LetterMaker.MakeLetter(
-                "PF_JoinRequestLabel".Translate(),
-                PF_Text.Variant("PF_JoinRequestText", 5, candidate.colonist.Named("PAWN"), candidate.relatedPawn.Named("RELATED"), candidate.targetFaction.Name),
+                FarewellUtility.MakeJoinRequestLabel(bond),
+                FarewellUtility.MakeJoinRequestText(candidate.colonist, candidate.relatedPawn, candidate.targetFaction, bond, otherFamilyRelation),
                 PF_LetterDefOf.PF_JoinRequest);
             letter.colonist = candidate.colonist;
             letter.relatedPawn = candidate.relatedPawn;
@@ -576,7 +577,7 @@ namespace PeacefulFarewell
 
             if (PeacefulFarewellMod.Settings.debugMode)
             {
-                PF_Log.Message($"Letter sent for colonist {candidate.colonist.LabelShort} -> {candidate.targetFaction.Name}");
+                PF_Log.Message($"Letter sent for colonist {candidate.colonist.LabelShort} -> {candidate.targetFaction.Name} (bond={bond}, relation={otherFamilyRelation?.defName ?? "-"})");
             }
 
             return true;
