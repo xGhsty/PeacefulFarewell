@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <PF_VisitTalk_Reminisce.label>wspomnienia</PF_VisitTalk_Reminisce.label>
+  <PF_VisitTalk_Reminisce.logRulesInitiator.rulesStrings>
+    <li>r_logentry->[INITIATOR_nameDef] [reminisced] z [RECIPIENT_nameDef] [memory].</li>
+    <li>r_logentry->[INITIATOR_nameDef] [reminded] [RECIPIENT_nameDef] [memory].</li>
+    <li>reminisced(INITIATOR_gender==male)->wspominał</li>
+    <li>reminisced(INITIATOR_gender==female)->wspominała</li>
+    <li>reminded(INITIATOR_gender==male)->przypomniał</li>
+    <li>reminded(INITIATOR_gender==female)->przypomniała</li>
+    <li>memory->dawne czasy</li>
+    <li>memory->rodzinne strony</li>
+    <li>memory->bliskich, których już nie ma</li>
+    <li>memory->ich ostatnie spotkanie</li>
+    <li>memory->starą historię, którą pamiętają już tylko oni</li>
+  </PF_VisitTalk_Reminisce.logRulesInitiator.rulesStrings>
+
+  <PF_VisitTalk_AskAboutLife.label>pytanie o życie</PF_VisitTalk_AskAboutLife.label>
+  <PF_VisitTalk_AskAboutLife.logRulesInitiator.rulesStrings>
+    <li>r_logentry->[INITIATOR_nameDef] [asked] [RECIPIENT_nameDef], jak się żyje [where].</li>
+    <li>r_logentry->[INITIATOR_nameDef] [wanted] wiedzieć wszystko o życiu [RECIPIENT_nameDef] [where].</li>
+    <li>asked(INITIATOR_gender==male)->zapytał</li>
+    <li>asked(INITIATOR_gender==female)->zapytała</li>
+    <li>wanted(INITIATOR_gender==male)->chciał</li>
+    <li>wanted(INITIATOR_gender==female)->chciała</li>
+    <li>where->poza kolonią</li>
+    <li>where->w drodze</li>
+    <li>where->wśród [RECIPIENT_possessive] ludzi</li>
+    <li>where->w [RECIPIENT_possessive] osadzie</li>
+  </PF_VisitTalk_AskAboutLife.logRulesInitiator.rulesStrings>
+
+  <PF_VisitTalk_Stories.label>opowieści</PF_VisitTalk_Stories.label>
+  <PF_VisitTalk_Stories.logRulesInitiator.rulesStrings>
+    <li>r_logentry->[INITIATOR_nameDef] [told] [RECIPIENT_nameDef] o [story].</li>
+    <li>r_logentry->[INITIATOR_nameDef] [shared] z [RECIPIENT_nameDef] opowieściami o [story].</li>
+    <li>told(INITIATOR_gender==male)->opowiadał</li>
+    <li>told(INITIATOR_gender==female)->opowiadała</li>
+    <li>shared(INITIATOR_gender==male)->dzielił się</li>
+    <li>shared(INITIATOR_gender==female)->dzieliła się</li>
+    <li>story->codziennym życiu u siebie</li>
+    <li>story->miejscach, które [seen]</li>
+    <li>story->ludziach, z którymi podróżuje</li>
+    <li>story(RECIPIENT_gender==male)->wszystkich, którzy wciąż o niego pytają</li>
+    <li>story(RECIPIENT_gender==female)->wszystkich, którzy wciąż o nią pytają</li>
+    <li>seen(INITIATOR_gender==male)->widział</li>
+    <li>seen(INITIATOR_gender==female)->widziała</li>
+  </PF_VisitTalk_Stories.logRulesInitiator.rulesStrings>
+
+  <PF_VisitTalk_Invite.label>zaproszenie</PF_VisitTalk_Invite.label>
+  <PF_VisitTalk_Invite.logRulesInitiator.rulesStrings>
+    <li>r_logentry->[INITIATOR_nameDef] [urged] [RECIPIENT_nameDef], by [went] razem z gośćmi.</li>
+    <li>r_logentry->[INITIATOR_nameDef] [said] [RECIPIENT_nameDef], że u [INITIATOR_possessive] ludzi zawsze znajdzie się dla [them] miejsce.</li>
+    <li>r_logentry->[INITIATOR_nameDef] [persuaded] [RECIPIENT_nameDef], by [left] kolonię i [went] z [INITIATOR_possessive] grupą.</li>
+    <li>urged(INITIATOR_gender==male)->namawiał</li>
+    <li>urged(INITIATOR_gender==female)->namawiała</li>
+    <li>said(INITIATOR_gender==male)->powiedział</li>
+    <li>said(INITIATOR_gender==female)->powiedziała</li>
+    <li>persuaded(INITIATOR_gender==male)->przekonywał</li>
+    <li>persuaded(INITIATOR_gender==female)->przekonywała</li>
+    <li>went(RECIPIENT_gender==male)->poszedł</li>
+    <li>went(RECIPIENT_gender==female)->poszła</li>
+    <li>left(RECIPIENT_gender==male)->opuścił</li>
+    <li>left(RECIPIENT_gender==female)->opuściła</li>
+    <li>them(RECIPIENT_gender==male)->niego</li>
+    <li>them(RECIPIENT_gender==female)->niej</li>
+  </PF_VisitTalk_Invite.logRulesInitiator.rulesStrings>
+
+  <PF_VisitTalk_Snub.label>zlekceważenie</PF_VisitTalk_Snub.label>
+  <PF_VisitTalk_Snub.logRulesInitiator.rulesStrings>
+    <li>r_logentry->[INITIATOR_nameDef] [brushedoff] [RECIPIENT_nameDef], wyraźnie mając ciekawsze zajęcia.</li>
+    <li>r_logentry->[INITIATOR_nameDef] [cut] rozmowę z [RECIPIENT_nameDef] i [walked].</li>
+    <li>r_logentry->[INITIATOR_nameDef] [madeclear], że nie ma ochoty rozmawiać z [RECIPIENT_nameDef].</li>
+    <li>brushedoff(INITIATOR_gender==male)->zbył</li>
+    <li>brushedoff(INITIATOR_gender==female)->zbyła</li>
+    <li>cut(INITIATOR_gender==male)->uciął</li>
+    <li>cut(INITIATOR_gender==female)->ucięła</li>
+    <li>walked(INITIATOR_gender==male)->odszedł</li>
+    <li>walked(INITIATOR_gender==female)->odeszła</li>
+    <li>madeclear(INITIATOR_gender==male)->dał jasno do zrozumienia</li>
+    <li>madeclear(INITIATOR_gender==female)->dała jasno do zrozumienia</li>
+  </PF_VisitTalk_Snub.logRulesInitiator.rulesStrings>
+
+</LanguageData>

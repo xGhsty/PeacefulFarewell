@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <PF_RequestToLeaveDenied.stages.0.label>zakaz odejścia</PF_RequestToLeaveDenied.stages.0.label>
+  <PF_RequestToLeaveDenied.stages.0.description>Chciałem/chciałam odejść z kimś mi bliskim, ale mi nie pozwolono. Wciąż to boli.</PF_RequestToLeaveDenied.stages.0.description>
+
+  <PF_LonelinessDenied.stages.0.label>dlaczego mnie nie puszczą?</PF_LonelinessDenied.stages.0.label>
+  <PF_LonelinessDenied.stages.0.description>Nikt tu za mną nie przepada, a ja chciałem/chciałam odejść i znaleźć miejsce, do którego będę przynależał(a). Dlaczego mnie nie puszczą?</PF_LonelinessDenied.stages.0.description>
+
+  <PF_LonelinessExcitedToLeave.stages.0.label>podekscytowany(a) podróżą</PF_LonelinessExcitedToLeave.stages.0.label>
+  <PF_LonelinessExcitedToLeave.stages.0.description>Nikt tu nigdy naprawdę mnie nie lubił. Wreszcie odchodzę, by znaleźć miejsce, do którego będę przynależał(a), i nie mogę się bardziej z tego cieszyć.</PF_LonelinessExcitedToLeave.stages.0.description>
+
+  <PF_ColonistLeftRelief.stages.0.label>dobrze, że sobie poszedł(poszła)</PF_ColonistLeftRelief.stages.0.label>
+  <PF_ColonistLeftRelief.stages.0.description>{0} w końcu odszedł(odeszła). Nie będzie mi go/jej brakować.</PF_ColonistLeftRelief.stages.0.description>
+
+  <PF_ColonistLeftPity.stages.0.label>szkoda, że odszedł(odeszła)</PF_ColonistLeftPity.stages.0.label>
+  <PF_ColonistLeftPity.stages.0.description>{0} odszedł(odeszła), bo nikt nie sprawił, że czuł(a) się tu mile widziany(a). Nie był(a) taki(a) zły(a). Czuję z tego powodu odrobinę winy.</PF_ColonistLeftPity.stages.0.description>
+
+  <PF_ReunitedWithLovedOne.stages.0.label>nareszcie razem</PF_ReunitedWithLovedOne.stages.0.label>
+  <PF_ReunitedWithLovedOne.stages.0.description>Opuszczam kolonię, by być z kimś, kogo kocham. Jesteśmy wreszcie znowu razem.</PF_ReunitedWithLovedOne.stages.0.description>
+
+  <PF_WillMissColonist.stages.0.label>będzie mi go/jej brakować</PF_WillMissColonist.stages.0.label>
+  <PF_WillMissColonist.stages.0.description>{0} odszedł(odeszła), by być z kimś, kogo kocha. Cieszę się jego/jej szczęściem, ale będzie mi brakować jego/jej towarzystwa.</PF_WillMissColonist.stages.0.description>
+
+  <PF_NotLikedHere.stages.0.label>nielubiany(a) tutaj</PF_NotLikedHere.stages.0.label>
+  <PF_NotLikedHere.stages.0.description>Nie sądzę, żeby ktokolwiek tu naprawdę mnie lubił.</PF_NotLikedHere.stages.0.description>
+
+  <PF_WanderlustDenied.stages.0.label>chciał(a) zobaczyć świat</PF_WanderlustDenied.stages.0.label>
+  <PF_WanderlustDenied.stages.0.description>Chciałem/chciałam wyruszyć i zobaczyć, co jest poza kolonią, ale mi nie pozwolono.</PF_WanderlustDenied.stages.0.description>
+
+  <PF_WanderlustGreatJourney.stages.0.label>ta podróż była wspaniała</PF_WanderlustGreatJourney.stages.0.label>
+  <PF_WanderlustGreatJourney.stages.0.description>Opuściłem/opuściłam dom, by zobaczyć świat, i tak się cieszę, że to zrobiłem/zrobiłam. Cóż to była za podróż.</PF_WanderlustGreatJourney.stages.0.description>
+
+  <PF_WanderlustFamilyReturned.stages.0.label>wrócił(a)</PF_WanderlustFamilyReturned.stages.0.label>
+  <PF_WanderlustFamilyReturned.stages.0.description>{0} wrócił(a) cały(a) i zdrowy(a) ze swojej podróży po świecie. Cieszę się, że jest w domu.</PF_WanderlustFamilyReturned.stages.0.description>
+
+  <PF_WordNeverCameFriend0.stages.0.label>co się z nim/nią stało?</PF_WordNeverCameFriend0.stages.0.label>
+  <PF_WordNeverCameFriend0.stages.0.description>Nigdy nie nadeszła żadna wieść o {0}. Nie wiem, czy żyje, czy nie, i pewnie nigdy się nie dowiem. Nie mogę przestać się zastanawiać, co się z nim/nią stało.</PF_WordNeverCameFriend0.stages.0.description>
+
+  <PF_WordNeverCameFriend1.stages.0.label>brak zamknięcia</PF_WordNeverCameFriend1.stages.0.label>
+  <PF_WordNeverCameFriend1.stages.0.description>{0} odszedł(odeszła) w świat i po prostu nigdy nie wrócił(a). Żadnego listu, żadnej opowieści podróżnika, nic. Wciąż czekam na wieści, które nie nadchodzą.</PF_WordNeverCameFriend1.stages.0.description>
+
+  <PF_WordNeverCameFriend2.stages.0.label>wciąż czekam</PF_WordNeverCameFriend2.stages.0.label>
+  <PF_WordNeverCameFriend2.stages.0.description>Każdego kupca, który tu przechodzi, pytam, czy słyszał coś o {0}. Za każdym razem odpowiedź brzmi: nie.</PF_WordNeverCameFriend2.stages.0.description>
+
+  <PF_WordNeverCameFriend3.stages.0.label>nieznany los</PF_WordNeverCameFriend3.stages.0.label>
+  <PF_WordNeverCameFriend3.stages.0.description>Czasem wyobrażam sobie, że {0} gdzieś się osiedlił(a), bezpiecznie. Innym razem wyobrażam sobie najgorsze. Niewiedza, co jest prawdą, sama w sobie boli.</PF_WordNeverCameFriend3.stages.0.description>
+
+  <PF_WordNeverCameFriend4.stages.0.label>puste łóżko</PF_WordNeverCameFriend4.stages.0.label>
+  <PF_WordNeverCameFriend4.stages.0.description>Rzeczy {0} wciąż leżą tam, gdzie je zostawił(a). Nikt nie miał serca ich przenieść. Może to znaczy, że część nas wciąż czeka.</PF_WordNeverCameFriend4.stages.0.description>
+
+  <PF_WordNeverCameFamily0.stages.0.label>co się z nim/nią stało?</PF_WordNeverCameFamily0.stages.0.label>
+  <PF_WordNeverCameFamily0.stages.0.description>Nigdy nie nadeszła żadna wieść o {0}. Moja własna krew, gdzieś tam, a ja nie mam jak się dowiedzieć, czy żyje, czy nie. Nie mogę przestać o tym myśleć.</PF_WordNeverCameFamily0.stages.0.description>
+
+  <PF_WordNeverCameFamily1.stages.0.label>brak zamknięcia</PF_WordNeverCameFamily1.stages.0.label>
+  <PF_WordNeverCameFamily1.stages.0.description>{0} to rodzina. Odszedł(odeszła) w świat i nigdy nie wrócił(a), a nikt nie potrafi mi powiedzieć dlaczego. Nie wiem, jak się z tym pogodzić.</PF_WordNeverCameFamily1.stages.0.description>
+
+  <PF_WordNeverCameFamily2.stages.0.label>wciąż czekam</PF_WordNeverCameFamily2.stages.0.label>
+  <PF_WordNeverCameFamily2.stages.0.description>Pytam każdego przejeżdżającego kupca, czy słyszał coś o {0}. Rodzina po prostu nie przestaje szukać. Ale odpowiedź zawsze brzmi: nie.</PF_WordNeverCameFamily2.stages.0.description>
+
+  <PF_WordNeverCameFamily3.stages.0.label>nieznany los</PF_WordNeverCameFamily3.stages.0.label>
+  <PF_WordNeverCameFamily3.stages.0.description>Niektórych nocy wyobrażam sobie, że {0} znalazł(a) sobie gdzieś dobre życie. Innych nocy wyobrażam sobie najgorsze. Niewiedza, w przypadku rodziny, to osobny rodzaj cichej żałoby.</PF_WordNeverCameFamily3.stages.0.description>
+
+  <PF_WordNeverCameFamily4.stages.0.label>puste łóżko</PF_WordNeverCameFamily4.stages.0.label>
+  <PF_WordNeverCameFamily4.stages.0.description>Rzeczy {0} wciąż leżą tam, gdzie je zostawił(a). Nikt w rodzinie nie miał jeszcze serca ich przenieść.</PF_WordNeverCameFamily4.stages.0.description>
+
+  <PF_WordNeverCamePartner0.stages.0.label>co się z nim/nią stało?</PF_WordNeverCamePartner0.stages.0.label>
+  <PF_WordNeverCamePartner0.stages.0.description>Nigdy nie nadeszła żadna wieść o {0}. Osoba, którą kocham, gdzieś tam, a ja nie wiem, czy żyje, czy nie. To mnie rozdziera.</PF_WordNeverCamePartner0.stages.0.description>
+
+  <PF_WordNeverCamePartner1.stages.0.label>brak zamknięcia</PF_WordNeverCamePartner1.stages.0.label>
+  <PF_WordNeverCamePartner1.stages.0.description>{0} odszedł(odeszła) w świat i nigdy do mnie nie wrócił(a). Żadnego listu, żadnej wieści, nic. Wciąż łapię się na tym, że czekam.</PF_WordNeverCamePartner1.stages.0.description>
+
+  <PF_WordNeverCamePartner2.stages.0.label>wciąż czekam</PF_WordNeverCamePartner2.stages.0.label>
+  <PF_WordNeverCamePartner2.stages.0.description>Pytam każdego przejeżdżającego kupca, czy słyszał coś o {0}. Za każdym razem nic. Chyba nigdy nie przestanę pytać.</PF_WordNeverCamePartner2.stages.0.description>
+
+  <PF_WordNeverCamePartner3.stages.0.label>nieznany los</PF_WordNeverCamePartner3.stages.0.label>
+  <PF_WordNeverCamePartner3.stages.0.description>Niektórych nocy wyobrażam sobie, że {0} znalazł(a) gdzieś bezpieczne miejsce. Innych nocy wyobrażam sobie najgorsze. Niewiedza, co jest prawdą, to osobny rodzaj piekła.</PF_WordNeverCamePartner3.stages.0.description>
+
+  <PF_WordNeverCamePartner4.stages.0.label>puste łóżko</PF_WordNeverCamePartner4.stages.0.label>
+  <PF_WordNeverCamePartner4.stages.0.description>Strona łóżka należąca do {0} wciąż jest pusta. Nie miałem/miałam serca przenieść jego/jej rzeczy.</PF_WordNeverCamePartner4.stages.0.description>
+
+  <PF_HeardTheyreSafeFriend0.stages.0.label>cieszę się, że bezpieczny(a)</PF_HeardTheyreSafeFriend0.stages.0.label>
+  <PF_HeardTheyreSafeFriend0.stages.0.description>Dotarła wieść, że {0} osiadł(a) gdzieś bezpiecznie. Ulżyło mi, że wiem, że dał(a) radę.</PF_HeardTheyreSafeFriend0.stages.0.description>
+
+  <PF_HeardTheyreSafeFriend1.stages.0.label>znalazł(a) nowy dom</PF_HeardTheyreSafeFriend1.stages.0.label>
+  <PF_HeardTheyreSafeFriend1.stages.0.description>Słyszałem/słyszałam, że {0} znalazł(a) tam, na zewnątrz, nowy dom. Dobrze wiedzieć, że świat był dla niego/niej łaskawy.</PF_HeardTheyreSafeFriend1.stages.0.description>
+
+  <PF_HeardTheyreSafeFriend2.stages.0.label>dał(a) radę</PF_HeardTheyreSafeFriend2.stages.0.label>
+  <PF_HeardTheyreSafeFriend2.stages.0.description>Cokolwiek innego zastanawiało mnie w sprawie {0}, teraz przynajmniej wiem: dotarł(a) gdzieś bezpiecznie.</PF_HeardTheyreSafeFriend2.stages.0.description>
+
+  <PF_HeardTheyreSafeFriend3.stages.0.label>kamień spadł z serca</PF_HeardTheyreSafeFriend3.stages.0.label>
+  <PF_HeardTheyreSafeFriend3.stages.0.description>Nie zdawałem/zdawałam sobie sprawy, jak bardzo martwiłem/martwiłam się o {0}, dopóki nie nadeszła wieść, że wszystko z nim/nią w porządku.</PF_HeardTheyreSafeFriend3.stages.0.description>
+
+  <PF_HeardTheyreSafeFamily0.stages.0.label>cieszę się, że bezpieczny(a)</PF_HeardTheyreSafeFamily0.stages.0.label>
+  <PF_HeardTheyreSafeFamily0.stages.0.description>Dotarła wieść, że {0} osiadł(a) gdzieś bezpiecznie. Moja własna krew, gdzieś tam, żywa i zdrowa - jest mi tak ulżyło.</PF_HeardTheyreSafeFamily0.stages.0.description>
+
+  <PF_HeardTheyreSafeFamily1.stages.0.label>znalazł(a) nowy dom</PF_HeardTheyreSafeFamily1.stages.0.label>
+  <PF_HeardTheyreSafeFamily1.stages.0.description>Słyszałem/słyszałam, że {0} znalazł(a) tam, na zewnątrz, nowy dom. Rodzina nie przestaje się troszczyć tylko dlatego, że dzielą nas kilometry.</PF_HeardTheyreSafeFamily1.stages.0.description>
+
+  <PF_HeardTheyreSafeFamily2.stages.0.label>dał(a) radę</PF_HeardTheyreSafeFamily2.stages.0.label>
+  <PF_HeardTheyreSafeFamily2.stages.0.description>Cokolwiek innego zastanawiało mnie w sprawie {0}, teraz przynajmniej wiem: dotarł(a) gdzieś bezpiecznie. To się liczy, gdy chodzi o rodzinę.</PF_HeardTheyreSafeFamily2.stages.0.description>
+
+  <PF_HeardTheyreSafeFamily3.stages.0.label>kamień spadł z serca</PF_HeardTheyreSafeFamily3.stages.0.label>
+  <PF_HeardTheyreSafeFamily3.stages.0.description>Nie zdawałem/zdawałam sobie sprawy, jak bardzo martwiłem/martwiłam się o {0}, dopóki nie nadeszła wieść, że wszystko z nim/nią w porządku. Krew nie przestaje się łatwo martwić.</PF_HeardTheyreSafeFamily3.stages.0.description>
+
+  <PF_HeardTheyreSafePartner0.stages.0.label>cieszę się, że bezpieczny(a)</PF_HeardTheyreSafePartner0.stages.0.label>
+  <PF_HeardTheyreSafePartner0.stages.0.description>Dotarła wieść, że {0} osiadł(a) gdzieś bezpiecznie. Osoba, którą kocham, żywa i zdrowa gdzieś tam - mógłbym/mogłabym się rozpłakać z ulgi.</PF_HeardTheyreSafePartner0.stages.0.description>
+
+  <PF_HeardTheyreSafePartner1.stages.0.label>znalazł(a) nowy dom</PF_HeardTheyreSafePartner1.stages.0.label>
+  <PF_HeardTheyreSafePartner1.stages.0.description>Słyszałem/słyszałam, że {0} znalazł(a) tam, na zewnątrz, nowy dom. Wciąż tęsknię za nim/nią każdego dnia, ale przynajmniej teraz wiem, że wszystko u niego/niej w porządku.</PF_HeardTheyreSafePartner1.stages.0.description>
+
+  <PF_HeardTheyreSafePartner2.stages.0.label>dał(a) radę</PF_HeardTheyreSafePartner2.stages.0.label>
+  <PF_HeardTheyreSafePartner2.stages.0.description>Cokolwiek innego zastanawiało mnie w sprawie {0}, teraz przynajmniej wiem: dotarł(a) gdzieś bezpiecznie. Mam nadzieję, że gdziekolwiek jest, jest szczęśliwy(a).</PF_HeardTheyreSafePartner2.stages.0.description>
+
+  <PF_HeardTheyreSafePartner3.stages.0.label>kamień spadł z serca</PF_HeardTheyreSafePartner3.stages.0.label>
+  <PF_HeardTheyreSafePartner3.stages.0.description>Nie zdawałem/zdawałam sobie sprawy, jak bardzo martwiłem/martwiłam się o {0}, dopóki nie nadeszła wieść, że wszystko z nim/nią w porządku. Wreszcie spałem/spałam spokojnie zeszłej nocy.</PF_HeardTheyreSafePartner3.stages.0.description>
+
+  <PF_LetterFromAfar.stages.0.label>nadszedł list</PF_LetterFromAfar.stages.0.label>
+  <PF_LetterFromAfar.stages.0.description>{0} przesłał(a) wieści z miejsca, w którym się osiedlił(a). Dobrze coś od niego/niej usłyszeć.</PF_LetterFromAfar.stages.0.description>
+
+  <PF_ReunitedSpouse.stages.0.label>znów razem ze współmałżonkiem</PF_ReunitedSpouse.stages.0.label>
+  <PF_ReunitedSpouse.stages.0.description>{0} odnalazł(a) mnie. Cokolwiek nas czeka, stawimy temu czoła razem.</PF_ReunitedSpouse.stages.0.description>
+
+  <PF_ReunitedFiance.stages.0.label>znów razem z narzeczonym(ą)</PF_ReunitedFiance.stages.0.label>
+  <PF_ReunitedFiance.stages.0.description>{0} znów jest przy mnie - i tym razem ślub się odbędzie.</PF_ReunitedFiance.stages.0.description>
+
+  <PF_ReunitedLover.stages.0.label>znów razem z ukochaną osobą</PF_ReunitedLover.stages.0.label>
+  <PF_ReunitedLover.stages.0.description>{0} znów jest przy mnie. Tym razem nie pozwolę tej osobie odejść.</PF_ReunitedLover.stages.0.description>
+
+  <PF_ReunitedParent.stages.0.label>znów razem z rodzicem</PF_ReunitedParent.stages.0.label>
+  <PF_ReunitedParent.stages.0.description>Po tylu latach znów jestem z {0}. To jak powrót do domu.</PF_ReunitedParent.stages.0.description>
+
+  <PF_ReunitedChild.stages.0.label>znów razem z dzieckiem</PF_ReunitedChild.stages.0.label>
+  <PF_ReunitedChild.stages.0.description>Moje dziecko, {0}, znów jest przy mnie. Myśl o nim nigdy mnie nie opuściła.</PF_ReunitedChild.stages.0.description>
+
+  <PF_ReunitedSibling.stages.0.label>znów razem z rodzeństwem</PF_ReunitedSibling.stages.0.label>
+  <PF_ReunitedSibling.stages.0.description>{0} i ja znów jesteśmy razem, zupełnie jak w dzieciństwie.</PF_ReunitedSibling.stages.0.description>
+
+  <PF_ReunitedFamily.stages.0.label>znów z rodziną</PF_ReunitedFamily.stages.0.label>
+  <PF_ReunitedFamily.stages.0.description>{0} to rodzina. Dobrze znów mieć kogoś bliskiego.</PF_ReunitedFamily.stages.0.description>
+
+  <PF_ReunitedFriend.stages.0.label>odchodzę z bliską osobą</PF_ReunitedFriend.stages.0.label>
+  <PF_ReunitedFriend.stages.0.description>Odchodzę razem z {0}. Dla takiej przyjaźni warto zacząć od nowa.</PF_ReunitedFriend.stages.0.description>
+
+  <PF_GoodToSeeVisitor.stages.0.label>dobrze było znów zobaczyć {0}</PF_GoodToSeeVisitor.stages.0.label>
+  <PF_GoodToSeeVisitor.stages.0.description>{0} przyjechał(a) z gośćmi i w końcu udało się nam porozmawiać. Moje miejsce jest tutaj, ale dobrze było znów się zobaczyć.</PF_GoodToSeeVisitor.stages.0.description>
+
+  <PF_SnubbedByVisitor.stages.0.label>zlekceważenie podczas wizyty</PF_SnubbedByVisitor.stages.0.label>
+  <PF_SnubbedByVisitor.stages.0.description>Podczas wizyty {0} prawie nie miał(a) dla mnie czasu. A wydawało mi się, że tyle dla siebie znaczymy.</PF_SnubbedByVisitor.stages.0.description>
+
+</LanguageData>

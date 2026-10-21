@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <JobDef>
+    <defName>PF_JoinVisitingFaction</defName>
+    <driverClass>PeacefulFarewell.JobDriver_JoinVisitingFaction</driverClass>
+    <reportString>leaving to join TargetA.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+    <playerInterruptible>false</playerInterruptible>
+    <suspendable>false</suspendable>
+  </JobDef>
+
+  <JobDef>
+    <defName>PF_LeaveOutOfLoneliness</defName>
+    <driverClass>PeacefulFarewell.JobDriver_LeaveOutOfLoneliness</driverClass>
+    <reportString>leaving the colony.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+    <playerInterruptible>false</playerInterruptible>
+    <suspendable>false</suspendable>
+  </JobDef>
+
+  <JobDef>
+    <defName>PF_LeaveOutOfWanderlust</defName>
+    <driverClass>PeacefulFarewell.JobDriver_LeaveOutOfWanderlust</driverClass>
+    <reportString>leaving to see the world.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+    <playerInterruptible>false</playerInterruptible>
+    <suspendable>false</suspendable>
+  </JobDef>
+
+  <JobDef>
+    <defName>PF_FollowDepartingOwner</defName>
+    <driverClass>PeacefulFarewell.JobDriver_FollowDepartingOwner</driverClass>
+    <reportString>following TargetA.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+    <playerInterruptible>false</playerInterruptible>
+    <suspendable>false</suspendable>
+  </JobDef>
+
+  <!-- A colonist going over to talk with a close relation/friend among
+       friendly visitors (PF_VisitMeeting). Ordinary, interruptible job -
+       drafting the colonist or an emergency simply cuts the talk short. -->
+  <JobDef>
+    <defName>PF_TalkWithVisitingRelative</defName>
+    <driverClass>PeacefulFarewell.JobDriver_TalkWithVisitingRelative</driverClass>
+    <reportString>talking with TargetA.</reportString>
+    <casualInterruptible>true</casualInterruptible>
+    <playerInterruptible>true</playerInterruptible>
+    <suspendable>false</suspendable>
+  </JobDef>
+
+  <!-- The visitor's side of the talk: stands and faces the colonist. -->
+  <JobDef>
+    <defName>PF_ListenToVisitingRelative</defName>
+    <driverClass>PeacefulFarewell.JobDriver_ListenToVisitingRelative</driverClass>
+    <reportString>talking with TargetA.</reportString>
+    <casualInterruptible>true</casualInterruptible>
+    <suspendable>false</suspendable>
+  </JobDef>
+
+</Defs>

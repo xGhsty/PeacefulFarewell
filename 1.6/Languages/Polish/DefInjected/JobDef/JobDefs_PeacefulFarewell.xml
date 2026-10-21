@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <PF_JoinVisitingFaction.reportString>odchodzi, by dołączyć do TargetA.</PF_JoinVisitingFaction.reportString>
+  <PF_LeaveOutOfLoneliness.reportString>opuszcza kolonię.</PF_LeaveOutOfLoneliness.reportString>
+  <PF_LeaveOutOfWanderlust.reportString>odchodzi, by zobaczyć świat.</PF_LeaveOutOfWanderlust.reportString>
+  <PF_FollowDepartingOwner.reportString>podąża za TargetA.</PF_FollowDepartingOwner.reportString>
+  <PF_TalkWithVisitingRelative.reportString>rozmawia z TargetA.</PF_TalkWithVisitingRelative.reportString>
+  <PF_ListenToVisitingRelative.reportString>rozmawia z TargetA.</PF_ListenToVisitingRelative.reportString>
+
+</LanguageData>

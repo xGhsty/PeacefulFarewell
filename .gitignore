@@ -1,0 +1,11 @@
+# Build output
+bin/
+obj/
+.vs/
+*.user
+
+# Compiled mod assembly - rebuilt by MSBuild on every build
+1.6/Assemblies/*.dll
+
+# Local Claude Code settings
+.claude/

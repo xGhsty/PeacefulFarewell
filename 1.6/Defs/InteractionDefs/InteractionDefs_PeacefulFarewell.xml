@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <!-- Lines played out during a visit talk (JobDriver_TalkWithVisitingRelative).
+       The plain InteractionWorker has a random selection weight of 0, so
+       vanilla never picks these on its own - they only happen through the
+       talk job. Colonist -> visitor: Reminisce, AskAboutLife.
+       Visitor -> colonist: Stories, Invite, Snub. -->
+
+  <InteractionDef>
+    <defName>PF_VisitTalk_Reminisce</defName>
+    <label>reminisce</label>
+    <workerClass>InteractionWorker</workerClass>
+    <symbol>Things/Mote/SpeechSymbols/DeepTalk</symbol>
+    <initiatorThought>Chitchat</initiatorThought>
+    <recipientThought>Chitchat</recipientThought>
+    <initiatorXpGainSkill>Social</initiatorXpGainSkill>
+    <initiatorXpGainAmount>4</initiatorXpGainAmount>
+    <logRulesInitiator>
+      <rulesStrings>
+        <li>r_logentry->[INITIATOR_nameDef] and [RECIPIENT_nameDef] reminisced about [memory].</li>
+        <li>r_logentry->[INITIATOR_nameDef] reminded [RECIPIENT_nameDef] of [memory].</li>
+        <li>memory->old times</li>
+        <li>memory->the place they both came from</li>
+        <li>memory->the people they had lost</li>
+        <li>memory->the last time they saw each other</li>
+        <li>memory->an old story only the two of them still remember</li>
+      </rulesStrings>
+    </logRulesInitiator>
+  </InteractionDef>
+
+  <InteractionDef>
+    <defName>PF_VisitTalk_AskAboutLife</defName>
+    <label>ask about life</label>
+    <workerClass>InteractionWorker</workerClass>
+    <symbol>Things/Mote/SpeechSymbols/Chitchat</symbol>
+    <initiatorThought>Chitchat</initiatorThought>
+    <recipientThought>Chitchat</recipientThought>
+    <initiatorXpGainSkill>Social</initiatorXpGainSkill>
+    <initiatorXpGainAmount>4</initiatorXpGainAmount>
+    <logRulesInitiator>
+      <rulesStrings>
+        <li>r_logentry->[INITIATOR_nameDef] asked [RECIPIENT_nameDef] what life is like [where].</li>
+        <li>r_logentry->[INITIATOR_nameDef] wanted to know everything about [RECIPIENT_nameDef]'s life [where].</li>
+        <li>where->among [RECIPIENT_possessive] people</li>
+        <li>where->out there, beyond the colony</li>
+        <li>where->on the road</li>
+        <li>where->in [RECIPIENT_possessive] settlement</li>
+      </rulesStrings>
+    </logRulesInitiator>
+  </InteractionDef>
+
+  <InteractionDef>
+    <defName>PF_VisitTalk_Stories</defName>
+    <label>tell stories</label>
+    <workerClass>InteractionWorker</workerClass>
+    <symbol>Things/Mote/SpeechSymbols/Chitchat</symbol>
+    <initiatorThought>Chitchat</initiatorThought>
+    <recipientThought>Chitchat</recipientThought>
+    <logRulesInitiator>
+      <rulesStrings>
+        <li>r_logentry->[INITIATOR_nameDef] told [RECIPIENT_nameDef] about [story].</li>
+        <li>r_logentry->[INITIATOR_nameDef] shared stories with [RECIPIENT_nameDef] about [story].</li>
+        <li>story->life back home</li>
+        <li>story->the places [INITIATOR_pronoun] has seen</li>
+        <li>story->the people [INITIATOR_pronoun] travels with</li>
+        <li>story->everyone who still asks about [RECIPIENT_objective]</li>
+      </rulesStrings>
+    </logRulesInitiator>
+  </InteractionDef>
+
+  <InteractionDef>
+    <defName>PF_VisitTalk_Invite</defName>
+    <label>invite along</label>
+    <workerClass>InteractionWorker</workerClass>
+    <symbol>Things/Mote/SpeechSymbols/KindWords</symbol>
+    <logRulesInitiator>
+      <rulesStrings>
+        <li>r_logentry->[INITIATOR_nameDef] asked [RECIPIENT_nameDef] to come along when the visitors leave.</li>
+        <li>r_logentry->[INITIATOR_nameDef] told [RECIPIENT_nameDef] there will always be a place for [RECIPIENT_objective] among [INITIATOR_possessive] people.</li>
+        <li>r_logentry->[INITIATOR_nameDef] urged [RECIPIENT_nameDef] to leave the colony and come with [INITIATOR_objective].</li>
+      </rulesStrings>
+    </logRulesInitiator>
+  </InteractionDef>
+
+  <InteractionDef>
+    <defName>PF_VisitTalk_Snub</defName>
+    <label>snub</label>
+    <workerClass>InteractionWorker</workerClass>
+    <symbol>Things/Mote/SpeechSymbols/Slight</symbol>
+    <recipientThought>PF_SnubbedByVisitor</recipientThought>
+    <logRulesInitiator>
+      <rulesStrings>
+        <li>r_logentry->[INITIATOR_nameDef] brushed [RECIPIENT_nameDef] off, clearly having better things to do.</li>
+        <li>r_logentry->[INITIATOR_nameDef] cut [RECIPIENT_nameDef] short and walked away.</li>
+        <li>r_logentry->[INITIATOR_nameDef] made it clear [INITIATOR_pronoun] wasn't interested in talking to [RECIPIENT_nameDef].</li>
+      </rulesStrings>
+    </logRulesInitiator>
+  </InteractionDef>
+
+</Defs>

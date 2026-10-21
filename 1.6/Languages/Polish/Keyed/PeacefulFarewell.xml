@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- Listy z prośbą o odejście, osobny zestaw dla każdej więzi
+       (FarewellUtility.JoinBond). Argumenty: PAWN, RELATED, {2} = nazwa
+       frakcji, RELATION = etykieta relacji (tylko OtherFamily). Liczba
+       wariantów musi zgadzać się z FarewellUtility.JoinRequestVariantCount:
+       Friend 4, pozostałe 3. PF_JoinRequestFooter jest doklejany do każdego. -->
+  <PF_JoinRequestLabel>Prośba o odejście</PF_JoinRequestLabel>
+  <PF_JoinRequestLabel_Partner>Odnaleziona miłość</PF_JoinRequestLabel_Partner>
+  <PF_JoinRequestLabel_Family>Rodzinne spotkanie</PF_JoinRequestLabel_Family>
+  <!-- Doklejane do prośby, gdy wynikła z rozmów podczas wizyty
+       (PF_VisitMeeting). 3 warianty. -->
+  <PF_JoinRequestAfterTalks0>To nie wzięło się znikąd: podczas wizyty {PAWN_nameDef} przez wiele godzin {PAWN_gender ? rozmawiał : rozmawiała} z {RELATED_nameDef} i wszystko dokładnie {PAWN_gender ? przemyślał : przemyślała}.</PF_JoinRequestAfterTalks0>
+  <PF_JoinRequestAfterTalks1>To nie jest nagły kaprys. Za każdym razem, gdy {PAWN_nameDef} {PAWN_gender ? wracał : wracała} z rozmowy z {RELATED_nameDef}, {PAWN_gender ? był : była} nieco {PAWN_gender ? cichszy : cichsza} i coraz bardziej {PAWN_gender ? pewny : pewna} swego.</PF_JoinRequestAfterTalks1>
+  <PF_JoinRequestAfterTalks2>Po kilku długich rozmowach z {RELATED_nameDef} w trakcie wizyty {PAWN_nameDef} {PAWN_gender ? podjął : podjęła} decyzję.</PF_JoinRequestAfterTalks2>
+  <PF_JoinRequestFooter>Jeśli się zgodzisz, {PAWN_nameDef} od razu dołączy do frakcji {2}, podejdzie do gości i odejdzie razem z nimi. Jeśli odmówisz, {PAWN_nameDef} będzie tym nieco {PAWN_gender ? zmartwiony : zmartwiona}.</PF_JoinRequestFooter>
+
+  <PF_JoinRequest_Spouse_Text0>{PAWN_nameDef} {PAWN_gender ? zamarł : zamarła}, gdy przybyli goście z frakcji {2}. Wśród nich jest {RELATED_nameDef} - {PAWN_gender ? jego : jej} {RELATED_gender ? mąż : żona}. {PAWN_nameDef} dawno już {PAWN_gender ? stracił : straciła} nadzieję na to spotkanie, a teraz chce opuścić kolonię i wrócić do wspólnego życia.</PF_JoinRequest_Spouse_Text0>
+  <PF_JoinRequest_Spouse_Text1>"{PAWN_gender ? Złożyłem : Złożyłam} przysięgę" - mówi cicho {PAWN_nameDef}, nie odrywając wzroku od {RELATED_gender ? męża : żony}. "Cokolwiek się wydarzyło, to wciąż {RELATED_gender ? mój mąż : moja żona}." {PAWN_nameDef} chce odejść razem z {RELATED_gender ? nim : nią} i dołączyć do frakcji {2}.</PF_JoinRequest_Spouse_Text1>
+  <PF_JoinRequest_Spouse_Text2>Od chwili przybycia gości {PAWN_nameDef} nie odstępuje {RELATED_gender ? swojego męża : swojej żony} na krok. Rubież ich rozdzieliła, ale los pozwolił im się odnaleźć. {PAWN_nameDef} prosi o zgodę na odejście do frakcji {2}, u boku {RELATED_nameDef}.</PF_JoinRequest_Spouse_Text2>
+
+  <PF_JoinRequest_Fiance_Text0>Z gośćmi z frakcji {2} {RELATED_gender ? przybył : przybyła} {RELATED_nameDef} - {PAWN_gender ? jego : jej} {RELATED_gender ? narzeczony : narzeczona}. Planowany ślub nigdy się nie odbył, ale {PAWN_nameDef} chce dać mu drugą szansę i prosi o zgodę na odejście razem z {RELATED_gender ? nim : nią}.</PF_JoinRequest_Fiance_Text0>
+  <PF_JoinRequest_Fiance_Text1>"Miał być ślub" - mówi {PAWN_nameDef}, nie mogąc przestać się uśmiechać. "{RELATED_nameDef} wciąż tego chce. Ja też." {PAWN_nameDef} prosi o zgodę na odejście do frakcji {2}.</PF_JoinRequest_Fiance_Text1>
+  <PF_JoinRequest_Fiance_Text2>Pierścionek, który {PAWN_nameDef} {PAWN_gender ? nosił : nosiła} przy sobie przez cały ten czas, znów ma sens: {RELATED_nameDef} jest tutaj, z frakcją {2}. {PAWN_nameDef} chce odejść razem z {RELATED_gender ? nim : nią} i wreszcie zacząć obiecane wspólne życie.</PF_JoinRequest_Fiance_Text2>
+
+  <PF_JoinRequest_Lover_Text0>{PAWN_nameDef} {PAWN_gender ? zauważył : zauważyła} wśród gości {RELATED_nameDef} i od tej chwili myśli tylko o {RELATED_gender ? nim : niej}. Uczucie, które kiedyś ich łączyło, wciąż jest żywe. {PAWN_nameDef} chce opuścić kolonię i dołączyć do frakcji {2}, by być z {RELATED_gender ? nim : nią}.</PF_JoinRequest_Lover_Text0>
+  <PF_JoinRequest_Lover_Text1>"{PAWN_gender ? Myślałem : Myślałam}, że {PAWN_gender ? straciłem : straciłam} {RELATED_gender ? go : ją} na zawsze" - przyznaje {PAWN_nameDef}, patrząc na {RELATED_nameDef} przy jukach gości. "Nie stracę {RELATED_gender ? go : jej} drugi raz." {PAWN_nameDef} prosi o zgodę na odejście z frakcją {2}.</PF_JoinRequest_Lover_Text1>
+  <PF_JoinRequest_Lover_Text2>Całą wizytę {PAWN_nameDef} {PAWN_gender ? spędził : spędziła} u boku {RELATED_nameDef} i nikt w kolonii nie mógł tego nie zauważyć. {PAWN_nameDef} chce pójść za głosem serca i odejść z frakcją {2}.</PF_JoinRequest_Lover_Text2>
+
+  <PF_JoinRequest_Parent_Text0>Wśród gości z frakcji {2} jest {RELATED_nameDef} - {PAWN_gender ? jego : jej} {RELATED_gender ? ojciec : matka}. Po tylu latach rozłąki {PAWN_nameDef} chce opuścić kolonię i znów być z rodziną.</PF_JoinRequest_Parent_Text0>
+  <PF_JoinRequest_Parent_Text1>{PAWN_nameDef} {PAWN_gender ? rozpoznał : rozpoznała} ten głos, zanim jeszcze {PAWN_gender ? zobaczył : zobaczyła} twarz: {RELATED_nameDef}, {PAWN_gender ? jego : jej} {RELATED_gender ? ojciec : matka}, podróżuje z frakcją {2}. {PAWN_nameDef} prosi o zgodę, by odejść razem z {RELATED_gender ? nim : nią}.</PF_JoinRequest_Parent_Text1>
+  <PF_JoinRequest_Parent_Text2>"Zawsze {PAWN_gender ? się zastanawiałem : się zastanawiałam}, czy {RELATED_gender ? tata : mama} jeszcze żyje" - mówi {PAWN_nameDef} drżącym głosem. {RELATED_nameDef} jest tutaj z frakcją {2}, a {PAWN_nameDef} chce odejść razem z {RELATED_gender ? nim : nią}.</PF_JoinRequest_Parent_Text2>
+
+  <PF_JoinRequest_Child_Text0>Z gośćmi z frakcji {2} {RELATED_gender ? przybył : przybyła} {RELATED_nameDef} - {PAWN_gender ? jego : jej} {RELATED_gender ? syn : córka}. Żaden rodzic nie przepuści takiej szansy: {PAWN_nameDef} chce opuścić kolonię i zostać przy {RELATED_gender ? nim : niej}.</PF_JoinRequest_Child_Text0>
+  <PF_JoinRequest_Child_Text1>{PAWN_nameDef} nie spuszcza wzroku z {RELATED_nameDef} od chwili przybycia gości. {PAWN_gender ? Jego : Jej} {RELATED_gender ? syn : córka} ma teraz własne życie we frakcji {2} - a {PAWN_nameDef} chce znów być jego częścią.</PF_JoinRequest_Child_Text1>
+  <PF_JoinRequest_Child_Text2>"Kiedyś mnie przy {RELATED_gender ? nim : niej} zabrakło" - mówi {PAWN_nameDef}. "Teraz chcę być obok." {PAWN_nameDef} prosi o zgodę na odejście do frakcji {2} razem z {RELATED_gender ? synem : córką}, {RELATED_nameDef}.</PF_JoinRequest_Child_Text2>
+
+  <PF_JoinRequest_Sibling_Text0>Wśród gości z frakcji {2} jest {RELATED_nameDef} - {PAWN_gender ? jego : jej} {RELATED_gender ? brat : siostra}. Ich rozmowa trwała do późnej nocy, a teraz {PAWN_nameDef} chce opuścić kolonię i zostać z {RELATED_gender ? bratem : siostrą}.</PF_JoinRequest_Sibling_Text0>
+  <PF_JoinRequest_Sibling_Text1>Wystarczyło kilka minut, a {PAWN_nameDef} znów {PAWN_gender ? żartował : żartowała} z {RELATED_gender ? bratem : siostrą}, jakby nie minął ani jeden rok. {PAWN_nameDef} prosi o zgodę na odejście z {RELATED_nameDef} i frakcją {2}.</PF_JoinRequest_Sibling_Text1>
+  <PF_JoinRequest_Sibling_Text2>"Rodzina to rodzina" - mówi po prostu {PAWN_nameDef}, wskazując na {RELATED_nameDef}. {PAWN_gender ? Jego : Jej} {RELATED_gender ? brat przybył : siostra przybyła} z frakcją {2}, a {PAWN_nameDef} chce odejść razem z {RELATED_gender ? nim : nią}.</PF_JoinRequest_Sibling_Text2>
+
+  <PF_JoinRequest_OtherFamily_Text0>{PAWN_nameDef} {PAWN_gender ? odnalazł : odnalazła} wśród gości rodzinę: {RELATED_nameDef} ({RELATION}) podróżuje z frakcją {2}. {PAWN_nameDef} chce opuścić kolonię i zostać z {RELATED_gender ? nim : nią}.</PF_JoinRequest_OtherFamily_Text0>
+  <PF_JoinRequest_OtherFamily_Text1>Całą wizytę {PAWN_nameDef} {PAWN_gender ? spędził : spędziła} z {RELATED_nameDef} ({RELATION}) na wspominaniu krewnych i dawnych czasów. Teraz prosi o zgodę na odejście do frakcji {2}, by być bliżej tego, co zostało z rodziny.</PF_JoinRequest_OtherFamily_Text1>
+  <PF_JoinRequest_OtherFamily_Text2>Więzy krwi są silne. {PAWN_nameDef} chce opuścić kolonię razem z {RELATED_nameDef} ({RELATION}) i dołączyć do frakcji {2}.</PF_JoinRequest_OtherFamily_Text2>
+
+  <PF_JoinRequest_Friend_Text0>{PAWN_nameDef} {PAWN_gender ? zauważył : zauważyła} wśród gości {RELATED_nameDef} - {RELATED_gender ? bliskiego przyjaciela : bliską przyjaciółkę} - i chce opuścić kolonię, by razem z {RELATED_gender ? nim : nią} dołączyć do frakcji {2}.</PF_JoinRequest_Friend_Text0>
+  <PF_JoinRequest_Friend_Text1>{PAWN_nameDef} {PAWN_gender ? spędził : spędziła} całą wizytę na rozmowie z {RELATED_nameDef} i teraz nie może przestać o tym myśleć. {PAWN_gender ? Postanowił : Postanowiła}, że {PAWN_gender ? wolałby : wolałaby} żyć we frakcji {2}, niż zostać tutaj.</PF_JoinRequest_Friend_Text1>
+  <PF_JoinRequest_Friend_Text2>{PAWN_nameDef} podchodzi do Ciebie, {PAWN_gender ? zdenerwowany : zdenerwowana}, ale {PAWN_gender ? zdecydowany : zdecydowana}. "{PAWN_gender ? Podjąłem : Podjęłam} decyzję. {RELATED_nameDef} {RELATED_gender ? poprosił : poprosiła}, bym {PAWN_gender ? poszedł : poszła} z {RELATED_gender ? nim : nią} do frakcji {2}. Chcę tam iść."</PF_JoinRequest_Friend_Text2>
+  <PF_JoinRequest_Friend_Text3>{PAWN_nameDef} zagaduje Cię tuż przed odejściem gości. "{PAWN_gender ? Rozmawiałem : Rozmawiałam} z {RELATED_nameDef}. Naprawdę {PAWN_gender ? rozmawiałem : rozmawiałam}. Od lat nie {PAWN_gender ? miałem : miałam} {RELATED_gender ? takiego przyjaciela : takiej przyjaciółki}." {PAWN_nameDef} chce odejść z frakcją {2}.</PF_JoinRequest_Friend_Text3>
+
+  <PF_AcceptButton>Pozwól odejść</PF_AcceptButton>
+  <PF_RejectButton>Odmów</PF_RejectButton>
+  <PF_CannotAccept_ColonistUnavailable>Ten osadnik nie jest już dostępny.</PF_CannotAccept_ColonistUnavailable>
+  <PF_AlreadyDecided>Decyzja w sprawie tej prośby została już podjęta.</PF_AlreadyDecided>
+
+  <PF_DepartureFailedLabel>Odejście przerwane</PF_DepartureFailedLabel>
+  <PF_DepartureFailedText>{PAWN_nameDef} {PAWN_gender ? zgodził : zgodziła} się odejść, ale zanim {PAWN_gender ? zdążył : zdążyła} wyruszyć, stanęło na przeszkodzie coś pilniejszego. Wciąż jest częścią kolonii - jeśli chcesz, by {PAWN_gender ? odszedł : odeszła}, musisz poczekać na nową prośbę lub wywołać ją ponownie.</PF_DepartureFailedText>
+
+  <PF_LetterLabel>Spokojne pożegnanie</PF_LetterLabel>
+  <PF_LetterText0>{PAWN_nameDef} {PAWN_gender ? opuścił : opuściła} kolonię i {PAWN_gender ? dołączył : dołączyła} do {1}.</PF_LetterText0>
+  <PF_LetterText1>{PAWN_nameDef} {PAWN_gender ? pożegnał : pożegnała} się i {PAWN_gender ? odszedł : odeszła}, by zacząć nowe życie wśród {1}.</PF_LetterText1>
+  <PF_LetterText2>{PAWN_nameDef} {PAWN_gender ? odszedł : odeszła}. {PAWN_possessive} łóżko jest puste, ale wszyscy zgadzają się, że to była słuszna decyzja - {PAWN_gender ? dołączył : dołączyła} teraz do {1}.</PF_LetterText2>
+  <PF_LetterText3>Kolonia wydaje się dziś odrobinę cichsza. {PAWN_nameDef} {PAWN_gender ? odszedł : odeszła}, by zamieszkać wśród {1}.</PF_LetterText3>
+
+  <PF_Setting_Section_VisitJoin>Odejście do odwiedzających (relacja z inną frakcją)</PF_Setting_Section_VisitJoin>
+  <PF_Setting_VisitTalksDesc>Kolonista, który ma wśród przyjaznych gości kogoś bliskiego, kilka razy w trakcie wizyty pójdzie z tą osobą porozmawiać. To, czy potem poprosi o zgodę na odejście, zależy od przebiegu tych rozmów, łączącej ich więzi, nastroju i ludzi, których zostawiłby w kolonii.</PF_Setting_VisitTalksDesc>
+  <PF_Setting_VisitTalksLabel>Rozmowy z gościem przed podjęciem decyzji: {0}</PF_Setting_VisitTalksLabel>
+  <PF_Setting_MinImportanceLabel>Wymagana minimalna waga relacji: {0}</PF_Setting_MinImportanceLabel>
+  <PF_Setting_Section_Debug>Diagnostyka</PF_Setting_Section_Debug>
+  <PF_Setting_DebugModeLabel>Tryb debugowania</PF_Setting_DebugModeLabel>
+  <PF_Setting_DebugModeTooltip>Zapisuje w konsoli/logu szczegóły wyszukiwania kandydatów przy każdym sprawdzeniu. Przydatne przy diagnozowaniu, dlaczego żadna prośba się nie pojawia.</PF_Setting_DebugModeTooltip>
+  <PF_Setting_CustomFileLoggingLabel>Zapisuj log do folderu moda</PF_Setting_CustomFileLoggingLabel>
+  <PF_Setting_CustomFileLoggingTooltip>Zapisuje plik tekstowy CustomLog.txt zawierający wyłącznie wpisy z Peaceful Farewell do folderu tego moda, żeby łatwo go znaleźć i udostępnić bez przeszukiwania Player.log. Włącz też tryb debugowania powyżej, aby uzyskać najwięcej szczegółów.</PF_Setting_CustomFileLoggingTooltip>
+  <PF_Setting_OpenLogFolderButton>Otwórz folder moda</PF_Setting_OpenLogFolderButton>
+  <PF_Setting_GenerateReportButton>Wygeneruj i otwórz raport</PF_Setting_GenerateReportButton>
+  <PF_Setting_ReportGeneratedMessage>Wygenerowano raport: {0}</PF_Setting_ReportGeneratedMessage>
+  <PF_Setting_ReportFailedMessage>Nie udało się wygenerować raportu - szczegóły w Player.log.</PF_Setting_ReportFailedMessage>
+  <PF_Setting_ViewWanderersButton>Pokaż wędrowców w świecie</PF_Setting_ViewWanderersButton>
+  <PF_Setting_ViewWanderersNoGameMessage>Brak aktywnej gry do sprawdzenia - najpierw wczytaj zapis.</PF_Setting_ViewWanderersNoGameMessage>
+
+  <PF_Overview_Title>Peaceful Farewell - Przegląd wędrowców</PF_Overview_Title>
+  <PF_Overview_NoWorld>Brak aktywnego świata do sprawdzenia.</PF_Overview_NoWorld>
+  <PF_Overview_None>(brak)</PF_Overview_None>
+  <PF_Overview_NoFaction>brak</PF_Overview_NoFaction>
+  <PF_Overview_Section_Wandering>Obecnie wędrujący ({0})</PF_Overview_Section_Wandering>
+  <PF_Overview_Section_Settled>Osiedleni, piszący do domu ({0})</PF_Overview_Section_Settled>
+  <PF_Overview_ForceDecision>los zostanie rozstrzygnięty przy następnym sprawdzeniu</PF_Overview_ForceDecision>
+  <PF_Overview_ResolveChance>{0}% szans przy następnym sprawdzeniu</PF_Overview_ResolveChance>
+  <PF_Overview_NextLetterInDays>następny list za {0}d</PF_Overview_NextLetterInDays>
+  <PF_Overview_WanderingCardSub>{0} - śledzony {1}d</PF_Overview_WanderingCardSub>
+  <PF_Overview_JumpToSettlement>Przejdź do {0}</PF_Overview_JumpToSettlement>
+  <PF_Overview_DepartedOn>Wyruszył/a: {0}</PF_Overview_DepartedOn>
+  <PF_Overview_DaysAgoFallback>{0}d temu</PF_Overview_DaysAgoFallback>
+
+  <PF_LonelinessRequestLabel>Brak poczucia przynależności</PF_LonelinessRequestLabel>
+  <PF_LonelinessRequestText0>{PAWN_nameDef} czuje się {PAWN_gender ? nielubiany : nielubiana} przez resztę kolonii i chce odejść, by znaleźć miejsce, do którego będzie {PAWN_gender ? przynależał : przynależała}.\n\nJeśli się zgodzisz, {PAWN_nameDef} odejdzie i spróbuje szczęścia w świecie. Jeśli odmówisz, {PAWN_nameDef} będzie tym nieco {PAWN_gender ? zmartwiony : zmartwiona}.</PF_LonelinessRequestText0>
+  <PF_LonelinessRequestText1>{PAWN_nameDef} znowu {PAWN_gender ? jadł : jadła} {PAWN_gender ? sam : sama}. Nikt nie siada z {PAWN_objective}, nikt nie pyta, jak się czuje. {PAWN_gender ? Postanowił : Postanowiła}, że jeśli nikt tutaj {PAWN_objective} nie chce, znajdzie miejsce, gdzie będzie inaczej.\n\nJeśli się zgodzisz, {PAWN_nameDef} odejdzie i spróbuje szczęścia w świecie. Jeśli odmówisz, {PAWN_nameDef} będzie tym nieco {PAWN_gender ? zmartwiony : zmartwiona}.</PF_LonelinessRequestText1>
+  <PF_LonelinessRequestText2>"Chyba tu nie pasuję" - mówi cicho {PAWN_nameDef}, unikając Twojego wzroku. "Chyba nikt by nie zauważył, gdybym {PAWN_gender ? odszedł : odeszła}." Mówi to jako stwierdzenie faktu, nie prośbę o współczucie.\n\nJeśli się zgodzisz, {PAWN_nameDef} odejdzie i spróbuje szczęścia w świecie. Jeśli odmówisz, {PAWN_nameDef} będzie tym nieco {PAWN_gender ? zmartwiony : zmartwiona}.</PF_LonelinessRequestText2>
+  <PF_LonelinessRequestText3>{PAWN_nameDef} {PAWN_gender ? przestał : przestała} próbować nawiązywać rozmowy. Tak jest łatwiej, jak {PAWN_gender ? sam sobie powiedział : sama sobie powiedziała}, niż znów być ignorowanym. Teraz jest {PAWN_gender ? gotów : gotowa} odejść i sprawdzić, czy świat okaże się bardziej łaskawy.\n\nJeśli się zgodzisz, {PAWN_nameDef} odejdzie i spróbuje szczęścia w świecie. Jeśli odmówisz, {PAWN_nameDef} będzie tym nieco {PAWN_gender ? zmartwiony : zmartwiona}.</PF_LonelinessRequestText3>
+  <PF_LonelinessRequestText4>Zastajesz {PAWN_nameDef} {PAWN_gender ? pakującego : pakującą} niewielki plecak. "To niczyja wina" - mówi - "po prostu chyba tu nie pasuję. Może gdzie indziej będzie inaczej."\n\nJeśli się zgodzisz, {PAWN_nameDef} odejdzie i spróbuje szczęścia w świecie. Jeśli odmówisz, {PAWN_nameDef} będzie tym nieco {PAWN_gender ? zmartwiony : zmartwiona}.</PF_LonelinessRequestText4>
+
+  <PF_WandererReturnedLabel>Powrót do kolonii</PF_WandererReturnedLabel>
+  <PF_WandererReturnedText0>{PAWN_nameDef} {PAWN_gender ? powrócił : powróciła} do kolonii po samotnej wędrówce po świecie.</PF_WandererReturnedText0>
+  <PF_WandererReturnedText1>Znajoma sylwetka zbliża się do bramy. To {PAWN_nameDef}, {PAWN_gender ? zmęczony : zmęczona} drogą, ale {PAWN_gender ? żywy : żywa}, po czasie spędzonym na wędrówce po świecie.</PF_WandererReturnedText1>
+  <PF_WandererReturnedText2>{PAWN_nameDef} {PAWN_gender ? wrócił : wróciła}. Niewiele mówi o tym, gdzie {PAWN_gender ? był : była}, tylko że cieszy się, widząc te mury ponownie.</PF_WandererReturnedText2>
+  <PF_WandererReturnedText3>Świat na zewnątrz nie okazał się tym, czego {PAWN_gender ? szukał : szukała} {PAWN_nameDef}. {PAWN_gender ? Wrócił : Wróciła} do kolonii, {PAWN_gender ? gotowy : gotowa} osiąść tu na nowo.</PF_WandererReturnedText3>
+
+  <PF_WandererJoinedFactionLabel>Znaleziono nowy dom</PF_WandererJoinedFactionLabel>
+  <PF_WandererJoinedFactionText0>{PAWN_nameDef}, {PAWN_gender ? który : która} {PAWN_gender ? opuścił : opuściła} kolonię, by wędrować po świecie, {PAWN_gender ? osiadł : osiadła} na stałe i {PAWN_gender ? dołączył : dołączyła} do {1}.</PF_WandererJoinedFactionText0>
+  <PF_WandererJoinedFactionText1>Do kolonii dociera wieść: {PAWN_nameDef} w końcu {PAWN_gender ? przestał : przestała} wędrować, zaczynając nowe życie wśród {1}.</PF_WandererJoinedFactionText1>
+  <PF_WandererJoinedFactionText2>{PAWN_nameDef} {PAWN_gender ? znalazł : znalazła} to, czego {PAWN_gender ? szukał : szukała}. {PAWN_gender ? Osiadł : Osiadła} na stałe wśród {1}.</PF_WandererJoinedFactionText2>
+  <PF_WandererJoinedFactionText3>Droga dobiegła końca dla {PAWN_nameDef}, przynajmniej na razie - {PAWN_gender ? zapuścił : zapuściła} korzenie wśród {1}.</PF_WandererJoinedFactionText3>
+
+  <PF_WandererJoinedHostileFactionLabel>Wiadomość od zdrajcy</PF_WandererJoinedHostileFactionLabel>
+  <PF_WandererJoinedHostileFactionText0>Wiadomość dociera do kolonii, podpisana imieniem {PAWN_nameDef}: {PAWN_gender ? dołączył : dołączyła} do {1}. Nie ma w niej żalu za tym, co zostawił(a) - tylko obietnica, że jeszcze się spotkacie.</PF_WandererJoinedHostileFactionText0>
+  <PF_WandererJoinedHostileFactionText1>{PAWN_nameDef} nie {PAWN_gender ? uciekł : uciekła} przed światem - {PAWN_gender ? uciekł : uciekła} przed Wami. Teraz nosi barwy {1}, a wieść, którą przesyła, brzmi jak groźba.</PF_WandererJoinedHostileFactionText1>
+  <PF_WandererJoinedHostileFactionText2>Ktoś, kto twierdzi, że mówi w imieniu {PAWN_nameDef}, przekazuje kolonii krótką wiadomość: {PAWN_gender ? dołączył : dołączyła} do {1} z własnej woli. Prędzej czy później się przekonacie, co to oznacza.</PF_WandererJoinedHostileFactionText2>
+  <PF_WandererJoinedHostileFactionText3>Nienawiść, którą {PAWN_nameDef} {PAWN_gender ? żywił : żywiła} do kolonii, znalazła w końcu dom. {PAWN_gender ? Dołączył : Dołączyła} do {1} - i przysięga, że wróci, ale nie {PAWN_gender ? sam : sama}.</PF_WandererJoinedHostileFactionText3>
+
+  <PF_WandererMissingLabel>Brak wieści</PF_WandererMissingLabel>
+  <PF_WandererMissingText0>Odkąd {PAWN_nameDef} {PAWN_gender ? odszedł : odeszła}, by wędrować po świecie, nie nadeszła żadna wieść. Los tej osoby pozostaje nieznany, ale do kolonii już nie wróci.</PF_WandererMissingText0>
+  <PF_WandererMissingText1>Przejeżdżający kupcy mówią, że słyszeli imię, które mogło należeć do {PAWN_nameDef}, powiązane z historią, której nikt nie potrafił potwierdzić. To ostatnie wieści o {PAWN_nameDef}, jakie dotarły do kolonii.</PF_WandererMissingText1>
+  <PF_WandererMissingText2>Ślad {PAWN_nameDef} urywa się gdzieś poza zasięgiem kolonii. Żadnego listu, żadnej relacji podróżnika, nic. Tylko cisza.</PF_WandererMissingText2>
+  <PF_WandererMissingText3>Cokolwiek {PAWN_nameDef} {PAWN_gender ? znalazł : znalazła} tam, na zewnątrz, nie była to droga powrotna do domu.</PF_WandererMissingText3>
+  <PF_WandererMissingText4>Kolonia czeka na wieści o {PAWN_nameDef}, które nigdy nie nadchodzą.</PF_WandererMissingText4>
+
+  <PF_Setting_Section_Loneliness>Odejście z samotności (brak przynależności)</PF_Setting_Section_Loneliness>
+  <PF_Setting_LonelinessChanceLabel>Szansa, że nielubiany osadnik zechce odejść: {0}</PF_Setting_LonelinessChanceLabel>
+  <PF_Setting_LonelinessAvgOpinionLabel>Średnia opinia innych musi być poniżej: {0}</PF_Setting_LonelinessAvgOpinionLabel>
+  <PF_Setting_LonelinessMaxSingleOpinionLabel>Opinia żadnego pojedynczego osadnika nie może przekraczać: {0}</PF_Setting_LonelinessMaxSingleOpinionLabel>
+  <PF_Setting_LonelinessMinDaysInColonyLabel>Minimalna liczba dni w kolonii, zanim to się uruchomi: {0}</PF_Setting_LonelinessMinDaysInColonyLabel>
+  <PF_Setting_Section_Wanderer>Losy wędrowca po opuszczeniu kolonii</PF_Setting_Section_Wanderer>
+  <PF_Setting_WandererMinCheckDaysLabel>Najwcześniej los wędrowca może zostać rozstrzygnięty po: {0} dniach</PF_Setting_WandererMinCheckDaysLabel>
+  <PF_Setting_WandererMaxCheckDaysLabel>Los wędrowca na pewno zostanie rozstrzygnięty po: {0} dniach</PF_Setting_WandererMaxCheckDaysLabel>
+  <PF_Setting_WandererJoinedFactionLetterLabel>Powiadom, gdy wędrowiec dołączy do frakcji</PF_Setting_WandererJoinedFactionLetterLabel>
+  <PF_Setting_WandererJoinedFactionLetterTooltip>Wysyła list, gdy osadnik, który odszedł z powodu samotności, osiądzie na stałe w innej frakcji.</PF_Setting_WandererJoinedFactionLetterTooltip>
+
+  <PF_WanderlustRequestLabel>Zew wędrówki</PF_WanderlustRequestLabel>
+  <PF_WanderlustRequestText0>{PAWN_nameDef} jest już {PAWN_gender ? młodym dorosłym : młodą dorosłą} i marzy, by zobaczyć, co leży poza kolonią.\n\nJeśli się zgodzisz, {PAWN_nameDef} odejdzie i spróbuje szczęścia w świecie. Jeśli odmówisz, {PAWN_nameDef} będzie tym nieco {PAWN_gender ? zmartwiony : zmartwiona}.</PF_WanderlustRequestText0>
+  <PF_WanderlustRequestText1>{PAWN_nameDef} {PAWN_gender ? zaczął : zaczęła} stawać na skraju kolonii, wpatrując się w horyzont. {PAWN_gender ? Dorastał : Dorastała} w tych murach, a teraz chce wiedzieć, co jest poza nimi.\n\nJeśli się zgodzisz, {PAWN_nameDef} odejdzie i spróbuje szczęścia w świecie. Jeśli odmówisz, {PAWN_nameDef} będzie tym nieco {PAWN_gender ? zmartwiony : zmartwiona}.</PF_WanderlustRequestText1>
+  <PF_WanderlustRequestText2>"{PAWN_gender ? Mieszkałem : Mieszkałam} tu całe życie" - mówi {PAWN_nameDef} - "i nigdy nie {PAWN_gender ? widziałem : widziałam} niczego innego." To nie skarga, tylko fakt, którego nie może już dłużej ignorować. Chce wyruszyć na poszukiwania.\n\nJeśli się zgodzisz, {PAWN_nameDef} odejdzie i spróbuje szczęścia w świecie. Jeśli odmówisz, {PAWN_nameDef} będzie tym nieco {PAWN_gender ? zmartwiony : zmartwiona}.</PF_WanderlustRequestText2>
+  <PF_WanderlustRequestText3>{PAWN_nameDef} jest już {PAWN_gender ? dorosły : dorosła}, a kolonia, która kiedyś wydawała się całym światem, nagle wydaje się bardzo mała. Chce się dowiedzieć, co jeszcze jest tam na zewnątrz.\n\nJeśli się zgodzisz, {PAWN_nameDef} odejdzie i spróbuje szczęścia w świecie. Jeśli odmówisz, {PAWN_nameDef} będzie tym nieco {PAWN_gender ? zmartwiony : zmartwiona}.</PF_WanderlustRequestText3>
+  <PF_WanderlustRequestText4>Przyłapujesz {PAWN_nameDef} na szkicowaniu mapy z na wpół zapamiętanych opowieści kupców - tras do miejsc, których nigdy nie {PAWN_gender ? widział : widziała}. {PAWN_gender ? Zapytany : Zapytana} o to, przyznaje, że {PAWN_gender ? myślał : myślała} o odejściu, by zobaczyć to wszystko na własne oczy.\n\nJeśli się zgodzisz, {PAWN_nameDef} odejdzie i spróbuje szczęścia w świecie. Jeśli odmówisz, {PAWN_nameDef} będzie tym nieco {PAWN_gender ? zmartwiony : zmartwiona}.</PF_WanderlustRequestText4>
+
+  <PF_WanderlustRequestReturningText0>{PAWN_nameDef} {PAWN_gender ? był : była} ostatnio {PAWN_gender ? cichszy : cichsza}, wspominając podróż, którą kiedyś odbył. Zastanawia się, czy coś się tam zmieniło od tego czasu - i czy nie czas tego sprawdzić.\n\nJeśli się zgodzisz, {PAWN_nameDef} znów odejdzie i spróbuje szczęścia w świecie. Jeśli odmówisz, {PAWN_nameDef} będzie tym nieco {PAWN_gender ? zmartwiony : zmartwiona}.</PF_WanderlustRequestReturningText0>
+  <PF_WanderlustRequestReturningText1>{PAWN_nameDef} wciąż czasem myśli o drodze. Powrót był {PAWN_gender ? słuszną decyzją : słuszną decyzją}, ale ostatnio {PAWN_gender ? łapał : łapała} się na tym, że zastanawia się, co zmieniło się tam, gdzie kiedyś {PAWN_gender ? był : była}.\n\nJeśli się zgodzisz, {PAWN_nameDef} znów odejdzie i spróbuje szczęścia w świecie. Jeśli odmówisz, {PAWN_nameDef} będzie tym nieco {PAWN_gender ? zmartwiony : zmartwiona}.</PF_WanderlustRequestReturningText1>
+  <PF_WanderlustRequestReturningText2>"Wciąż o tym myślę" - przyznaje {PAWN_nameDef} - "nie dlatego, że żałuję powrotu. Po prostu zastanawiam się, co jest teraz inne." Dawna chęć podróżowania wróciła.\n\nJeśli się zgodzisz, {PAWN_nameDef} znów odejdzie i spróbuje szczęścia w świecie. Jeśli odmówisz, {PAWN_nameDef} będzie tym nieco {PAWN_gender ? zmartwiony : zmartwiona}.</PF_WanderlustRequestReturningText2>
+  <PF_WanderlustRequestReturningText3>{PAWN_nameDef} znów ostatnio {PAWN_gender ? opowiadał : opowiadała} stare historie o swojej podróży - i z każdym opowiadaniem wydaje się nieco bardziej {PAWN_gender ? niespokojny : niespokojna}. Może jeszcze jedna wyprawa, tylko po to, by zobaczyć, co się zmieniło.\n\nJeśli się zgodzisz, {PAWN_nameDef} znów odejdzie i spróbuje szczęścia w świecie. Jeśli odmówisz, {PAWN_nameDef} będzie tym nieco {PAWN_gender ? zmartwiony : zmartwiona}.</PF_WanderlustRequestReturningText3>
+  <PF_WanderlustRequestReturningText4>Zastajesz {PAWN_nameDef} nad tymi samymi, na wpół zapamiętanymi trasami sprzed lat, ponownie {PAWN_gender ? śledzącego : śledzącą} je palcem. Tak naprawdę nigdy nie {PAWN_gender ? przestał : przestała} myśleć o drodze - i chce zobaczyć, jak wiele się tam zmieniło.\n\nJeśli się zgodzisz, {PAWN_nameDef} znów odejdzie i spróbuje szczęścia w świecie. Jeśli odmówisz, {PAWN_nameDef} będzie tym nieco {PAWN_gender ? zmartwiony : zmartwiona}.</PF_WanderlustRequestReturningText4>
+
+  <PF_Setting_Section_Wanderlust>Zew wędrówki (młodzi dorośli)</PF_Setting_Section_Wanderlust>
+  <PF_Setting_WanderlustEnabledLabel>Włącz zew wędrówki u młodych dorosłych</PF_Setting_WanderlustEnabledLabel>
+  <PF_Setting_WanderlustEnabledTooltip>Pozwala osadnikom w wieku od 13 do 18 lat okazjonalnie prosić o opuszczenie kolonii, by zobaczyć świat, niezależnie od relacji czy samotności.</PF_Setting_WanderlustEnabledTooltip>
+  <PF_Setting_WanderlustChanceLabel>Szansa dziennie, że młody dorosły zechce wyruszyć w świat: {0}</PF_Setting_WanderlustChanceLabel>
+
+  <PF_Setting_Section_LetterFromAfar>Listy z oddali (osiedleni wędrowcy)</PF_Setting_Section_LetterFromAfar>
+  <PF_Setting_LetterFromAfarEnabledLabel>Włącz listy z oddali</PF_Setting_LetterFromAfarEnabledLabel>
+  <PF_Setting_LetterFromAfarEnabledTooltip>Pozwala osadnikowi, który odszedł i osiadł na stałe w przyjaznej frakcji, okazjonalnie wysłać list do bliskiej osoby wciąż przebywającej w kolonii.</PF_Setting_LetterFromAfarEnabledTooltip>
+
+  <PF_MissingSituationLabel>{PAWN_gender ? Zaginiony : Zaginiona}</PF_MissingSituationLabel>
+
+  <PF_LetterFromAfarLabel>Nadszedł list</PF_LetterFromAfarLabel>
+  <PF_LetterFromAfarText0>Wędrowny kupiec wręcza {RECIPIENT_objective} złożony, sfatygowany list. To od {PAWN_nameDef} - {PAWN_gender ? dobrze się urządził : dobrze się urządziła} i chce, by {RECIPIENT_nameDef} wiedział, że jest {PAWN_gender ? szczęśliwy : szczęśliwa} i że często o {RECIPIENT_objective} myśli.</PF_LetterFromAfarText0>
+  <PF_LetterFromAfarText1>{RECIPIENT_nameDef} znajduje list wśród przywiezionych towarów. {PAWN_nameDef} pisze o drobnych szczegółach nowego życia - o pogodzie, o czyimś żarcie, o niczym ważnym, a jednak właśnie to sprawia, że brzmi to tak jak {PAWN_gender ? on : ona}.</PF_LetterFromAfarText1>
+  <PF_LetterFromAfarText2>List od {PAWN_nameDef} w końcu dociera do {RECIPIENT_nameDef}, miesiące po tym, jak musiał zostać napisany. Kończy się prosto: "Wszystko u mnie w porządku. Mam nadzieję, że u Ciebie też."</PF_LetterFromAfarText2>
+  <PF_LetterFromAfarText3>{RECIPIENT_nameDef} rozpoznaje pismo, zanim jeszcze otworzy list. {PAWN_nameDef} pisze, że odejście było słuszną decyzją i że nie ma dnia, by {PAWN_gender ? nie myślał : nie myślała} o ludziach z domu.</PF_LetterFromAfarText3>
+  <PF_LetterFromAfarText4>W przesyłce kupca znajduje się krótka wiadomość zaadresowana do {RECIPIENT_nameDef}. {PAWN_nameDef} {PAWN_gender ? napisał : napisała} zwięźle - jest {PAWN_gender ? bezpieczny : bezpieczna}, dobrze się miewa i tęskni za domem bardziej, niż się spodziewał.</PF_LetterFromAfarText4>
+  <PF_LetterFromAfarText5>Wieści docierają w formie listu dla {RECIPIENT_nameDef}. Nowe życie {PAWN_nameDef} brzmi zupełnie inaczej niż to, które {PAWN_gender ? zostawił : zostawiła}, ale w słowach wciąż czuć to samo ciepło, które {RECIPIENT_nameDef} dobrze pamięta.</PF_LetterFromAfarText5>
+
+  <!-- Gender-specific ThoughtDef text, resolved by PF_GenderText at
+       grant/render time (DefInjected bakes in a single string at load and
+       can't hold both forms - see Thought_MemoryWithOwnerGender,
+       Thought_MemoryWithSubject, Thought_MemorySocialWithGender). Naming:
+       "{defName}_{Male|Female}_label/desc" = owner-gender axis (the pawn
+       holding the thought speaks about themself). "{defName}_Subj{Male|
+       Female}_label/desc" = subject-gender axis ({0}, someone else being
+       named). "{defName}_Subj{M|F}_Owner{M|F}_desc" = both axes at once. -->
+
+  <PF_RequestToLeaveDenied_Male_desc>Chciałem odejść z kimś mi bliskim, ale mi nie pozwolono. Wciąż to boli.</PF_RequestToLeaveDenied_Male_desc>
+  <PF_RequestToLeaveDenied_Female_desc>Chciałam odejść z kimś mi bliskim, ale mi nie pozwolono. Wciąż to boli.</PF_RequestToLeaveDenied_Female_desc>
+
+  <PF_LonelinessDenied_Male_desc>Nikt tu za mną nie przepada, a ja chciałem odejść i znaleźć miejsce, do którego będę przynależał. Dlaczego mnie nie puszczą?</PF_LonelinessDenied_Male_desc>
+  <PF_LonelinessDenied_Female_desc>Nikt tu za mną nie przepada, a ja chciałam odejść i znaleźć miejsce, do którego będę przynależała. Dlaczego mnie nie puszczą?</PF_LonelinessDenied_Female_desc>
+
+  <PF_LonelinessExcitedToLeave_Male_label>podekscytowany podróżą</PF_LonelinessExcitedToLeave_Male_label>
+  <PF_LonelinessExcitedToLeave_Female_label>podekscytowana podróżą</PF_LonelinessExcitedToLeave_Female_label>
+  <PF_LonelinessExcitedToLeave_Male_desc>Nikt tu nigdy naprawdę mnie nie lubił. Wreszcie odchodzę, by znaleźć miejsce, do którego będę przynależał, i nie mogę się bardziej z tego cieszyć.</PF_LonelinessExcitedToLeave_Male_desc>
+  <PF_LonelinessExcitedToLeave_Female_desc>Nikt tu nigdy naprawdę mnie nie lubił. Wreszcie odchodzę, by znaleźć miejsce, do którego będę przynależała, i nie mogę się bardziej z tego cieszyć.</PF_LonelinessExcitedToLeave_Female_desc>
+
+  <PF_NotLikedHere_Male_label>nielubiany tutaj</PF_NotLikedHere_Male_label>
+  <PF_NotLikedHere_Female_label>nielubiana tutaj</PF_NotLikedHere_Female_label>
+
+  <PF_WanderlustDenied_Male_label>chciał zobaczyć świat</PF_WanderlustDenied_Male_label>
+  <PF_WanderlustDenied_Female_label>chciała zobaczyć świat</PF_WanderlustDenied_Female_label>
+  <PF_WanderlustDenied_Male_desc>Chciałem wyruszyć i zobaczyć, co jest poza kolonią, ale mi nie pozwolono.</PF_WanderlustDenied_Male_desc>
+  <PF_WanderlustDenied_Female_desc>Chciałam wyruszyć i zobaczyć, co jest poza kolonią, ale mi nie pozwolono.</PF_WanderlustDenied_Female_desc>
+
+  <PF_WanderlustGreatJourney_Male_desc>Opuściłem dom, by zobaczyć świat, i tak się cieszę, że to zrobiłem. Cóż to była za podróż.</PF_WanderlustGreatJourney_Male_desc>
+  <PF_WanderlustGreatJourney_Female_desc>Opuściłam dom, by zobaczyć świat, i tak się cieszę, że to zrobiłam. Cóż to była za podróż.</PF_WanderlustGreatJourney_Female_desc>
+
+  <!-- Subject-gender axis: {0} is the pawn being named, not the holder. -->
+
+  <PF_ColonistLeftRelief_SubjMale_label>dobrze, że sobie poszedł</PF_ColonistLeftRelief_SubjMale_label>
+  <PF_ColonistLeftRelief_SubjFemale_label>dobrze, że sobie poszła</PF_ColonistLeftRelief_SubjFemale_label>
+  <PF_ColonistLeftRelief_SubjMale_desc>{0} w końcu odszedł. Nie będzie mi go brakować.</PF_ColonistLeftRelief_SubjMale_desc>
+  <PF_ColonistLeftRelief_SubjFemale_desc>{0} w końcu odeszła. Nie będzie mi jej brakować.</PF_ColonistLeftRelief_SubjFemale_desc>
+
+  <PF_ColonistLeftPity_SubjMale_label>szkoda, że odszedł</PF_ColonistLeftPity_SubjMale_label>
+  <PF_ColonistLeftPity_SubjFemale_label>szkoda, że odeszła</PF_ColonistLeftPity_SubjFemale_label>
+  <PF_ColonistLeftPity_SubjMale_desc>{0} odszedł, bo nikt nie sprawił, że czuł się tu mile widziany. Nie był taki zły. Czuję z tego powodu odrobinę winy.</PF_ColonistLeftPity_SubjMale_desc>
+  <PF_ColonistLeftPity_SubjFemale_desc>{0} odeszła, bo nikt nie sprawił, że czuła się tu mile widziana. Nie była taka zła. Czuję z tego powodu odrobinę winy.</PF_ColonistLeftPity_SubjFemale_desc>
+
+  <PF_WillMissColonist_SubjMale_label>będzie mi go brakować</PF_WillMissColonist_SubjMale_label>
+  <PF_WillMissColonist_SubjFemale_label>będzie mi jej brakować</PF_WillMissColonist_SubjFemale_label>
+  <PF_WillMissColonist_SubjMale_desc>{0} odszedł, by być z kimś, kogo kocha. Cieszę się jego szczęściem, ale będzie mi brakować jego towarzystwa.</PF_WillMissColonist_SubjMale_desc>
+  <PF_WillMissColonist_SubjFemale_desc>{0} odeszła, by być z kimś, kogo kocha. Cieszę się jej szczęściem, ale będzie mi brakować jej towarzystwa.</PF_WillMissColonist_SubjFemale_desc>
+
+  <PF_WanderlustFamilyReturned_SubjMale_label>wrócił</PF_WanderlustFamilyReturned_SubjMale_label>
+  <PF_WanderlustFamilyReturned_SubjFemale_label>wróciła</PF_WanderlustFamilyReturned_SubjFemale_label>
+  <PF_WanderlustFamilyReturned_SubjMale_desc>{0} wrócił cały i zdrowy ze swojej podróży po świecie. Cieszę się, że jest w domu.</PF_WanderlustFamilyReturned_SubjMale_desc>
+  <PF_WanderlustFamilyReturned_SubjFemale_desc>{0} wróciła cała i zdrowa ze swojej podróży po świecie. Cieszę się, że jest w domu.</PF_WanderlustFamilyReturned_SubjFemale_desc>
+
+  <PF_WordNeverCameFriend1_SubjMale_desc>{0} odszedł w świat i po prostu nigdy nie wrócił. Żadnego listu, żadnej opowieści podróżnika, nic. Wciąż czekam na wieści, które nie nadchodzą.</PF_WordNeverCameFriend1_SubjMale_desc>
+  <PF_WordNeverCameFriend1_SubjFemale_desc>{0} odeszła w świat i po prostu nigdy nie wróciła. Żadnego listu, żadnej opowieści podróżnika, nic. Wciąż czekam na wieści, które nie nadchodzą.</PF_WordNeverCameFriend1_SubjFemale_desc>
+
+  <PF_WordNeverCameFriend3_SubjMale_desc>Czasem wyobrażam sobie, że {0} gdzieś się osiedlił, bezpiecznie. Innym razem wyobrażam sobie najgorsze. Niewiedza, co jest prawdą, sama w sobie boli.</PF_WordNeverCameFriend3_SubjMale_desc>
+  <PF_WordNeverCameFriend3_SubjFemale_desc>Czasem wyobrażam sobie, że {0} gdzieś się osiedliła, bezpiecznie. Innym razem wyobrażam sobie najgorsze. Niewiedza, co jest prawdą, sama w sobie boli.</PF_WordNeverCameFriend3_SubjFemale_desc>
+
+  <PF_WordNeverCameFriend4_SubjMale_desc>Rzeczy {0} wciąż leżą tam, gdzie je zostawił. Nikt nie miał serca ich przenieść. Może to znaczy, że część nas wciąż czeka.</PF_WordNeverCameFriend4_SubjMale_desc>
+  <PF_WordNeverCameFriend4_SubjFemale_desc>Rzeczy {0} wciąż leżą tam, gdzie je zostawiła. Nikt nie miał serca ich przenieść. Może to znaczy, że część nas wciąż czeka.</PF_WordNeverCameFriend4_SubjFemale_desc>
+
+  <PF_WordNeverCameFamily1_SubjMale_desc>{0} to rodzina. Odszedł w świat i nigdy nie wrócił, a nikt nie potrafi mi powiedzieć dlaczego. Nie wiem, jak się z tym pogodzić.</PF_WordNeverCameFamily1_SubjMale_desc>
+  <PF_WordNeverCameFamily1_SubjFemale_desc>{0} to rodzina. Odeszła w świat i nigdy nie wróciła, a nikt nie potrafi mi powiedzieć dlaczego. Nie wiem, jak się z tym pogodzić.</PF_WordNeverCameFamily1_SubjFemale_desc>
+
+  <PF_WordNeverCameFamily3_SubjMale_desc>Niektórych nocy wyobrażam sobie, że {0} znalazł sobie gdzieś dobre życie. Innych nocy wyobrażam sobie najgorsze. Niewiedza, w przypadku rodziny, to osobny rodzaj cichej żałoby.</PF_WordNeverCameFamily3_SubjMale_desc>
+  <PF_WordNeverCameFamily3_SubjFemale_desc>Niektórych nocy wyobrażam sobie, że {0} znalazła sobie gdzieś dobre życie. Innych nocy wyobrażam sobie najgorsze. Niewiedza, w przypadku rodziny, to osobny rodzaj cichej żałoby.</PF_WordNeverCameFamily3_SubjFemale_desc>
+
+  <PF_WordNeverCameFamily4_SubjMale_desc>Rzeczy {0} wciąż leżą tam, gdzie je zostawił. Nikt w rodzinie nie miał jeszcze serca ich przenieść.</PF_WordNeverCameFamily4_SubjMale_desc>
+  <PF_WordNeverCameFamily4_SubjFemale_desc>Rzeczy {0} wciąż leżą tam, gdzie je zostawiła. Nikt w rodzinie nie miał jeszcze serca ich przenieść.</PF_WordNeverCameFamily4_SubjFemale_desc>
+
+  <PF_WordNeverCamePartner1_SubjMale_desc>{0} odszedł w świat i nigdy do mnie nie wrócił. Żadnego listu, żadnej wieści, nic. Wciąż łapię się na tym, że czekam.</PF_WordNeverCamePartner1_SubjMale_desc>
+  <PF_WordNeverCamePartner1_SubjFemale_desc>{0} odeszła w świat i nigdy do mnie nie wróciła. Żadnego listu, żadnej wieści, nic. Wciąż łapię się na tym, że czekam.</PF_WordNeverCamePartner1_SubjFemale_desc>
+
+  <PF_WordNeverCamePartner3_SubjMale_desc>Niektórych nocy wyobrażam sobie, że {0} znalazł gdzieś bezpieczne miejsce. Innych nocy wyobrażam sobie najgorsze. Niewiedza, co jest prawdą, to osobny rodzaj piekła.</PF_WordNeverCamePartner3_SubjMale_desc>
+  <PF_WordNeverCamePartner3_SubjFemale_desc>Niektórych nocy wyobrażam sobie, że {0} znalazła gdzieś bezpieczne miejsce. Innych nocy wyobrażam sobie najgorsze. Niewiedza, co jest prawdą, to osobny rodzaj piekła.</PF_WordNeverCamePartner3_SubjFemale_desc>
+
+  <PF_WordNeverCamePartner4_SubjMale_desc>Strona łóżka należąca do {0} wciąż jest pusta. Nie miałem serca przenieść jego rzeczy.</PF_WordNeverCamePartner4_SubjMale_desc>
+  <PF_WordNeverCamePartner4_SubjFemale_desc>Strona łóżka należąca do {0} wciąż jest pusta. Nie miałem serca przenieść jej rzeczy.</PF_WordNeverCamePartner4_SubjFemale_desc>
+
+  <PF_HeardTheyreSafeFriend0_SubjMale_desc>Dotarła wieść, że {0} osiadł gdzieś bezpiecznie. Ulżyło mi, że wiem, że dał radę.</PF_HeardTheyreSafeFriend0_SubjMale_desc>
+  <PF_HeardTheyreSafeFriend0_SubjFemale_desc>Dotarła wieść, że {0} osiadła gdzieś bezpiecznie. Ulżyło mi, że wiem, że dała radę.</PF_HeardTheyreSafeFriend0_SubjFemale_desc>
+
+  <PF_HeardTheyreSafeFriend1_SubjMale_label>znalazł nowy dom</PF_HeardTheyreSafeFriend1_SubjMale_label>
+  <PF_HeardTheyreSafeFriend1_SubjFemale_label>znalazła nowy dom</PF_HeardTheyreSafeFriend1_SubjFemale_label>
+  <PF_HeardTheyreSafeFriend1_SubjMale_desc>Słyszałem, że {0} znalazł tam, na zewnątrz, nowy dom. Dobrze wiedzieć, że świat był dla niego łaskawy.</PF_HeardTheyreSafeFriend1_SubjMale_desc>
+  <PF_HeardTheyreSafeFriend1_SubjFemale_desc>Słyszałem, że {0} znalazła tam, na zewnątrz, nowy dom. Dobrze wiedzieć, że świat był dla niej łaskawy.</PF_HeardTheyreSafeFriend1_SubjFemale_desc>
+
+  <PF_WordNeverCameFriend0_SubjMale_label>co się z nim stało?</PF_WordNeverCameFriend0_SubjMale_label>
+  <PF_WordNeverCameFriend0_SubjFemale_label>co się z nią stało?</PF_WordNeverCameFriend0_SubjFemale_label>
+  <PF_WordNeverCameFriend0_SubjMale_desc>Nigdy nie nadeszła żadna wieść o {0}. Nie wiem, czy żyje, czy nie, i pewnie nigdy się nie dowiem. Nie mogę przestać się zastanawiać, co się z nim stało.</PF_WordNeverCameFriend0_SubjMale_desc>
+  <PF_WordNeverCameFriend0_SubjFemale_desc>Nigdy nie nadeszła żadna wieść o {0}. Nie wiem, czy żyje, czy nie, i pewnie nigdy się nie dowiem. Nie mogę przestać się zastanawiać, co się z nią stało.</PF_WordNeverCameFriend0_SubjFemale_desc>
+
+  <PF_WordNeverCameFamily0_SubjMale_label>co się z nim stało?</PF_WordNeverCameFamily0_SubjMale_label>
+  <PF_WordNeverCameFamily0_SubjFemale_label>co się z nią stało?</PF_WordNeverCameFamily0_SubjFemale_label>
+  <PF_WordNeverCameFamily0_SubjMale_desc>Nigdy nie nadeszła żadna wieść o {0}. Moja własna krew, gdzieś tam, a ja nie mam jak się dowiedzieć, czy żyje, czy nie. Nie mogę przestać o tym myśleć.</PF_WordNeverCameFamily0_SubjMale_desc>
+  <PF_WordNeverCameFamily0_SubjFemale_desc>Nigdy nie nadeszła żadna wieść o {0}. Moja własna krew, gdzieś tam, a ja nie mam jak się dowiedzieć, czy żyje, czy nie. Nie mogę przestać o tym myśleć.</PF_WordNeverCameFamily0_SubjFemale_desc>
+
+  <PF_WordNeverCamePartner0_SubjMale_label>co się z nim stało?</PF_WordNeverCamePartner0_SubjMale_label>
+  <PF_WordNeverCamePartner0_SubjFemale_label>co się z nią stało?</PF_WordNeverCamePartner0_SubjFemale_label>
+  <PF_WordNeverCamePartner0_SubjMale_desc>Nigdy nie nadeszła żadna wieść o {0}. Osoba, którą kocham, gdzieś tam, a ja nie wiem, czy żyje, czy nie. To mnie rozdziera.</PF_WordNeverCamePartner0_SubjMale_desc>
+  <PF_WordNeverCamePartner0_SubjFemale_desc>Nigdy nie nadeszła żadna wieść o {0}. Osoba, którą kocham, gdzieś tam, a ja nie wiem, czy żyje, czy nie. To mnie rozdziera.</PF_WordNeverCamePartner0_SubjFemale_desc>
+
+  <PF_HeardTheyreSafeFriend2_SubjMale_label>dał radę</PF_HeardTheyreSafeFriend2_SubjMale_label>
+  <PF_HeardTheyreSafeFriend2_SubjFemale_label>dała radę</PF_HeardTheyreSafeFriend2_SubjFemale_label>
+  <PF_HeardTheyreSafeFriend2_SubjMale_desc>Cokolwiek innego zastanawiało mnie w sprawie {0}, teraz przynajmniej wiem: dotarł gdzieś bezpiecznie.</PF_HeardTheyreSafeFriend2_SubjMale_desc>
+  <PF_HeardTheyreSafeFriend2_SubjFemale_desc>Cokolwiek innego zastanawiało mnie w sprawie {0}, teraz przynajmniej wiem: dotarła gdzieś bezpiecznie.</PF_HeardTheyreSafeFriend2_SubjFemale_desc>
+
+  <PF_HeardTheyreSafeFamily0_SubjMale_desc>Dotarła wieść, że {0} osiadł gdzieś bezpiecznie. Moja własna krew, gdzieś tam, żywa i zdrowa - jest mi tak ulżyło.</PF_HeardTheyreSafeFamily0_SubjMale_desc>
+  <PF_HeardTheyreSafeFamily0_SubjFemale_desc>Dotarła wieść, że {0} osiadła gdzieś bezpiecznie. Moja własna krew, gdzieś tam, żywa i zdrowa - jest mi tak ulżyło.</PF_HeardTheyreSafeFamily0_SubjFemale_desc>
+
+  <PF_HeardTheyreSafeFamily1_SubjMale_label>znalazł nowy dom</PF_HeardTheyreSafeFamily1_SubjMale_label>
+  <PF_HeardTheyreSafeFamily1_SubjFemale_label>znalazła nowy dom</PF_HeardTheyreSafeFamily1_SubjFemale_label>
+  <PF_HeardTheyreSafeFamily1_SubjMale_desc>Słyszałem, że {0} znalazł tam, na zewnątrz, nowy dom. Rodzina nie przestaje się troszczyć tylko dlatego, że dzielą nas kilometry.</PF_HeardTheyreSafeFamily1_SubjMale_desc>
+  <PF_HeardTheyreSafeFamily1_SubjFemale_desc>Słyszałem, że {0} znalazła tam, na zewnątrz, nowy dom. Rodzina nie przestaje się troszczyć tylko dlatego, że dzielą nas kilometry.</PF_HeardTheyreSafeFamily1_SubjFemale_desc>
+
+  <PF_HeardTheyreSafeFamily2_SubjMale_label>dał radę</PF_HeardTheyreSafeFamily2_SubjMale_label>
+  <PF_HeardTheyreSafeFamily2_SubjFemale_label>dała radę</PF_HeardTheyreSafeFamily2_SubjFemale_label>
+  <PF_HeardTheyreSafeFamily2_SubjMale_desc>Cokolwiek innego zastanawiało mnie w sprawie {0}, teraz przynajmniej wiem: dotarł gdzieś bezpiecznie. To się liczy, gdy chodzi o rodzinę.</PF_HeardTheyreSafeFamily2_SubjMale_desc>
+  <PF_HeardTheyreSafeFamily2_SubjFemale_desc>Cokolwiek innego zastanawiało mnie w sprawie {0}, teraz przynajmniej wiem: dotarła gdzieś bezpiecznie. To się liczy, gdy chodzi o rodzinę.</PF_HeardTheyreSafeFamily2_SubjFemale_desc>
+
+  <PF_HeardTheyreSafePartner0_SubjMale_desc>Dotarła wieść, że {0} osiadł gdzieś bezpiecznie. Osoba, którą kocham, żywa i zdrowa gdzieś tam - mógłbym się rozpłakać z ulgi.</PF_HeardTheyreSafePartner0_SubjMale_desc>
+  <PF_HeardTheyreSafePartner0_SubjFemale_desc>Dotarła wieść, że {0} osiadła gdzieś bezpiecznie. Osoba, którą kocham, żywa i zdrowa gdzieś tam - mógłbym się rozpłakać z ulgi.</PF_HeardTheyreSafePartner0_SubjFemale_desc>
+
+  <PF_HeardTheyreSafePartner1_SubjMale_label>znalazł nowy dom</PF_HeardTheyreSafePartner1_SubjMale_label>
+  <PF_HeardTheyreSafePartner1_SubjFemale_label>znalazła nowy dom</PF_HeardTheyreSafePartner1_SubjFemale_label>
+  <PF_HeardTheyreSafePartner1_SubjMale_desc>Słyszałem, że {0} znalazł tam, na zewnątrz, nowy dom. Wciąż tęsknię za nim każdego dnia, ale przynajmniej teraz wiem, że wszystko u niego w porządku.</PF_HeardTheyreSafePartner1_SubjMale_desc>
+  <PF_HeardTheyreSafePartner1_SubjFemale_desc>Słyszałem, że {0} znalazła tam, na zewnątrz, nowy dom. Wciąż tęsknię za nią każdego dnia, ale przynajmniej teraz wiem, że wszystko u niej w porządku.</PF_HeardTheyreSafePartner1_SubjFemale_desc>
+
+  <PF_HeardTheyreSafePartner2_SubjMale_label>dał radę</PF_HeardTheyreSafePartner2_SubjMale_label>
+  <PF_HeardTheyreSafePartner2_SubjFemale_label>dała radę</PF_HeardTheyreSafePartner2_SubjFemale_label>
+  <PF_HeardTheyreSafePartner2_SubjMale_desc>Cokolwiek innego zastanawiało mnie w sprawie {0}, teraz przynajmniej wiem: dotarł gdzieś bezpiecznie. Mam nadzieję, że gdziekolwiek jest, jest szczęśliwy.</PF_HeardTheyreSafePartner2_SubjMale_desc>
+  <PF_HeardTheyreSafePartner2_SubjFemale_desc>Cokolwiek innego zastanawiało mnie w sprawie {0}, teraz przynajmniej wiem: dotarła gdzieś bezpiecznie. Mam nadzieję, że gdziekolwiek jest, jest szczęśliwa.</PF_HeardTheyreSafePartner2_SubjFemale_desc>
+
+  <!-- Both axes: subject named via {0} AND first-person owner phrasing in
+       the same sentence. -->
+
+  <PF_HeardTheyreSafeFriend3_SubjMale_OwnerMale_desc>Nie zdawałem sobie sprawy, jak bardzo martwiłem się o {0}, dopóki nie nadeszła wieść, że wszystko z nim w porządku.</PF_HeardTheyreSafeFriend3_SubjMale_OwnerMale_desc>
+  <PF_HeardTheyreSafeFriend3_SubjMale_OwnerFemale_desc>Nie zdawałam sobie sprawy, jak bardzo martwiłam się o {0}, dopóki nie nadeszła wieść, że wszystko z nim w porządku.</PF_HeardTheyreSafeFriend3_SubjMale_OwnerFemale_desc>
+  <PF_HeardTheyreSafeFriend3_SubjFemale_OwnerMale_desc>Nie zdawałem sobie sprawy, jak bardzo martwiłem się o {0}, dopóki nie nadeszła wieść, że wszystko z nią w porządku.</PF_HeardTheyreSafeFriend3_SubjFemale_OwnerMale_desc>
+  <PF_HeardTheyreSafeFriend3_SubjFemale_OwnerFemale_desc>Nie zdawałam sobie sprawy, jak bardzo martwiłam się o {0}, dopóki nie nadeszła wieść, że wszystko z nią w porządku.</PF_HeardTheyreSafeFriend3_SubjFemale_OwnerFemale_desc>
+
+  <PF_HeardTheyreSafeFamily3_SubjMale_OwnerMale_desc>Nie zdawałem sobie sprawy, jak bardzo martwiłem się o {0}, dopóki nie nadeszła wieść, że wszystko z nim w porządku. Krew nie przestaje się łatwo martwić.</PF_HeardTheyreSafeFamily3_SubjMale_OwnerMale_desc>
+  <PF_HeardTheyreSafeFamily3_SubjMale_OwnerFemale_desc>Nie zdawałam sobie sprawy, jak bardzo martwiłam się o {0}, dopóki nie nadeszła wieść, że wszystko z nim w porządku. Krew nie przestaje się łatwo martwić.</PF_HeardTheyreSafeFamily3_SubjMale_OwnerFemale_desc>
+  <PF_HeardTheyreSafeFamily3_SubjFemale_OwnerMale_desc>Nie zdawałem sobie sprawy, jak bardzo martwiłem się o {0}, dopóki nie nadeszła wieść, że wszystko z nią w porządku. Krew nie przestaje się łatwo martwić.</PF_HeardTheyreSafeFamily3_SubjFemale_OwnerMale_desc>
+  <PF_HeardTheyreSafeFamily3_SubjFemale_OwnerFemale_desc>Nie zdawałam sobie sprawy, jak bardzo martwiłam się o {0}, dopóki nie nadeszła wieść, że wszystko z nią w porządku. Krew nie przestaje się łatwo martwić.</PF_HeardTheyreSafeFamily3_SubjFemale_OwnerFemale_desc>
+
+  <PF_HeardTheyreSafePartner3_SubjMale_OwnerMale_desc>Nie zdawałem sobie sprawy, jak bardzo martwiłem się o {0}, dopóki nie nadeszła wieść, że wszystko z nim w porządku. Wreszcie spałem spokojnie zeszłej nocy.</PF_HeardTheyreSafePartner3_SubjMale_OwnerMale_desc>
+  <PF_HeardTheyreSafePartner3_SubjMale_OwnerFemale_desc>Nie zdawałam sobie sprawy, jak bardzo martwiłam się o {0}, dopóki nie nadeszła wieść, że wszystko z nim w porządku. Wreszcie spałam spokojnie zeszłej nocy.</PF_HeardTheyreSafePartner3_SubjMale_OwnerFemale_desc>
+  <PF_HeardTheyreSafePartner3_SubjFemale_OwnerMale_desc>Nie zdawałem sobie sprawy, jak bardzo martwiłem się o {0}, dopóki nie nadeszła wieść, że wszystko z nią w porządku. Wreszcie spałem spokojnie zeszłej nocy.</PF_HeardTheyreSafePartner3_SubjFemale_OwnerMale_desc>
+  <PF_HeardTheyreSafePartner3_SubjFemale_OwnerFemale_desc>Nie zdawałam sobie sprawy, jak bardzo martwiłam się o {0}, dopóki nie nadeszła wieść, że wszystko z nią w porządku. Wreszcie spałam spokojnie zeszłej nocy.</PF_HeardTheyreSafePartner3_SubjFemale_OwnerFemale_desc>
+
+  <PF_LetterFromAfar_SubjMale_label>nadszedł list</PF_LetterFromAfar_SubjMale_label>
+  <PF_LetterFromAfar_SubjFemale_label>nadszedł list</PF_LetterFromAfar_SubjFemale_label>
+  <PF_LetterFromAfar_SubjMale_desc>{0} przesłał wieści z miejsca, w którym się osiedlił. Dobrze coś od niego usłyszeć.</PF_LetterFromAfar_SubjMale_desc>
+  <PF_LetterFromAfar_SubjFemale_desc>{0} przesłała wieści z miejsca, w którym się osiedliła. Dobrze coś od niej usłyszeć.</PF_LetterFromAfar_SubjFemale_desc>
+
+  <!-- Myśli o ponownym spotkaniu (PF_Reunited*): płeć gościa ({0}) wybiera formę. -->
+  <PF_ReunitedSpouse_SubjMale_label>znów razem z mężem</PF_ReunitedSpouse_SubjMale_label>
+  <PF_ReunitedSpouse_SubjFemale_label>znów razem z żoną</PF_ReunitedSpouse_SubjFemale_label>
+  <PF_ReunitedSpouse_SubjMale_desc>{0}, mój mąż, odnalazł mnie. Cokolwiek nas czeka, stawimy temu czoła razem.</PF_ReunitedSpouse_SubjMale_desc>
+  <PF_ReunitedSpouse_SubjFemale_desc>{0}, moja żona, odnalazła mnie. Cokolwiek nas czeka, stawimy temu czoła razem.</PF_ReunitedSpouse_SubjFemale_desc>
+  <PF_ReunitedFiance_SubjMale_label>znów razem z narzeczonym</PF_ReunitedFiance_SubjMale_label>
+  <PF_ReunitedFiance_SubjFemale_label>znów razem z narzeczoną</PF_ReunitedFiance_SubjFemale_label>
+  <PF_ReunitedFiance_SubjMale_desc>Mój narzeczony, {0}, znów jest przy mnie - i tym razem ślub się odbędzie.</PF_ReunitedFiance_SubjMale_desc>
+  <PF_ReunitedFiance_SubjFemale_desc>Moja narzeczona, {0}, znów jest przy mnie - i tym razem ślub się odbędzie.</PF_ReunitedFiance_SubjFemale_desc>
+  <PF_ReunitedLover_SubjMale_label>znów razem z ukochanym</PF_ReunitedLover_SubjMale_label>
+  <PF_ReunitedLover_SubjFemale_label>znów razem z ukochaną</PF_ReunitedLover_SubjFemale_label>
+  <PF_ReunitedLover_SubjMale_desc>{0} znów jest przy mnie. Tym razem nie pozwolę mu odejść.</PF_ReunitedLover_SubjMale_desc>
+  <PF_ReunitedLover_SubjFemale_desc>{0} znów jest przy mnie. Tym razem nie pozwolę jej odejść.</PF_ReunitedLover_SubjFemale_desc>
+  <PF_ReunitedParent_SubjMale_label>znów razem z ojcem</PF_ReunitedParent_SubjMale_label>
+  <PF_ReunitedParent_SubjFemale_label>znów razem z matką</PF_ReunitedParent_SubjFemale_label>
+  <PF_ReunitedParent_SubjMale_desc>Po tylu latach znów jestem z tatą, {0}. To jak powrót do domu.</PF_ReunitedParent_SubjMale_desc>
+  <PF_ReunitedParent_SubjFemale_desc>Po tylu latach znów jestem z mamą, {0}. To jak powrót do domu.</PF_ReunitedParent_SubjFemale_desc>
+  <PF_ReunitedChild_SubjMale_label>znów razem z synem</PF_ReunitedChild_SubjMale_label>
+  <PF_ReunitedChild_SubjFemale_label>znów razem z córką</PF_ReunitedChild_SubjFemale_label>
+  <PF_ReunitedChild_SubjMale_desc>Mój syn, {0}, znów jest przy mnie. Myśl o nim nigdy mnie nie opuściła.</PF_ReunitedChild_SubjMale_desc>
+  <PF_ReunitedChild_SubjFemale_desc>Moja córka, {0}, znów jest przy mnie. Myśl o niej nigdy mnie nie opuściła.</PF_ReunitedChild_SubjFemale_desc>
+  <PF_ReunitedSibling_SubjMale_label>znów razem z bratem</PF_ReunitedSibling_SubjMale_label>
+  <PF_ReunitedSibling_SubjFemale_label>znów razem z siostrą</PF_ReunitedSibling_SubjFemale_label>
+  <PF_ReunitedSibling_SubjMale_desc>{0} i ja znów jesteśmy razem, zupełnie jak w dzieciństwie. Dobrze mieć brata z powrotem.</PF_ReunitedSibling_SubjMale_desc>
+  <PF_ReunitedSibling_SubjFemale_desc>{0} i ja znów jesteśmy razem, zupełnie jak w dzieciństwie. Dobrze mieć siostrę z powrotem.</PF_ReunitedSibling_SubjFemale_desc>
+  <PF_ReunitedFriend_SubjMale_label>odchodzę z przyjacielem</PF_ReunitedFriend_SubjMale_label>
+  <PF_ReunitedFriend_SubjFemale_label>odchodzę z przyjaciółką</PF_ReunitedFriend_SubjFemale_label>
+  <PF_ReunitedFriend_SubjMale_desc>Odchodzę razem z {0}. Dla takiego przyjaciela warto zacząć od nowa.</PF_ReunitedFriend_SubjMale_desc>
+  <PF_ReunitedFriend_SubjFemale_desc>Odchodzę razem z {0}. Dla takiej przyjaciółki warto zacząć od nowa.</PF_ReunitedFriend_SubjFemale_desc>
+
+  <!-- Rozmowy podczas wizyty (PF_VisitMeeting) -->
+  <PF_GoodToSeeVisitor_SubjMale_label>dobrze było znów zobaczyć {0}</PF_GoodToSeeVisitor_SubjMale_label>
+  <PF_GoodToSeeVisitor_SubjFemale_label>dobrze było znów zobaczyć {0}</PF_GoodToSeeVisitor_SubjFemale_label>
+  <PF_GoodToSeeVisitor_SubjMale_desc>{0} przyjechał z gośćmi i w końcu udało się nam porozmawiać. Moje miejsce jest tutaj, ale dobrze było go znów zobaczyć.</PF_GoodToSeeVisitor_SubjMale_desc>
+  <PF_GoodToSeeVisitor_SubjFemale_desc>{0} przyjechała z gośćmi i w końcu udało się nam porozmawiać. Moje miejsce jest tutaj, ale dobrze było ją znów zobaczyć.</PF_GoodToSeeVisitor_SubjFemale_desc>
+  <PF_SnubbedByVisitor_SubjMale_label>zlekceważenie podczas wizyty</PF_SnubbedByVisitor_SubjMale_label>
+  <PF_SnubbedByVisitor_SubjFemale_label>zlekceważenie podczas wizyty</PF_SnubbedByVisitor_SubjFemale_label>
+  <PF_SnubbedByVisitor_SubjMale_desc>Podczas wizyty {0} prawie nie miał dla mnie czasu. A wydawało mi się, że tyle dla siebie znaczymy.</PF_SnubbedByVisitor_SubjMale_desc>
+  <PF_SnubbedByVisitor_SubjFemale_desc>Podczas wizyty {0} prawie nie miała dla mnie czasu. A wydawało mi się, że tyle dla siebie znaczymy.</PF_SnubbedByVisitor_SubjFemale_desc>
+
+</LanguageData>

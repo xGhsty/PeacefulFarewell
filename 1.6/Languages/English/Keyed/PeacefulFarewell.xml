@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- Join request letters, one set per bond (FarewellUtility.JoinBond).
+       Args: PAWN, RELATED, {2} = faction name, RELATION = relation label
+       (OtherFamily only). Variant counts must match
+       FarewellUtility.JoinRequestVariantCount: Friend 4, every other bond 3.
+       PF_JoinRequestFooter is appended to every variant. -->
+  <PF_JoinRequestLabel>Request to leave</PF_JoinRequestLabel>
+  <PF_JoinRequestLabel_Partner>Love found again</PF_JoinRequestLabel_Partner>
+  <PF_JoinRequestLabel_Family>Family reunion</PF_JoinRequestLabel_Family>
+  <!-- Appended to the join request when it came out of visit talks
+       (PF_VisitMeeting). 3 variants. -->
+  <PF_JoinRequestAfterTalks0>This didn't come out of nowhere: {PAWN_nameDef} and {RELATED_nameDef} spent hours talking during the visit, and {PAWN_nameDef} has thought it through.</PF_JoinRequestAfterTalks0>
+  <PF_JoinRequestAfterTalks1>It's not a sudden whim. Every time {PAWN_nameDef} came back from talking with {RELATED_nameDef}, {PAWN_pronoun} was a little quieter, a little more certain.</PF_JoinRequestAfterTalks1>
+  <PF_JoinRequestAfterTalks2>After several long conversations with {RELATED_nameDef} over the course of the visit, {PAWN_nameDef} has made up {PAWN_possessive} mind.</PF_JoinRequestAfterTalks2>
+  <PF_JoinRequestFooter>If you allow it, {PAWN_nameDef} will join the {2} right away, walk over to the visitors and leave together with them. If you refuse, {PAWN_nameDef} will be a bit upset about it.</PF_JoinRequestFooter>
+
+  <PF_JoinRequest_Spouse_Text0>{PAWN_nameDef} froze the moment the visitors from the {2} arrived. Among them was {RELATED_nameDef} - {PAWN_possessive} {RELATED_gender ? husband : wife}, whom {PAWN_pronoun} had long stopped hoping to see again. {PAWN_nameDef} wants to leave the colony and go back to the life they once shared.</PF_JoinRequest_Spouse_Text0>
+  <PF_JoinRequest_Spouse_Text1>"I made a vow," {PAWN_nameDef} tells you quietly, eyes fixed on {RELATED_nameDef} across the yard. "Whatever happened since, that's still my {RELATED_gender ? husband : wife}." {PAWN_nameDef} wants to leave with {RELATED_objective} and join the {2}.</PF_JoinRequest_Spouse_Text1>
+  <PF_JoinRequest_Spouse_Text2>Since the visitors arrived, {PAWN_nameDef} hasn't left {RELATED_nameDef}'s side for a moment. The rim tore them apart, but fate let them find each other again. {PAWN_nameDef} asks to leave the colony and join the {2}, next to {PAWN_possessive} {RELATED_gender ? husband : wife}.</PF_JoinRequest_Spouse_Text2>
+
+  <PF_JoinRequest_Fiance_Text0>{RELATED_nameDef}, {PAWN_nameDef}'s {RELATED_gender ? fiancé : fiancée}, arrived with the {2}. The wedding they planned never happened - but {PAWN_nameDef} wants a second chance at it, and asks to leave the colony with {RELATED_objective}.</PF_JoinRequest_Fiance_Text0>
+  <PF_JoinRequest_Fiance_Text1>"There was supposed to be a wedding," {PAWN_nameDef} says, unable to stop smiling. "{RELATED_nameDef} still wants it. So do I." {PAWN_nameDef} asks for permission to leave and join the {2}.</PF_JoinRequest_Fiance_Text1>
+  <PF_JoinRequest_Fiance_Text2>The ring {PAWN_nameDef} kept all this time finally means something again: {RELATED_nameDef} is here, with the {2}. {PAWN_nameDef} wants to go with {RELATED_objective} and finally start the life they promised each other.</PF_JoinRequest_Fiance_Text2>
+
+  <PF_JoinRequest_Lover_Text0>{PAWN_nameDef} spotted {RELATED_nameDef} among the visitors and hasn't thought of anything else since. What was once between them is still there. {PAWN_nameDef} wants to leave the colony and join the {2} to be with {RELATED_objective}.</PF_JoinRequest_Lover_Text0>
+  <PF_JoinRequest_Lover_Text1>"I thought I'd lost {RELATED_objective} for good," {PAWN_nameDef} admits, watching {RELATED_nameDef} by the visitors' packs. "I'm not losing {RELATED_objective} twice." {PAWN_nameDef} asks to leave with the {2}.</PF_JoinRequest_Lover_Text1>
+  <PF_JoinRequest_Lover_Text2>{PAWN_nameDef} spent the whole visit at {RELATED_nameDef}'s side, and nobody in the colony could miss it. {PAWN_nameDef} wants to follow {PAWN_possessive} heart and leave with the {2}.</PF_JoinRequest_Lover_Text2>
+
+  <PF_JoinRequest_Parent_Text0>Among the visitors from the {2} is {RELATED_nameDef} - {PAWN_nameDef}'s {RELATED_gender ? father : mother}. After all these years apart, {PAWN_nameDef} wants to leave the colony and be with family again.</PF_JoinRequest_Parent_Text0>
+  <PF_JoinRequest_Parent_Text1>{PAWN_nameDef} recognized the voice before {PAWN_pronoun} even saw the face: {RELATED_nameDef}, {PAWN_possessive} {RELATED_gender ? father : mother}, traveling with the {2}. {PAWN_nameDef} asks to leave and go with {RELATED_objective}.</PF_JoinRequest_Parent_Text1>
+  <PF_JoinRequest_Parent_Text2>"I always wondered whether {RELATED_gender ? Dad : Mom} was still alive," {PAWN_nameDef} says, voice unsteady. {RELATED_nameDef} is here with the {2}, and {PAWN_nameDef} wants to leave with {RELATED_objective}.</PF_JoinRequest_Parent_Text2>
+
+  <PF_JoinRequest_Child_Text0>{RELATED_nameDef}, {PAWN_nameDef}'s {RELATED_gender ? son : daughter}, has come with the {2}. No parent passes up a chance like this - {PAWN_nameDef} wants to leave the colony and stay by {RELATED_possessive} side.</PF_JoinRequest_Child_Text0>
+  <PF_JoinRequest_Child_Text1>{PAWN_nameDef} hasn't taken {PAWN_possessive} eyes off {RELATED_nameDef} since the visitors arrived. {PAWN_nameDef}'s {RELATED_gender ? son : daughter} has a life among the {2} now - and {PAWN_nameDef} wants to be part of it again.</PF_JoinRequest_Child_Text1>
+  <PF_JoinRequest_Child_Text2>"I wasn't there for {RELATED_objective} once," {PAWN_nameDef} tells you. "I want to be now." {PAWN_nameDef} asks to leave with {PAWN_possessive} {RELATED_gender ? son : daughter}, {RELATED_nameDef}, and join the {2}.</PF_JoinRequest_Child_Text2>
+
+  <PF_JoinRequest_Sibling_Text0>{RELATED_nameDef}, {PAWN_nameDef}'s {RELATED_gender ? brother : sister}, is among the visitors from the {2}. Their talk went on late into the night, and now {PAWN_nameDef} wants to leave the colony and stay with {RELATED_objective}.</PF_JoinRequest_Sibling_Text0>
+  <PF_JoinRequest_Sibling_Text1>It took only minutes before {PAWN_nameDef} was joking with {PAWN_possessive} {RELATED_gender ? brother : sister} again, as if not a single year had passed. {PAWN_nameDef} asks to leave with {RELATED_nameDef} and the {2}.</PF_JoinRequest_Sibling_Text1>
+  <PF_JoinRequest_Sibling_Text2>"Family is family," {PAWN_nameDef} says simply, nodding toward {RELATED_nameDef} - {PAWN_possessive} {RELATED_gender ? brother : sister}, here with the {2}. {PAWN_nameDef} wants to go with {RELATED_objective}.</PF_JoinRequest_Sibling_Text2>
+
+  <PF_JoinRequest_OtherFamily_Text0>{PAWN_nameDef} found family among the visitors: {RELATED_nameDef} ({RELATION}) is traveling with the {2}. {PAWN_nameDef} wants to leave the colony and stay with {RELATED_objective}.</PF_JoinRequest_OtherFamily_Text0>
+  <PF_JoinRequest_OtherFamily_Text1>{PAWN_nameDef} spent the visit with {RELATED_nameDef} ({RELATION}), trading stories about relatives and old times. Now {PAWN_pronoun} asks to leave with the {2}, to be closer to what's left of {PAWN_possessive} family.</PF_JoinRequest_OtherFamily_Text1>
+  <PF_JoinRequest_OtherFamily_Text2>Blood ties run deep. {PAWN_nameDef} wants to leave the colony with {RELATED_nameDef} ({RELATION}) and join the {2}.</PF_JoinRequest_OtherFamily_Text2>
+
+  <PF_JoinRequest_Friend_Text0>{PAWN_nameDef} has noticed {RELATED_nameDef}, a close friend, among the visitors and wants to leave the colony to join the {2} together with {RELATED_objective}.</PF_JoinRequest_Friend_Text0>
+  <PF_JoinRequest_Friend_Text1>{PAWN_nameDef} spent the whole visit talking with {RELATED_nameDef}, and now can't stop thinking about it. {PAWN_nameDef} would rather spend {PAWN_possessive} life among the {2} than stay here.</PF_JoinRequest_Friend_Text1>
+  <PF_JoinRequest_Friend_Text2>{PAWN_nameDef} approaches you, nervous but resolute. "I've made up my mind. {RELATED_nameDef} asked me to come along, to the {2}. I want to go."</PF_JoinRequest_Friend_Text2>
+  <PF_JoinRequest_Friend_Text3>{PAWN_nameDef} catches you before the visitors leave. "{RELATED_nameDef} and I talked. Really talked. I haven't had a friend like that in years." {PAWN_nameDef} wants to go with the {2}.</PF_JoinRequest_Friend_Text3>
+
+  <PF_AcceptButton>Let them go</PF_AcceptButton>
+  <PF_RejectButton>Refuse</PF_RejectButton>
+  <PF_CannotAccept_ColonistUnavailable>That colonist is no longer available.</PF_CannotAccept_ColonistUnavailable>
+  <PF_AlreadyDecided>A decision has already been made for this request.</PF_AlreadyDecided>
+
+  <PF_DepartureFailedLabel>Departure interrupted</PF_DepartureFailedLabel>
+  <PF_DepartureFailedText>{PAWN_nameDef} agreed to leave, but something more pressing got in the way before they could set off. They're still part of the colony - if you want them to leave, you'll need to wait for a new request or trigger one again.</PF_DepartureFailedText>
+
+  <PF_LetterLabel>Peaceful farewell</PF_LetterLabel>
+  <PF_LetterText0>{PAWN_nameDef} has left the colony and joined the {1}.</PF_LetterText0>
+  <PF_LetterText1>{PAWN_nameDef} said their goodbyes and walked off to start a new life with the {1}.</PF_LetterText1>
+  <PF_LetterText2>{PAWN_nameDef} is gone. Their bed is empty, but everyone agrees it was the right choice - they've joined the {1} now.</PF_LetterText2>
+  <PF_LetterText3>The colony feels a little quieter today. {PAWN_nameDef} has left to make a home among the {1}.</PF_LetterText3>
+
+  <PF_Setting_Section_VisitJoin>Leaving to join visitors (other-faction relation)</PF_Setting_Section_VisitJoin>
+  <PF_Setting_VisitTalksDesc>A colonist with a close relation or friend among friendly visitors will go over and talk with them a few times during the visit. Whether they then ask to leave depends on how those talks went, their bond, their mood and the people they'd leave behind.</PF_Setting_VisitTalksDesc>
+  <PF_Setting_VisitTalksLabel>Talks with the visitor before deciding: {0}</PF_Setting_VisitTalksLabel>
+  <PF_Setting_MinImportanceLabel>Minimum relation importance required: {0}</PF_Setting_MinImportanceLabel>
+  <PF_Setting_Section_Debug>Diagnostics</PF_Setting_Section_Debug>
+  <PF_Setting_DebugModeLabel>Debug mode</PF_Setting_DebugModeLabel>
+  <PF_Setting_DebugModeTooltip>Logs candidate search details to the console/log every check. Useful for troubleshooting why no request appears.</PF_Setting_DebugModeTooltip>
+  <PF_Setting_CustomFileLoggingLabel>Write log file to mod folder</PF_Setting_CustomFileLoggingLabel>
+  <PF_Setting_CustomFileLoggingTooltip>Writes a plain-text CustomLog.txt with only PeacefulFarewell's own log lines to this mod's folder, so it's easy to find and share without digging through Player.log. Enable Debug mode above too for the most detail.</PF_Setting_CustomFileLoggingTooltip>
+  <PF_Setting_OpenLogFolderButton>Open mod folder</PF_Setting_OpenLogFolderButton>
+  <PF_Setting_GenerateReportButton>Generate and open report</PF_Setting_GenerateReportButton>
+  <PF_Setting_ReportGeneratedMessage>Report generated: {0}</PF_Setting_ReportGeneratedMessage>
+  <PF_Setting_ReportFailedMessage>Failed to generate report - see Player.log for details.</PF_Setting_ReportFailedMessage>
+  <PF_Setting_ViewWanderersButton>View wanderers in world</PF_Setting_ViewWanderersButton>
+  <PF_Setting_ViewWanderersNoGameMessage>No active game to inspect - load a save first.</PF_Setting_ViewWanderersNoGameMessage>
+
+  <PF_Overview_Title>Peaceful Farewell - Wanderer Overview</PF_Overview_Title>
+  <PF_Overview_NoWorld>No active world to inspect.</PF_Overview_NoWorld>
+  <PF_Overview_None>(none)</PF_Overview_None>
+  <PF_Overview_NoFaction>none</PF_Overview_NoFaction>
+  <PF_Overview_Section_Wandering>Currently wandering ({0})</PF_Overview_Section_Wandering>
+  <PF_Overview_Section_Settled>Settled, writing home ({0})</PF_Overview_Section_Settled>
+  <PF_Overview_ForceDecision>fate decided next check</PF_Overview_ForceDecision>
+  <PF_Overview_ResolveChance>{0}% chance next check</PF_Overview_ResolveChance>
+  <PF_Overview_NextLetterInDays>next letter in {0}d</PF_Overview_NextLetterInDays>
+  <PF_Overview_WanderingCardSub>{0} - tracked {1}d</PF_Overview_WanderingCardSub>
+  <PF_Overview_JumpToSettlement>Jump to {0}</PF_Overview_JumpToSettlement>
+  <PF_Overview_DepartedOn>Departed: {0}</PF_Overview_DepartedOn>
+  <PF_Overview_DaysAgoFallback>{0}d ago</PF_Overview_DaysAgoFallback>
+
+  <PF_LonelinessRequestLabel>Not feeling welcome</PF_LonelinessRequestLabel>
+  <PF_LonelinessRequestText0>{PAWN_nameDef} feels disliked by everyone else in the colony and wants to leave to find somewhere they belong.\n\nIf you allow it, {PAWN_nameDef} will walk off and try their luck in the world. If you refuse, {PAWN_nameDef} will be a bit upset about it.</PF_LonelinessRequestText0>
+  <PF_LonelinessRequestText1>{PAWN_nameDef} has been eating alone again. Nobody sits with them, nobody asks how they're doing. They've decided that if no one here wants them around, they'll go find somewhere that does.\n\nIf you allow it, {PAWN_nameDef} will walk off and try their luck in the world. If you refuse, {PAWN_nameDef} will be a bit upset about it.</PF_LonelinessRequestText1>
+  <PF_LonelinessRequestText2>"I don't think I belong here," {PAWN_nameDef} says quietly, not quite meeting your eyes. "I don't think anyone would notice if I left." They mean it as a statement of fact, not a plea.\n\nIf you allow it, {PAWN_nameDef} will walk off and try their luck in the world. If you refuse, {PAWN_nameDef} will be a bit upset about it.</PF_LonelinessRequestText2>
+  <PF_LonelinessRequestText3>{PAWN_nameDef} has stopped trying to make conversation. It's easier that way, they've told themself, than being ignored again. Now they're ready to leave and see if the world is kinder.\n\nIf you allow it, {PAWN_nameDef} will walk off and try their luck in the world. If you refuse, {PAWN_nameDef} will be a bit upset about it.</PF_LonelinessRequestText3>
+  <PF_LonelinessRequestText4>You find {PAWN_nameDef} packing a small bag. "It's not anyone's fault," they say, "I just don't think I fit in here. Maybe somewhere else I will."\n\nIf you allow it, {PAWN_nameDef} will walk off and try their luck in the world. If you refuse, {PAWN_nameDef} will be a bit upset about it.</PF_LonelinessRequestText4>
+
+  <PF_WandererReturnedLabel>Returned to the colony</PF_WandererReturnedLabel>
+  <PF_WandererReturnedText0>{PAWN_nameDef} has returned to the colony after wandering the world alone.</PF_WandererReturnedText0>
+  <PF_WandererReturnedText1>A familiar silhouette approaches the gate. It's {PAWN_nameDef}, road-worn but alive, back from their time wandering the world.</PF_WandererReturnedText1>
+  <PF_WandererReturnedText2>{PAWN_nameDef} is back. They don't say much about where they've been, only that they're glad to see these walls again.</PF_WandererReturnedText2>
+  <PF_WandererReturnedText3>The world outside wasn't what {PAWN_nameDef} was looking for. They've come back to the colony, ready to settle in again.</PF_WandererReturnedText3>
+
+  <PF_WandererJoinedFactionLabel>Found a new home</PF_WandererJoinedFactionLabel>
+  <PF_WandererJoinedFactionText0>{PAWN_nameDef}, who left the colony to wander the world, has settled down and joined the {1}.</PF_WandererJoinedFactionText0>
+  <PF_WandererJoinedFactionText1>Word reaches the colony: {PAWN_nameDef} has stopped wandering at last, taking up a new life among the {1}.</PF_WandererJoinedFactionText1>
+  <PF_WandererJoinedFactionText2>{PAWN_nameDef} found what they were looking for. They've settled down permanently with the {1}.</PF_WandererJoinedFactionText2>
+  <PF_WandererJoinedFactionText3>The road has ended for {PAWN_nameDef}, at least for now - they've put down roots with the {1}.</PF_WandererJoinedFactionText3>
+
+  <PF_WandererJoinedHostileFactionLabel>Word from a traitor</PF_WandererJoinedHostileFactionLabel>
+  <PF_WandererJoinedHostileFactionText0>A message reaches the colony, signed with {PAWN_nameDef}'s name: they've joined the {1}. There's no regret in it for what they left behind - only a promise that you'll meet again.</PF_WandererJoinedHostileFactionText0>
+  <PF_WandererJoinedHostileFactionText1>{PAWN_nameDef} didn't run from the world - they ran from you. They wear the colors of the {1} now, and the word they've sent back reads like a threat.</PF_WandererJoinedHostileFactionText1>
+  <PF_WandererJoinedHostileFactionText2>Someone claiming to speak for {PAWN_nameDef} delivers a short message to the colony: they joined the {1} of their own free will. Sooner or later, you'll find out what that means.</PF_WandererJoinedHostileFactionText2>
+  <PF_WandererJoinedHostileFactionText3>Whatever {PAWN_nameDef} felt for the colony, it curdled into something that finally found a home. They've joined the {1} - and they swear they'll be back, just not alone.</PF_WandererJoinedHostileFactionText3>
+
+  <PF_WandererMissingLabel>No word</PF_WandererMissingLabel>
+  <PF_WandererMissingText0>No word has come of {PAWN_nameDef} since they left to wander the world. Whatever became of them, they aren't coming back.</PF_WandererMissingText0>
+  <PF_WandererMissingText1>Traders passing through say they heard a name that might have been {PAWN_nameDef}'s, attached to a story nobody could confirm. It's the last anyone hears of them.</PF_WandererMissingText1>
+  <PF_WandererMissingText2>{PAWN_nameDef}'s trail goes cold somewhere beyond the colony's reach. No letter, no traveler's account, nothing. Just silence.</PF_WandererMissingText2>
+  <PF_WandererMissingText3>Whatever {PAWN_nameDef} found out there, it wasn't a way back home.</PF_WandererMissingText3>
+  <PF_WandererMissingText4>The colony waits for news of {PAWN_nameDef} that never comes.</PF_WandererMissingText4>
+
+  <PF_Setting_Section_Loneliness>Leaving out of loneliness (not feeling welcome)</PF_Setting_Section_Loneliness>
+  <PF_Setting_LonelinessChanceLabel>Chance a disliked colonist wants to leave, per check: {0}</PF_Setting_LonelinessChanceLabel>
+  <PF_Setting_LonelinessAvgOpinionLabel>Average opinion from others must be below: {0}</PF_Setting_LonelinessAvgOpinionLabel>
+  <PF_Setting_LonelinessMaxSingleOpinionLabel>No single colonist's opinion may be above: {0}</PF_Setting_LonelinessMaxSingleOpinionLabel>
+  <PF_Setting_LonelinessMinDaysInColonyLabel>Minimum days in the colony before this can trigger: {0}</PF_Setting_LonelinessMinDaysInColonyLabel>
+  <PF_Setting_Section_Wanderer>Wanderer's fate after leaving the colony</PF_Setting_Section_Wanderer>
+  <PF_Setting_WandererMinCheckDaysLabel>Earliest a wanderer's fate can be decided: {0} days</PF_Setting_WandererMinCheckDaysLabel>
+  <PF_Setting_WandererMaxCheckDaysLabel>A wanderer's fate is guaranteed decided by: {0} days</PF_Setting_WandererMaxCheckDaysLabel>
+  <PF_Setting_WandererJoinedFactionLetterLabel>Notify when a wanderer joins a faction</PF_Setting_WandererJoinedFactionLetterLabel>
+  <PF_Setting_WandererJoinedFactionLetterTooltip>Sends a letter when a colonist who left out of loneliness settles down permanently with another faction.</PF_Setting_WandererJoinedFactionLetterTooltip>
+
+  <PF_WanderlustRequestLabel>Wanderlust</PF_WanderlustRequestLabel>
+  <PF_WanderlustRequestText0>{PAWN_nameDef} is a young adult now, and dreams of seeing what lies beyond the colony.\n\nIf you allow it, {PAWN_nameDef} will walk off and try their luck in the world. If you refuse, {PAWN_nameDef} will be a bit upset about it.</PF_WanderlustRequestText0>
+  <PF_WanderlustRequestText1>{PAWN_nameDef} has taken to standing at the colony's edge, staring at the horizon. They've grown up within these walls, and now they want to know what's beyond them.\n\nIf you allow it, {PAWN_nameDef} will walk off and try their luck in the world. If you refuse, {PAWN_nameDef} will be a bit upset about it.</PF_WanderlustRequestText1>
+  <PF_WanderlustRequestText2>"I've lived here my whole life," {PAWN_nameDef} says, "and I've never seen anything else." It isn't a complaint, just a fact they can no longer ignore. They want to go looking.\n\nIf you allow it, {PAWN_nameDef} will walk off and try their luck in the world. If you refuse, {PAWN_nameDef} will be a bit upset about it.</PF_WanderlustRequestText2>
+  <PF_WanderlustRequestText3>{PAWN_nameDef} is an adult now, and the colony that once felt like the whole world suddenly feels very small. They want to find out what else is out there.\n\nIf you allow it, {PAWN_nameDef} will walk off and try their luck in the world. If you refuse, {PAWN_nameDef} will be a bit upset about it.</PF_WanderlustRequestText3>
+  <PF_WanderlustRequestText4>You catch {PAWN_nameDef} sketching a map from half-remembered traders' stories, routes to places they've never seen. When you ask about it, they admit they've been thinking of leaving to see it all firsthand.\n\nIf you allow it, {PAWN_nameDef} will walk off and try their luck in the world. If you refuse, {PAWN_nameDef} will be a bit upset about it.</PF_WanderlustRequestText4>
+
+  <PF_WanderlustRequestReturningText0>{PAWN_nameDef} has been quiet lately, thinking back on the journey they once took. They wonder if anything out there has changed since - and whether it's time to go find out.\n\nIf you allow it, {PAWN_nameDef} will walk off and try their luck in the world again. If you refuse, {PAWN_nameDef} will be a bit upset about it.</PF_WanderlustRequestReturningText0>
+  <PF_WanderlustRequestReturningText1>{PAWN_nameDef} still thinks about the road sometimes. Coming back was the right choice, but lately they've caught themselves wondering what's changed out there since they left it behind.\n\nIf you allow it, {PAWN_nameDef} will walk off and try their luck in the world again. If you refuse, {PAWN_nameDef} will be a bit upset about it.</PF_WanderlustRequestReturningText1>
+  <PF_WanderlustRequestReturningText2>"I keep thinking about it," {PAWN_nameDef} admits. "Not because I regret coming back - I just wonder what's different now." The old itch to travel has returned.\n\nIf you allow it, {PAWN_nameDef} will walk off and try their luck in the world again. If you refuse, {PAWN_nameDef} will be a bit upset about it.</PF_WanderlustRequestReturningText2>
+  <PF_WanderlustRequestReturningText3>{PAWN_nameDef} has been telling old stories about their journey again lately - and each telling seems to leave them a little more restless. Maybe one more trip, just to see what's changed.\n\nIf you allow it, {PAWN_nameDef} will walk off and try their luck in the world again. If you refuse, {PAWN_nameDef} will be a bit upset about it.</PF_WanderlustRequestReturningText3>
+  <PF_WanderlustRequestReturningText4>You find {PAWN_nameDef} looking over the same half-remembered routes from before, tracing them again with a finger. They never really stopped thinking about the road - and they'd like to see how much of it has changed.\n\nIf you allow it, {PAWN_nameDef} will walk off and try their luck in the world again. If you refuse, {PAWN_nameDef} will be a bit upset about it.</PF_WanderlustRequestReturningText4>
+
+  <PF_Setting_Section_Wanderlust>Wanderlust (young adults)</PF_Setting_Section_Wanderlust>
+  <PF_Setting_WanderlustEnabledLabel>Enable young adult wanderlust</PF_Setting_WanderlustEnabledLabel>
+  <PF_Setting_WanderlustEnabledTooltip>Lets colonists aged 13 to 18 occasionally ask to leave the colony to go see the world, independent of relations or loneliness.</PF_Setting_WanderlustEnabledTooltip>
+  <PF_Setting_WanderlustChanceLabel>Chance a young adult wants to wander off, per day: {0}</PF_Setting_WanderlustChanceLabel>
+
+  <PF_Setting_Section_LetterFromAfar>Letters from afar (settled wanderers)</PF_Setting_Section_LetterFromAfar>
+  <PF_Setting_LetterFromAfarEnabledLabel>Enable letters from afar</PF_Setting_LetterFromAfarEnabledLabel>
+  <PF_Setting_LetterFromAfarEnabledTooltip>Lets a colonist who left and settled down with a friendly faction occasionally send a letter back to a loved one still in the colony.</PF_Setting_LetterFromAfarEnabledTooltip>
+
+  <PF_MissingSituationLabel>Missing</PF_MissingSituationLabel>
+
+  <PF_LetterFromAfarLabel>A letter arrived</PF_LetterFromAfarLabel>
+  <PF_LetterFromAfarText0>A traveling trader hands {RECIPIENT_nameDef} a folded, well-worn letter. It's from {PAWN_nameDef} - they've settled in well, and wanted {RECIPIENT_nameDef} to know they're happy, and that they think of them often.</PF_LetterFromAfarText0>
+  <PF_LetterFromAfarText1>{RECIPIENT_nameDef} finds a letter waiting among the traded goods. {PAWN_nameDef} writes about the little details of their new life - the weather, a joke someone told, nothing important, and somehow that's exactly what makes it feel like them.</PF_LetterFromAfarText1>
+  <PF_LetterFromAfarText2>A letter from {PAWN_nameDef} finally reaches {RECIPIENT_nameDef}, months after it must have been written. It ends simply: "I'm doing fine. I hope you are too."</PF_LetterFromAfarText2>
+  <PF_LetterFromAfarText3>{RECIPIENT_nameDef} recognizes the handwriting before even opening the letter. {PAWN_nameDef} writes that leaving was the right choice, and that not a day goes by without thinking of the people back home.</PF_LetterFromAfarText3>
+  <PF_LetterFromAfarText4>Tucked inside a merchant's delivery is a short note addressed to {RECIPIENT_nameDef}. {PAWN_nameDef} kept it brief - they're safe, they're well, and they miss home more than they expected to.</PF_LetterFromAfarText4>
+  <PF_LetterFromAfarText5>News arrives in the form of a letter for {RECIPIENT_nameDef}. {PAWN_nameDef}'s new life sounds nothing like the one they left, but their words carry the same warmth {RECIPIENT_nameDef} remembers.</PF_LetterFromAfarText5>
+
+  <!-- Reunion thoughts (PF_Reunited*): gender of the visitor ({0}) picks the noun. -->
+  <PF_ReunitedSpouse_SubjMale_label>together with my husband again</PF_ReunitedSpouse_SubjMale_label>
+  <PF_ReunitedSpouse_SubjFemale_label>together with my wife again</PF_ReunitedSpouse_SubjFemale_label>
+  <PF_ReunitedSpouse_SubjMale_desc>{0}, my husband, found me again. Whatever comes next, we'll face it side by side.</PF_ReunitedSpouse_SubjMale_desc>
+  <PF_ReunitedSpouse_SubjFemale_desc>{0}, my wife, found me again. Whatever comes next, we'll face it side by side.</PF_ReunitedSpouse_SubjFemale_desc>
+  <PF_ReunitedFiance_SubjMale_label>reunited with my fiancé</PF_ReunitedFiance_SubjMale_label>
+  <PF_ReunitedFiance_SubjFemale_label>reunited with my fiancée</PF_ReunitedFiance_SubjFemale_label>
+  <PF_ReunitedFiance_SubjMale_desc>My fiancé, {0}, and I are together again - and this time, there will be a wedding.</PF_ReunitedFiance_SubjMale_desc>
+  <PF_ReunitedFiance_SubjFemale_desc>My fiancée, {0}, and I are together again - and this time, there will be a wedding.</PF_ReunitedFiance_SubjFemale_desc>
+  <PF_ReunitedParent_SubjMale_label>reunited with my father</PF_ReunitedParent_SubjMale_label>
+  <PF_ReunitedParent_SubjFemale_label>reunited with my mother</PF_ReunitedParent_SubjFemale_label>
+  <PF_ReunitedParent_SubjMale_desc>After all these years, I'm with my father, {0}, again. It feels like coming home.</PF_ReunitedParent_SubjMale_desc>
+  <PF_ReunitedParent_SubjFemale_desc>After all these years, I'm with my mother, {0}, again. It feels like coming home.</PF_ReunitedParent_SubjFemale_desc>
+  <PF_ReunitedChild_SubjMale_label>reunited with my son</PF_ReunitedChild_SubjMale_label>
+  <PF_ReunitedChild_SubjFemale_label>reunited with my daughter</PF_ReunitedChild_SubjFemale_label>
+  <PF_ReunitedChild_SubjMale_desc>My son, {0}, is with me again. I never stopped thinking about him.</PF_ReunitedChild_SubjMale_desc>
+  <PF_ReunitedChild_SubjFemale_desc>My daughter, {0}, is with me again. I never stopped thinking about her.</PF_ReunitedChild_SubjFemale_desc>
+  <PF_ReunitedSibling_SubjMale_label>reunited with my brother</PF_ReunitedSibling_SubjMale_label>
+  <PF_ReunitedSibling_SubjFemale_label>reunited with my sister</PF_ReunitedSibling_SubjFemale_label>
+  <PF_ReunitedSibling_SubjMale_desc>{0} and I are together again, just like when we were kids. It's good to have my brother back.</PF_ReunitedSibling_SubjMale_desc>
+  <PF_ReunitedSibling_SubjFemale_desc>{0} and I are together again, just like when we were kids. It's good to have my sister back.</PF_ReunitedSibling_SubjFemale_desc>
+
+</LanguageData>
