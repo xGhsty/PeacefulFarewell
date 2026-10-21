@@ -163,7 +163,6 @@ namespace PeacefulFarewell
                 FarewellUtility.ApplyJoinVisitingFactionThoughts(pawn);
                 Job exitJob = JobMaker.MakeJob(JobDefOf.Goto, exitSpot);
                 exitJob.exitMapOnArrival = true;
-                exitJob.locomotionUrgency = LocomotionUrgency.Walk;
                 pawn.jobs.jobQueue.EnqueueFirst(exitJob);
                 if (PeacefulFarewellMod.Settings.debugMode)
                 {

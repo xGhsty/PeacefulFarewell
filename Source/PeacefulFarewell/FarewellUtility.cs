@@ -773,61 +773,90 @@ namespace PeacefulFarewell
         // interrupt ordinary work (otherwise they'd rarely happen during a
         // one-day caravan visit), but never sleep, meals, emergencies,
         // anything the player ordered, or while raiders are around.
-        public static bool CanStartVisitTalk(Pawn colonist, Pawn relative)
+        // `forced` (debug "Hurry visitor talks") skips the soft checks -
+        // schedule, needs, current job, lords, threats - and keeps only
+        // what would make the talk physically impossible. `reason` says
+        // what blocked it, for the debug log.
+        public static bool CanStartVisitTalk(Pawn colonist, Pawn relative, bool forced, out string reason)
         {
             Map map = colonist.Map;
             if (map == null || relative.Map != map)
             {
+                reason = "not on the same map";
                 return false;
             }
-            if (colonist.Downed || colonist.Drafted || colonist.InMentalState || !colonist.Awake() || colonist.InBed())
+            if (colonist.Downed || colonist.Drafted || colonist.InMentalState || !colonist.Awake())
             {
+                reason = $"colonist downed={colonist.Downed}, drafted={colonist.Drafted}, mentalState={colonist.InMentalState}, awake={colonist.Awake()}";
                 return false;
             }
-            // Rituals, parties, caravans being formed...
-            if (colonist.GetLord() != null)
-            {
-                return false;
-            }
-            if (colonist.carryTracker?.CarriedThing != null)
-            {
-                return false;
-            }
-            if (colonist.timetable?.CurrentAssignment == TimeAssignmentDefOf.Sleep)
-            {
-                return false;
-            }
-            if (colonist.needs?.food != null && colonist.needs.food.CurCategory >= HungerCategory.UrgentlyHungry)
-            {
-                return false;
-            }
-            if (colonist.needs?.rest != null && colonist.needs.rest.CurCategory >= RestCategory.VeryTired)
-            {
-                return false;
-            }
-
-            Job curJob = colonist.CurJob;
-            if (curJob != null && (curJob.playerForced || !curJob.def.casualInterruptible || NeverInterruptForVisitTalk.Contains(curJob.def)))
-            {
-                return false;
-            }
-
             if (relative.Downed || relative.InMentalState || !relative.Awake() || relative.interactions == null)
             {
+                reason = $"visitor downed={relative.Downed}, mentalState={relative.InMentalState}, awake={relative.Awake()}, interactions={relative.interactions != null}";
                 return false;
             }
-            if (GenHostility.AnyHostileActiveThreatToPlayer(map))
+
+            if (!forced)
             {
+                if (colonist.InBed())
+                {
+                    reason = "colonist in bed";
+                    return false;
+                }
+                // Rituals, parties, caravans being formed...
+                if (colonist.GetLord() != null)
+                {
+                    reason = $"colonist in lord {colonist.GetLord().LordJob?.GetType().Name ?? "null"}";
+                    return false;
+                }
+                if (colonist.carryTracker?.CarriedThing != null)
+                {
+                    reason = $"colonist carrying {colonist.carryTracker.CarriedThing.LabelShort}";
+                    return false;
+                }
+                if (colonist.timetable?.CurrentAssignment == TimeAssignmentDefOf.Sleep)
+                {
+                    reason = "sleep time in schedule";
+                    return false;
+                }
+                if (colonist.needs?.food != null && colonist.needs.food.CurCategory >= HungerCategory.UrgentlyHungry)
+                {
+                    reason = "colonist urgently hungry";
+                    return false;
+                }
+                if (colonist.needs?.rest != null && colonist.needs.rest.CurCategory >= RestCategory.VeryTired)
+                {
+                    reason = "colonist very tired";
+                    return false;
+                }
+
+                Job curJob = colonist.CurJob;
+                if (curJob != null && (curJob.playerForced || !curJob.def.casualInterruptible || NeverInterruptForVisitTalk.Contains(curJob.def)))
+                {
+                    reason = $"colonist job {curJob.def.defName} (playerForced={curJob.playerForced}, casualInterruptible={curJob.def.casualInterruptible})";
+                    return false;
+                }
+
+                if (GenHostility.AnyHostileActiveThreatToPlayer(map))
+                {
+                    reason = "hostile threat on the map";
+                    return false;
+                }
+            }
+
+            if (!colonist.CanReach(relative, PathEndMode.Touch, Danger.Some))
+            {
+                reason = "visitor not reachable";
                 return false;
             }
-            return colonist.CanReach(relative, PathEndMode.Touch, Danger.Some);
+            reason = null;
+            return true;
         }
 
         // Interrupts the colonist's current work (resumed afterwards).
         public static void StartVisitTalk(Pawn colonist, Pawn relative)
         {
             Job job = JobMaker.MakeJob(PF_JobDefOf.PF_TalkWithVisitingRelative, relative);
-            job.locomotionUrgency = LocomotionUrgency.Walk;
             colonist.jobs.StartJob(job, JobCondition.InterruptForced, null, resumeCurJobAfterwards: true);
         }
 
@@ -990,7 +1019,6 @@ namespace PeacefulFarewell
             PF_Job_JoinVisitingFaction job = new PF_Job_JoinVisitingFaction(PF_JobDefOf.PF_JoinVisitingFaction, relatedPawn, targetFaction)
             {
                 lord = visitingLord,
-                locomotionUrgency = LocomotionUrgency.Walk,
                 targetB = ownedBed
             };
 
@@ -1020,7 +1048,7 @@ namespace PeacefulFarewell
             }
 
             GiveReunionThought(colonist, relatedPawn);
-            TrySendBondedAnimalAlong(colonist);
+            TrySendBondedAnimalAlong(colonist, unhurried: false);
         }
 
         private static ThoughtDef ReunionThoughtFor(JoinBond bond)
@@ -1178,7 +1206,7 @@ namespace PeacefulFarewell
             // actually reaches the map edge, since the walk can be interrupted
             // and colonists shouldn't have to wait to react to the departure.
             NotifyColonyAboutLonelinessDeparture(colonist, opinionsBeforeDeparture);
-            TrySendBondedAnimalAlong(colonist);
+            TrySendBondedAnimalAlong(colonist, unhurried: true);
         }
 
         public static void SendLonelinessDeniedThought(Pawn colonist)
@@ -1299,7 +1327,7 @@ namespace PeacefulFarewell
                 return;
             }
 
-            TrySendBondedAnimalAlong(colonist);
+            TrySendBondedAnimalAlong(colonist, unhurried: true);
         }
 
         // Finds a spawned animal on the colonist's map that is bonded to them
@@ -1337,7 +1365,10 @@ namespace PeacefulFarewell
         // follow the colonist to the map edge, purely cosmetic - the colonist's
         // own departure job never waits on it. If the animal isn't close enough
         // when the colonist actually leaves the map, it simply stays behind.
-        public static void TrySendBondedAnimalAlong(Pawn colonist)
+        // `unhurried` matches the owner's pace: the slow walk of a lonely or
+        // wanderlust departure, or the game's default pace when joining
+        // visitors.
+        public static void TrySendBondedAnimalAlong(Pawn colonist, bool unhurried)
         {
             Pawn animal = FindBondedAnimal(colonist);
             if (animal == null || !animal.Spawned)
@@ -1350,7 +1381,10 @@ namespace PeacefulFarewell
             }
 
             Job job = JobMaker.MakeJob(PF_JobDefOf.PF_FollowDepartingOwner, colonist);
-            job.locomotionUrgency = LocomotionUrgency.Walk;
+            if (unhurried)
+            {
+                job.locomotionUrgency = LocomotionUrgency.Walk;
+            }
             bool tookJob = animal.jobs.TryTakeOrderedJob(job, JobTag.Misc);
             if (PeacefulFarewellMod.Settings.debugMode)
             {

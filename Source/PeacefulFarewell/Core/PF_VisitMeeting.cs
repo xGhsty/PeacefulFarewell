@@ -28,6 +28,12 @@ namespace PeacefulFarewell
         public int snubs;
         public bool concluded;
 
+        // Not saved. Set by the debug "Hurry visitor talks" action so the
+        // next talk skips the soft checks in CanStartVisitTalk; lastBlockReason
+        // keeps the debug log from repeating the same reason every check.
+        public bool debugForceNextTalk;
+        public string lastBlockReason;
+
         public void ExposeData()
         {
             Scribe_References.Look(ref colonist, "colonist");

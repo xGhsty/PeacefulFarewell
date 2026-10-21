@@ -656,11 +656,18 @@ namespace PeacefulFarewell
                 {
                     continue;
                 }
-                if (!FarewellUtility.CanStartVisitTalk(meeting.colonist, meeting.relative))
+                if (!FarewellUtility.CanStartVisitTalk(meeting.colonist, meeting.relative, meeting.debugForceNextTalk, out string blockReason))
                 {
+                    if (PeacefulFarewellMod.Settings.debugMode && blockReason != meeting.lastBlockReason)
+                    {
+                        PF_Log.Message($"Visit talk blocked ({blockReason}): {meeting}");
+                    }
+                    meeting.lastBlockReason = blockReason;
                     continue;
                 }
 
+                meeting.lastBlockReason = null;
+                meeting.debugForceNextTalk = false;
                 meeting.nextTalkTick = now + VisitTalkRetryTicks;
                 FarewellUtility.StartVisitTalk(meeting.colonist, meeting.relative);
 
@@ -751,7 +758,8 @@ namespace PeacefulFarewell
         }
 
         // Debug: start meetings on this map right away and make every
-        // undecided meeting there due for its next talk now.
+        // undecided meeting there due for its next talk now, skipping the
+        // soft checks (work, schedule, needs) in CanStartVisitTalk.
         public static int DebugHurryVisitTalks(Map map)
         {
             PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
@@ -767,6 +775,8 @@ namespace PeacefulFarewell
                 if (!meeting.concluded && meeting.colonist?.Map == map)
                 {
                     meeting.nextTalkTick = Find.TickManager.TicksGame;
+                    meeting.debugForceNextTalk = true;
+                    meeting.lastBlockReason = null;
                     count++;
                 }
             }
