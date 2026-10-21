@@ -8,7 +8,9 @@ namespace PeacefulFarewell
 {
     public class PF_Settings : ModSettings
     {
-        public float requestChancePerVisit = 0.07f;
+        // How many talks with the visiting relation/friend happen before
+        // the colonist decides whether to ask to leave (see PF_VisitMeeting).
+        public int visitTalksBeforeDecision = 3;
         public float minRelationImportance = 20f;
         public bool debugMode = false;
         public bool customFileLoggingEnabled = false;
@@ -32,7 +34,7 @@ namespace PeacefulFarewell
         public override void ExposeData()
         {
             base.ExposeData();
-            Scribe_Values.Look(ref requestChancePerVisit, "requestChancePerVisit", 0.07f);
+            Scribe_Values.Look(ref visitTalksBeforeDecision, "visitTalksBeforeDecision", 3);
             Scribe_Values.Look(ref minRelationImportance, "minRelationImportance", 20f);
             Scribe_Values.Look(ref debugMode, "debugMode", false);
             Scribe_Values.Look(ref customFileLoggingEnabled, "customFileLoggingEnabled", false);
@@ -60,8 +62,12 @@ namespace PeacefulFarewell
             listing.Label("PF_Setting_Section_VisitJoin".Translate());
             Text.Font = GameFont.Small;
 
-            listing.Label("PF_Setting_ChanceLabel".Translate(requestChancePerVisit.ToStringPercent()));
-            requestChancePerVisit = listing.Slider(requestChancePerVisit, 0f, 1f);
+            listing.Label("PF_Setting_VisitTalksDesc".Translate());
+
+            listing.Gap();
+
+            listing.Label("PF_Setting_VisitTalksLabel".Translate(visitTalksBeforeDecision));
+            visitTalksBeforeDecision = Mathf.RoundToInt(listing.Slider(visitTalksBeforeDecision, 1f, 6f));
 
             listing.Gap();
 

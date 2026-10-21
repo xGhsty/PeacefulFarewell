@@ -172,12 +172,26 @@ namespace PeacefulFarewell
         {
             candidate = default(RequestCandidate);
 
-            if (map == null || !map.IsPlayerHome)
+            List<RequestCandidate> options = FindRequestCandidates(map);
+            if (options.Count == 0)
             {
                 return false;
             }
 
+            candidate = options.RandomElement();
+            return true;
+        }
+
+        // Every colonist/visitor pair on the map that qualifies for a join
+        // request right now - one entry per (visiting lord, colonist).
+        public static List<RequestCandidate> FindRequestCandidates(Map map)
+        {
             List<RequestCandidate> options = new List<RequestCandidate>();
+
+            if (map == null || !map.IsPlayerHome)
+            {
+                return options;
+            }
 
             int lordsTotal = map.lordManager.lords.Count;
             int lordsEligible = 0;
@@ -191,17 +205,30 @@ namespace PeacefulFarewell
                 }
                 lordsEligible++;
 
+                List<Pawn> visitors = lord.ownedPawns.ToList();
                 foreach (Pawn colonist in map.mapPawns.FreeColonistsSpawned.ToList())
                 {
                     if (!IsEligibleAdultColonist(colonist))
                     {
                         continue;
                     }
-                    if (HasFamilyInColony(colonist))
+                    if (PF_GameComponent.IsJoinRequestOnCooldown(colonist) || HasPendingRequestLetter(colonist))
                     {
                         continue;
                     }
-                    if (PF_GameComponent.IsJoinRequestOnCooldown(colonist) || HasPendingRequestLetter(colonist))
+                    colonistsChecked++;
+
+                    // Cheap check first: this runs every hour for every
+                    // colonist while visitors are around (it used to run only
+                    // when the old per-visit chance rolled), so the
+                    // colony-wide scans below only happen for the few
+                    // colonists who actually have someone among the visitors.
+                    Pawn closePawn = FindClosestRelation(colonist, visitors);
+                    if (closePawn == null)
+                    {
+                        continue;
+                    }
+                    if (HasFamilyInColony(colonist))
                     {
                         continue;
                     }
@@ -217,34 +244,31 @@ namespace PeacefulFarewell
                     {
                         continue;
                     }
-                    colonistsChecked++;
 
-                    Pawn closePawn = FindClosestRelation(colonist, lord.ownedPawns.ToList());
-                    if (closePawn != null)
+                    options.Add(new RequestCandidate
                     {
-                        options.Add(new RequestCandidate
-                        {
-                            colonist = colonist,
-                            relatedPawn = closePawn,
-                            visitingLord = lord,
-                            targetFaction = lord.faction
-                        });
-                    }
+                        colonist = colonist,
+                        relatedPawn = closePawn,
+                        visitingLord = lord,
+                        targetFaction = lord.faction
+                    });
                 }
             }
 
             if (PeacefulFarewellMod.Settings.debugMode)
             {
-                PF_Log.Message($"TryFindRequestCandidate on {map}: lordsTotal={lordsTotal}, lordsEligible={lordsEligible}, colonistsChecked={colonistsChecked}, options={options.Count}, minImportance={PeacefulFarewellMod.Settings.minRelationImportance}");
+                PF_Log.Message($"FindRequestCandidates on {map}: lordsTotal={lordsTotal}, lordsEligible={lordsEligible}, colonistsChecked={colonistsChecked}, options={options.Count}, minImportance={PeacefulFarewellMod.Settings.minRelationImportance}");
             }
 
-            if (options.Count == 0)
-            {
-                return false;
-            }
+            return options;
+        }
 
-            candidate = options.RandomElement();
-            return true;
+        // Vanilla visitors leave through LordToil_ExitMap, but trader
+        // caravans use LordToil_ExitMapAndEscortCarriers, which isn't a
+        // subclass of it - both mean "the visit is over".
+        public static bool IsLordLeaving(Lord lord)
+        {
+            return lord.CurLordToil is LordToil_ExitMap || lord.CurLordToil is LordToil_ExitMapAndEscortCarriers;
         }
 
         private static bool IsEligibleVisitingLord(Lord lord)
@@ -262,7 +286,7 @@ namespace PeacefulFarewell
             {
                 return false;
             }
-            if (lord.CurLordToil is LordToil_ExitMap)
+            if (IsLordLeaving(lord))
             {
                 return false;
             }
@@ -666,13 +690,279 @@ namespace PeacefulFarewell
         // faction name, RELATION = vanilla relation label (OtherFamily only,
         // empty otherwise). The shared "what happens if you accept/refuse"
         // paragraph is a separate key so every bond's variants stay short.
-        public static TaggedString MakeJoinRequestText(Pawn colonist, Pawn related, Faction faction, JoinBond bond, PawnRelationDef otherFamilyRelation)
+        // afterTalks: the decision came out of PF_VisitMeeting's talks (not a
+        // debug-forced letter), so the letter says it wasn't a sudden whim.
+        public static TaggedString MakeJoinRequestText(Pawn colonist, Pawn related, Faction faction, JoinBond bond, PawnRelationDef otherFamilyRelation, bool afterTalks = false)
         {
             string relationLabel = otherFamilyRelation != null ? otherFamilyRelation.GetGenderSpecificLabel(related) : "";
             TaggedString body = PF_Text.Variant("PF_JoinRequest_" + bond + "_Text", JoinRequestVariantCount(bond),
                 colonist.Named("PAWN"), related.Named("RELATED"), faction.Name, relationLabel.Named("RELATION"));
+            if (afterTalks)
+            {
+                body += "\n\n" + PF_Text.Variant("PF_JoinRequestAfterTalks", 3, colonist.Named("PAWN"), related.Named("RELATED"));
+            }
             TaggedString footer = "PF_JoinRequestFooter".Translate(colonist.Named("PAWN"), related.Named("RELATED"), faction.Name);
             return body + "\n\n" + footer;
+        }
+
+        // ---- Visit talks (see PF_VisitMeeting) ----
+
+        public enum VisitTalkOutcome
+        {
+            None,
+            Warm,
+            Invited,
+            Snub
+        }
+
+        // How strongly the talks, bond, mood and colony ties have to pull
+        // before the colonist asks to leave - see ComputeVisitPull.
+        internal const float VisitPullThreshold = 40f;
+
+        // A colonist's own opinion bar for "someone here I'd miss" when
+        // weighing what they'd leave behind. Lower than the 40 "strong
+        // friend" bar - two of those already exclude a colonist from the
+        // candidate pool outright (see FindRequestCandidates).
+        private const float VisitColonyFriendOpinion = 20f;
+        private const int VisitColonyFriendsCap = 5;
+
+        // Jobs a colonist is never pulled away from for a talk, even when
+        // vanilla would let them be interrupted casually.
+        private static readonly HashSet<JobDef> NeverInterruptForVisitTalk = new HashSet<JobDef>
+        {
+            JobDefOf.TendPatient,
+            JobDefOf.Rescue,
+            JobDefOf.BeatFire,
+            JobDefOf.ExtinguishSelf,
+            JobDefOf.Capture,
+            JobDefOf.Arrest,
+            JobDefOf.TakeWoundedPrisonerToBed,
+            JobDefOf.Ingest,
+            JobDefOf.LayDown,
+            JobDefOf.Lovin,
+            JobDefOf.Flee,
+            JobDefOf.FleeAndCower,
+            JobDefOf.TradeWithPawn,
+        };
+
+        // The visitors are still here, the colonist is still ours and on the
+        // same map, and neither side has died or wandered off for good.
+        internal static bool IsVisitMeetingStillPossible(PF_VisitMeeting meeting)
+        {
+            Pawn colonist = meeting.colonist;
+            Pawn relative = meeting.relative;
+            Lord lord = meeting.lord;
+
+            if (colonist == null || colonist.Dead || !colonist.Spawned || colonist.Faction != Faction.OfPlayer || IsRunningFarewellJob(colonist))
+            {
+                return false;
+            }
+            if (relative == null || relative.Dead || !relative.Spawned || relative.Map != colonist.Map)
+            {
+                return false;
+            }
+            if (lord == null || lord.lordManager == null || !lord.lordManager.lords.Contains(lord)
+                || lord.Map != colonist.Map || !lord.ownedPawns.Contains(relative) || IsLordLeaving(lord))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        // Whether the colonist can be pulled into a talk right now. Talks may
+        // interrupt ordinary work (otherwise they'd rarely happen during a
+        // one-day caravan visit), but never sleep, meals, emergencies,
+        // anything the player ordered, or while raiders are around.
+        public static bool CanStartVisitTalk(Pawn colonist, Pawn relative)
+        {
+            Map map = colonist.Map;
+            if (map == null || relative.Map != map)
+            {
+                return false;
+            }
+            if (colonist.Downed || colonist.Drafted || colonist.InMentalState || !colonist.Awake() || colonist.InBed())
+            {
+                return false;
+            }
+            // Rituals, parties, caravans being formed...
+            if (colonist.GetLord() != null)
+            {
+                return false;
+            }
+            if (colonist.carryTracker?.CarriedThing != null)
+            {
+                return false;
+            }
+            if (colonist.timetable?.CurrentAssignment == TimeAssignmentDefOf.Sleep)
+            {
+                return false;
+            }
+            if (colonist.needs?.food != null && colonist.needs.food.CurCategory >= HungerCategory.UrgentlyHungry)
+            {
+                return false;
+            }
+            if (colonist.needs?.rest != null && colonist.needs.rest.CurCategory >= RestCategory.VeryTired)
+            {
+                return false;
+            }
+
+            Job curJob = colonist.CurJob;
+            if (curJob != null && (curJob.playerForced || !curJob.def.casualInterruptible || NeverInterruptForVisitTalk.Contains(curJob.def)))
+            {
+                return false;
+            }
+
+            if (relative.Downed || relative.InMentalState || !relative.Awake() || relative.interactions == null)
+            {
+                return false;
+            }
+            if (GenHostility.AnyHostileActiveThreatToPlayer(map))
+            {
+                return false;
+            }
+            return colonist.CanReach(relative, PathEndMode.Touch, Danger.Some);
+        }
+
+        // Interrupts the colonist's current work (resumed afterwards).
+        public static void StartVisitTalk(Pawn colonist, Pawn relative)
+        {
+            Job job = JobMaker.MakeJob(PF_JobDefOf.PF_TalkWithVisitingRelative, relative);
+            job.locomotionUrgency = LocomotionUrgency.Walk;
+            colonist.jobs.StartJob(job, JobCondition.InterruptForced, null, resumeCurJobAfterwards: true);
+        }
+
+        // Has the visitor stop and face the colonist while they talk - only
+        // when they're doing something unimportant (wandering, standing
+        // around), never over a player-ordered or non-interruptible job.
+        public static void TryMakeVisitorListen(Pawn relative, Pawn colonist)
+        {
+            if (relative == null || relative.Downed || relative.InMentalState || !relative.Awake() || relative.jobs == null)
+            {
+                return;
+            }
+            Job curJob = relative.CurJob;
+            if (curJob != null && (curJob.playerForced || !curJob.def.casualInterruptible || curJob.def == PF_JobDefOf.PF_ListenToVisitingRelative))
+            {
+                return;
+            }
+
+            Job listen = JobMaker.MakeJob(PF_JobDefOf.PF_ListenToVisitingRelative, colonist);
+            listen.expiryInterval = GenDate.TicksPerHour;
+            relative.jobs.StartJob(listen, JobCondition.InterruptForced, null, resumeCurJobAfterwards: true);
+        }
+
+        // Rolled once per talk. The visitor's own opinion of the colonist
+        // decides how likely they are to brush them off (an abrasive visitor
+        // more so, a kind one hardly ever); otherwise a visitor who likes the
+        // colonist is more likely to invite them along.
+        public static VisitTalkOutcome RollVisitTalkOutcome(Pawn colonist, Pawn relative)
+        {
+            float relativeOpinion = relative?.relations != null ? relative.relations.OpinionOf(colonist) : 0f;
+
+            float snubChance = Mathf.Clamp(0.15f - relativeOpinion / 200f, 0.03f, 0.5f);
+            if (relative?.story?.traits != null)
+            {
+                if (relative.story.traits.HasTrait(TraitDefOf.Abrasive))
+                {
+                    snubChance = Mathf.Min(snubChance * 2f, 0.6f);
+                }
+                if (relative.story.traits.HasTrait(TraitDefOf.Kind))
+                {
+                    snubChance *= 0.3f;
+                }
+            }
+            if (Rand.Chance(snubChance))
+            {
+                return VisitTalkOutcome.Snub;
+            }
+
+            float inviteChance = relativeOpinion >= 20f ? 0.35f : 0.15f;
+            return Rand.Chance(inviteChance) ? VisitTalkOutcome.Invited : VisitTalkOutcome.Warm;
+        }
+
+        public static float VisitTalkPoints(VisitTalkOutcome outcome)
+        {
+            switch (outcome)
+            {
+                case VisitTalkOutcome.Warm: return 10f;
+                case VisitTalkOutcome.Invited: return 18f;
+                case VisitTalkOutcome.Snub: return -25f;
+                default: return 0f;
+            }
+        }
+
+        private static float JoinBondPull(JoinBond bond)
+        {
+            switch (bond)
+            {
+                case JoinBond.Spouse: return 40f;
+                case JoinBond.Fiance: return 35f;
+                case JoinBond.Lover: return 30f;
+                case JoinBond.Parent:
+                case JoinBond.Child: return 25f;
+                case JoinBond.Sibling: return 20f;
+                case JoinBond.OtherFamily: return 10f;
+                default: return 5f;
+            }
+        }
+
+        // Decides the meeting once the last talk is done; >= VisitPullThreshold
+        // means the colonist asks to leave. Made of:
+        //  - bond: a spouse pulls much harder than a friend
+        //  - the talks themselves (warm / invited / snubbed)
+        //  - the colonist's real opinion of the visitor (RealFriendOpinionOf,
+        //    so a vanilla insult or slight during the visit counts too, and
+        //    so does the snub thought from our own talks)
+        //  - mood: an unhappy colonist is easier to tempt away
+        //  - people in the colony they'd miss
+        // breakdown is for the debug log.
+        public static float ComputeVisitPull(PF_VisitMeeting meeting, out string breakdown)
+        {
+            Pawn colonist = meeting.colonist;
+            Pawn relative = meeting.relative;
+
+            float bondPull = JoinBondPull(GetJoinBond(colonist, relative, out _));
+            float opinionPull = (RealFriendOpinionOf(colonist, relative) - 30f) * 0.5f;
+            float moodPull = colonist.needs?.mood != null ? (0.5f - colonist.needs.mood.CurLevel) * 60f : 0f;
+            int colonyFriends = CountVisitColonyFriends(colonist);
+            float colonyPull = -6f * colonyFriends;
+
+            float total = bondPull + meeting.talkPoints + opinionPull + moodPull + colonyPull;
+            breakdown = $"bond={bondPull:F0}, talks={meeting.talkPoints:F0} ({meeting.talksDone} talks, {meeting.snubs} snubs), opinion={opinionPull:F1}, mood={moodPull:F1}, colonyFriends={colonyFriends} ({colonyPull:F0}) => {total:F1} / {VisitPullThreshold:F0}";
+            return total;
+        }
+
+        private static int CountVisitColonyFriends(Pawn colonist)
+        {
+            if (colonist.Map == null)
+            {
+                return 0;
+            }
+
+            int count = 0;
+            foreach (Pawn other in colonist.Map.mapPawns.FreeColonistsSpawned)
+            {
+                if (other == colonist || other.Dead)
+                {
+                    continue;
+                }
+                if (RealFriendOpinionOf(colonist, other) >= VisitColonyFriendOpinion && ++count >= VisitColonyFriendsCap)
+                {
+                    break;
+                }
+            }
+            return count;
+        }
+
+        // The colonist stays (or the visitors left before the last talk) -
+        // a small "good to see them" boost, unless they were snubbed.
+        public static void GiveGoodToSeeVisitorThought(Pawn colonist, Pawn relative)
+        {
+            if (colonist?.needs?.mood == null || relative == null || colonist.Dead)
+            {
+                return;
+            }
+            GainMemoryWithSubject(colonist, PF_ThoughtDefOf.PF_GoodToSeeVisitor, relative);
         }
 
         public static void StartJoinJob(Pawn colonist, Pawn relatedPawn, Lord visitingLord, Faction targetFaction)

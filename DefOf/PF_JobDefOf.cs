@@ -10,6 +10,8 @@ namespace PeacefulFarewell
         public static JobDef PF_LeaveOutOfLoneliness;
         public static JobDef PF_LeaveOutOfWanderlust;
         public static JobDef PF_FollowDepartingOwner;
+        public static JobDef PF_TalkWithVisitingRelative;
+        public static JobDef PF_ListenToVisitingRelative;
 
         static PF_JobDefOf()
         {

@@ -72,7 +72,7 @@ namespace PeacefulFarewell
                 return;
             }
 
-            sb.AppendLine($"requestChancePerVisit = {s.requestChancePerVisit}");
+            sb.AppendLine($"visitTalksBeforeDecision = {s.visitTalksBeforeDecision}");
             sb.AppendLine($"minRelationImportance = {s.minRelationImportance}");
             sb.AppendLine($"lonelinessChancePerCheck = {s.lonelinessChancePerCheck}");
             sb.AppendLine($"lonelinessAvgOpinionThreshold = {s.lonelinessAvgOpinionThreshold}");

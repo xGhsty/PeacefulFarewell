@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using RimWorld;
 using Verse;
+using Verse.AI.Group;
 
 namespace PeacefulFarewell
 {
@@ -98,6 +99,21 @@ namespace PeacefulFarewell
         // double-firing near the boundary) on every load.
         private int checkPhaseOffset = -1;
 
+        // Colonists meeting a close relation/friend among friendly visitors
+        // (see PF_VisitMeeting). Ticked every VisitMeetingTickInterval to
+        // send the colonist over for a talk when it's due and they're free.
+        private List<PF_VisitMeeting> visitMeetings = new List<PF_VisitMeeting>();
+        private const int VisitMeetingTickInterval = 250;
+
+        // First talk within an hour of the meeting starting, then one every
+        // 3-4 in-game hours - a one-day caravan visit fits the default 3.
+        private static readonly IntRange FirstVisitTalkDelayTicks = new IntRange(250, GenDate.TicksPerHour);
+        private static readonly IntRange VisitTalkIntervalTicks = new IntRange(3 * GenDate.TicksPerHour, 4 * GenDate.TicksPerHour);
+
+        // If a started talk falls through (visitor out of reach, colonist
+        // drafted, ...), wait this long before sending them again.
+        private const int VisitTalkRetryTicks = GenDate.TicksPerHour;
+
         public PF_GameComponent(Game game)
         {
         }
@@ -157,6 +173,16 @@ namespace PeacefulFarewell
             if (Scribe.mode == LoadSaveMode.PostLoadInit && everReturnedFromWanderlust == null)
             {
                 everReturnedFromWanderlust = new HashSet<Pawn>();
+            }
+
+            Scribe_Collections.Look(ref visitMeetings, "visitMeetings", LookMode.Deep);
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
+            {
+                if (visitMeetings == null)
+                {
+                    visitMeetings = new List<PF_VisitMeeting>();
+                }
+                visitMeetings.RemoveAll((PF_VisitMeeting m) => m == null || m.colonist == null || m.relative == null);
             }
         }
 
@@ -479,6 +505,18 @@ namespace PeacefulFarewell
                 PF_Log.Error("Exception in loneliness scan tick: " + ex);
                 activeScan = null;
             }
+
+            if (tick % VisitMeetingTickInterval == 0)
+            {
+                try
+                {
+                    TickVisitMeetings();
+                }
+                catch (System.Exception ex)
+                {
+                    PF_Log.Error("Exception in visit meeting tick: " + ex);
+                }
+            }
         }
 
         private void DoCheck()
@@ -545,16 +583,203 @@ namespace PeacefulFarewell
             }
         }
 
+        // No dice roll any more: every colonist with a close relation/friend
+        // among the visitors gets a meeting, and the talks decide.
         private void CheckVisitorRequest(Map map)
         {
-            if (!Rand.Chance(PeacefulFarewellMod.Settings.requestChancePerVisit))
+            foreach (FarewellUtility.RequestCandidate candidate in FarewellUtility.FindRequestCandidates(map))
+            {
+                // A colonist can qualify for several visiting groups at once -
+                // the first one wins. Also skips colonists whose meeting
+                // already ended in a decision during this visit.
+                if (HasVisitMeeting(candidate.colonist))
+                {
+                    continue;
+                }
+
+                PF_VisitMeeting meeting = new PF_VisitMeeting
+                {
+                    colonist = candidate.colonist,
+                    relative = candidate.relatedPawn,
+                    lord = candidate.visitingLord,
+                    faction = candidate.targetFaction,
+                    nextTalkTick = Find.TickManager.TicksGame + FirstVisitTalkDelayTicks.RandomInRange
+                };
+                visitMeetings.Add(meeting);
+
+                if (PeacefulFarewellMod.Settings.debugMode)
+                {
+                    PF_Log.Message($"Visit meeting started: {meeting}");
+                }
+            }
+        }
+
+        private bool HasVisitMeeting(Pawn colonist)
+        {
+            foreach (PF_VisitMeeting meeting in visitMeetings)
+            {
+                if (meeting.colonist == colonist)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void TickVisitMeetings()
+        {
+            if (visitMeetings.Count == 0)
             {
                 return;
             }
 
-            TryForceVisitorRequest(map);
+            int now = Find.TickManager.TicksGame;
+            for (int i = visitMeetings.Count - 1; i >= 0; i--)
+            {
+                PF_VisitMeeting meeting = visitMeetings[i];
+
+                if (!FarewellUtility.IsVisitMeetingStillPossible(meeting))
+                {
+                    visitMeetings.RemoveAt(i);
+                    if (!meeting.concluded)
+                    {
+                        PartWithoutDecision(meeting);
+                    }
+                    continue;
+                }
+
+                if (meeting.concluded || now < meeting.nextTalkTick)
+                {
+                    continue;
+                }
+                if (meeting.colonist.CurJobDef == PF_JobDefOf.PF_TalkWithVisitingRelative)
+                {
+                    continue;
+                }
+                if (!FarewellUtility.CanStartVisitTalk(meeting.colonist, meeting.relative))
+                {
+                    continue;
+                }
+
+                meeting.nextTalkTick = now + VisitTalkRetryTicks;
+                FarewellUtility.StartVisitTalk(meeting.colonist, meeting.relative);
+
+                if (PeacefulFarewellMod.Settings.debugMode)
+                {
+                    PF_Log.Message($"Visit talk started: {meeting}, colonist job now={meeting.colonist.CurJobDef?.defName ?? "null"}");
+                }
+            }
         }
 
+        // The visitors left (or either pawn became unavailable) before the
+        // last talk - no decision, the colonist just stays.
+        private static void PartWithoutDecision(PF_VisitMeeting meeting)
+        {
+            if (meeting.talksDone > 0 && meeting.snubs == 0 && meeting.colonist != null
+                && !meeting.colonist.Dead && meeting.colonist.Faction == Faction.OfPlayer)
+            {
+                FarewellUtility.GiveGoodToSeeVisitorThought(meeting.colonist, meeting.relative);
+            }
+
+            if (PeacefulFarewellMod.Settings.debugMode)
+            {
+                PF_Log.Message($"Visit meeting ended without a decision: {meeting}");
+            }
+        }
+
+        // Called by JobDriver_TalkWithVisitingRelative when a talk ends.
+        public static void NotifyVisitTalkFinished(Pawn colonist, Pawn relative, FarewellUtility.VisitTalkOutcome outcome)
+        {
+            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
+            if (component == null)
+            {
+                return;
+            }
+
+            PF_VisitMeeting meeting = component.visitMeetings.FirstOrDefault((PF_VisitMeeting m) => m.colonist == colonist && m.relative == relative && !m.concluded);
+            if (meeting == null || outcome == FarewellUtility.VisitTalkOutcome.None)
+            {
+                return;
+            }
+
+            meeting.talksDone++;
+            meeting.talkPoints += FarewellUtility.VisitTalkPoints(outcome);
+            if (outcome == FarewellUtility.VisitTalkOutcome.Snub)
+            {
+                meeting.snubs++;
+            }
+            meeting.nextTalkTick = Find.TickManager.TicksGame + VisitTalkIntervalTicks.RandomInRange;
+
+            if (PeacefulFarewellMod.Settings.debugMode)
+            {
+                PF_Log.Message($"Visit talk finished ({outcome}): {meeting}");
+            }
+
+            if (meeting.talksDone >= PeacefulFarewellMod.Settings.visitTalksBeforeDecision)
+            {
+                DecideVisitMeeting(meeting);
+            }
+        }
+
+        private static void DecideVisitMeeting(PF_VisitMeeting meeting)
+        {
+            meeting.concluded = true;
+
+            float pull = FarewellUtility.ComputeVisitPull(meeting, out string breakdown);
+            bool wantsToLeave = pull >= FarewellUtility.VisitPullThreshold;
+            bool canAsk = wantsToLeave
+                && meeting.faction != null
+                && !meeting.faction.HostileTo(Faction.OfPlayer)
+                && !FarewellUtility.HasPendingRequestLetter(meeting.colonist)
+                && !IsJoinRequestOnCooldown(meeting.colonist);
+
+            if (PeacefulFarewellMod.Settings.debugMode)
+            {
+                PF_Log.Message($"Visit meeting decision for {meeting.colonist.LabelShort}: {breakdown} -> {(canAsk ? "asks to leave" : wantsToLeave ? "wants to leave, but can't ask now" : "stays")}");
+            }
+
+            if (canAsk)
+            {
+                SendJoinRequestLetter(meeting.colonist, meeting.relative, meeting.lord, meeting.faction, afterTalks: true);
+                return;
+            }
+
+            if (!wantsToLeave && meeting.snubs == 0)
+            {
+                FarewellUtility.GiveGoodToSeeVisitorThought(meeting.colonist, meeting.relative);
+            }
+        }
+
+        // Debug: start meetings on this map right away and make every
+        // undecided meeting there due for its next talk now.
+        public static int DebugHurryVisitTalks(Map map)
+        {
+            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
+            if (component == null || map == null)
+            {
+                return 0;
+            }
+
+            component.CheckVisitorRequest(map);
+            int count = 0;
+            foreach (PF_VisitMeeting meeting in component.visitMeetings)
+            {
+                if (!meeting.concluded && meeting.colonist?.Map == map)
+                {
+                    meeting.nextTalkTick = Find.TickManager.TicksGame;
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        public static List<PF_VisitMeeting> GetVisitMeetings()
+        {
+            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
+            return component != null ? component.visitMeetings : new List<PF_VisitMeeting>();
+        }
+
+        // Debug-only: skips the talks and sends the letter straight away.
         public static bool TryForceVisitorRequest(Map map)
         {
             if (!FarewellUtility.TryFindRequestCandidate(map, out FarewellUtility.RequestCandidate candidate))
@@ -562,25 +787,29 @@ namespace PeacefulFarewell
                 return false;
             }
 
-            FarewellUtility.JoinBond bond = FarewellUtility.GetJoinBond(candidate.colonist, candidate.relatedPawn, out PawnRelationDef otherFamilyRelation);
+            SendJoinRequestLetter(candidate.colonist, candidate.relatedPawn, candidate.visitingLord, candidate.targetFaction, afterTalks: false);
+            return true;
+        }
+
+        private static void SendJoinRequestLetter(Pawn colonist, Pawn relatedPawn, Lord visitingLord, Faction targetFaction, bool afterTalks)
+        {
+            FarewellUtility.JoinBond bond = FarewellUtility.GetJoinBond(colonist, relatedPawn, out PawnRelationDef otherFamilyRelation);
             ChoiceLetter_JoinRequest letter = (ChoiceLetter_JoinRequest)LetterMaker.MakeLetter(
                 FarewellUtility.MakeJoinRequestLabel(bond),
-                FarewellUtility.MakeJoinRequestText(candidate.colonist, candidate.relatedPawn, candidate.targetFaction, bond, otherFamilyRelation),
+                FarewellUtility.MakeJoinRequestText(colonist, relatedPawn, targetFaction, bond, otherFamilyRelation, afterTalks),
                 PF_LetterDefOf.PF_JoinRequest);
-            letter.colonist = candidate.colonist;
-            letter.relatedPawn = candidate.relatedPawn;
-            letter.visitingLord = candidate.visitingLord;
-            letter.targetFaction = candidate.targetFaction;
-            letter.lookTargets = new LookTargets(candidate.colonist);
+            letter.colonist = colonist;
+            letter.relatedPawn = relatedPawn;
+            letter.visitingLord = visitingLord;
+            letter.targetFaction = targetFaction;
+            letter.lookTargets = new LookTargets(colonist);
 
             Find.LetterStack.ReceiveLetter(letter);
 
             if (PeacefulFarewellMod.Settings.debugMode)
             {
-                PF_Log.Message($"Letter sent for colonist {candidate.colonist.LabelShort} -> {candidate.targetFaction.Name} (bond={bond}, relation={otherFamilyRelation?.defName ?? "-"})");
+                PF_Log.Message($"Letter sent for colonist {colonist.LabelShort} -> {targetFaction.Name} (bond={bond}, relation={otherFamilyRelation?.defName ?? "-"}, afterTalks={afterTalks})");
             }
-
-            return true;
         }
 
         private void FinishLonelinessScan(PF_LonelinessScan scan)

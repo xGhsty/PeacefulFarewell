@@ -8,13 +8,27 @@ namespace PeacefulFarewell
     {
         private const string Category = "Peaceful Farewell";
 
-        [DebugAction(Category, "Force visitor join request", allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        [DebugAction(Category, "Force visitor join request (skip talks)", allowedGameStates = AllowedGameStates.PlayingOnMap)]
         private static void ForceVisitorRequest()
         {
             if (!PF_GameComponent.TryForceVisitorRequest(Find.CurrentMap))
             {
                 Messages.Message("No eligible visitor/colonist pair found on this map.", MessageTypeDefOf.RejectInput, historical: false);
             }
+        }
+
+        [DebugAction(Category, "Hurry visitor talks (next talk now)", allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        private static void HurryVisitorTalks()
+        {
+            int count = PF_GameComponent.DebugHurryVisitTalks(Find.CurrentMap);
+            Messages.Message(count > 0 ? $"{count} visit meeting(s) due for a talk now." : "No visit meetings on this map.", count > 0 ? MessageTypeDefOf.TaskCompletion : MessageTypeDefOf.RejectInput, historical: false);
+        }
+
+        [DebugAction(Category, "Log visit meetings", allowedGameStates = AllowedGameStates.Playing)]
+        private static void LogVisitMeetings()
+        {
+            System.Collections.Generic.List<PF_VisitMeeting> meetings = PF_GameComponent.GetVisitMeetings();
+            Log.Message($"[PeacefulFarewell] {meetings.Count} visit meeting(s):\n" + string.Join("\n", meetings));
         }
 
         [DebugAction(Category, "Force wanderlust request", allowedGameStates = AllowedGameStates.PlayingOnMap)]

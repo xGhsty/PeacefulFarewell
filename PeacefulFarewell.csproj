@@ -50,7 +50,9 @@
 
   <Target Name="DeployToRimWorldMods" AfterTargets="CopyToModAssemblies" Condition="Exists('$(RimWorldPath)\Mods')">
     <ItemGroup>
-      <ModFiles Include="$(ProjectDir)..\..\**\*" Exclude="$(ProjectDir)..\..\Source\**\*" />
+      <!-- The git repository lives in the mod root, so keep .git and
+           repo-only files out of the game's Mods folder. -->
+      <ModFiles Include="$(ProjectDir)..\..\**\*" Exclude="$(ProjectDir)..\..\Source\**\*;$(ProjectDir)..\..\.git\**\*;$(ProjectDir)..\..\.gitignore;$(ProjectDir)..\..\README.md" />
     </ItemGroup>
     <Copy SourceFiles="@(ModFiles)" DestinationFolder="$(ModDeployPath)\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
