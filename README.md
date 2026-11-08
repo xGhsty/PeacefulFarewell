@@ -1,88 +1,105 @@
 # Peaceful Farewell
 
-RimWorld mod (1.6) pozwalający kolonistom **pokojowo opuścić kolonię**, zamiast ginąć, znikać bez śladu albo zamieniać się w mentalny break. Kod C# napisany z użyciem [Harmony](https://github.com/pardeike/HarmonyRimWorld).
+A RimWorld mod (1.6 / 1.7) that lets colonists **peacefully leave the colony** instead of dying, vanishing without a trace or breaking down mentally. Written in C# using [Harmony](https://github.com/pardeike/HarmonyRimWorld).
 
-Nie wymaga żadnego DLC. Wymaga Harmony.
+No DLC required. Requires Harmony.
 
-## O co chodzi
+## What it's about
 
-W vanilla RimWorld koloniści praktycznie nigdy nie odchodzą sami z siebie: jedyne wyjścia to śmierć, porwanie albo załamanie psychiczne. Peaceful Farewell dodaje alternatywę: jeśli kolonista ma silną więź z kimś poza kolonią (rodzina, partner, bliski przyjaciel) albo po prostu czuje się niechciany/znudzony życiem w kolonii, może **poprosić o odejście** zamiast przechodzić przez negatywne mechaniki vanilla. Gracz zawsze dostaje list z prośbą i decyduje: akceptuje albo odrzuca.
+In vanilla RimWorld colonists practically never leave on their own: the only ways out are death, kidnapping or a mental break. Peaceful Farewell adds an alternative: if a colonist has a strong bond with someone outside the colony (family, a partner, a close friend), or simply feels unwanted or restless in the colony, they can **ask to leave** instead of going through vanilla's negative mechanics. The player always gets a letter with the request and decides: accept or refuse.
 
-## Główne mechaniki
+## Main mechanics
 
-### 🚶 Dołączenie do odwiedzającej frakcji
-Gdy do mapy przybywa przyjazna karawana/grupa odwiedzających (także goście z moda Hospitality), kolonista mający bliską relację (rodzina, małżonek/partner, bliski przyjaciel) z kimś w tej grupie nie podejmuje decyzji nagle. W trakcie wizyty kilka razy idzie z tą osobą porozmawiać: wspominają dawne czasy, wypytuje o życie poza kolonią, gość opowiada historie, czasem namawia "chodź z nami", a czasem kolonistę zlekceważy. Rozmowy widać w logu społecznym, a gracz może je przerwać (np. draftując kolonistę).
+###  Joining a visiting faction
+When a friendly caravan or group of visitors arrives (including guests from the Hospitality mod), a colonist with a close bond (family, spouse/partner, close friend) to someone in that group doesn't decide on a whim. During the visit they go over to talk with that person several times: they reminisce, ask about life outside the colony, the visitor tells stories, sometimes urges "come with us", and sometimes brushes the colonist off. The talks show up in the social log, and the player can interrupt them (e.g. by drafting the colonist).
 
-Po ustalonej liczbie rozmów kolonista podejmuje decyzję na podstawie siły więzi, przebiegu rozmów, prawdziwej opinii o gościu (zlekceważenie czy obraza ją obniżają), swojego nastroju i przyjaciół, których zostawiłby w kolonii. Jeśli chce odejść, gracz dostaje list z prośbą. Po akceptacji kolonista dołącza do frakcji gości i opuszcza mapę razem z nimi. Jeśli zostaje, dostaje pozytywną myśl "dobrze było znów zobaczyć...".
+After a set number of talks the colonist decides, based on the strength of the bond, how the talks went, their real opinion of the visitor (a snub or an insult lowers it), their mood and the friends they would leave behind in the colony. If they want to leave, the player gets a letter with the request. Once accepted, the colonist joins the visitors' faction and leaves the map with them. If they stay, they get a positive "good to see them again" thought.
 
-### 😔 Samotność ("nie czuję się tu mile widziany")
-Kolonista, którego **średnia opinia** wszystkich innych o nim jest bardzo niska, a jednocześnie **nikt pojedynczy** go na tyle nie lubi (żaden pojedynczy wynik opinii nie przekracza progu), może poprosić o opuszczenie kolonii z powodu poczucia odrzucenia. Oba progi są konfigurowalne w ustawieniach moda.
+###  Loneliness ("I don't feel welcome here")
+A colonist whose **average opinion** among everyone else is very low, while at the same time **no single colonist** likes them enough (no individual opinion exceeds the threshold), may ask to leave the colony out of a feeling of rejection. Both thresholds are configurable in the mod settings.
 
-### 🧭 Wanderlust (zew wędrówki)
-Niezależnie od relacji społecznych, kolonista może po prostu poczuć potrzebę zobaczenia świata i poprosić o wyruszenie w drogę na jakiś czas, bez porzucania kolonii na stałe (patrz niżej: powrót wędrowców).
+###  Wanderlust
+Regardless of social relations, a colonist may simply feel the urge to see the world and ask to set out for a while, without abandoning the colony for good (see below: returning wanderers).
 
-### 📨 List z daleka
-Koloniści, którzy odeszli, mogą z czasem przysłać list informujący bliskich w kolonii, że u nich wszystko w porządku, priorytetowo do partnera, potem rodziny, potem przyjaciół.
+###  Letters from afar
+Colonists who left may eventually send a letter letting their loved ones in the colony know they are doing well, addressed first to a partner, then family, then friends.
 
-### 🔁 Powrót wędrowców
-Koloniści, którzy odeszli z powodu samotności lub wanderlustu, nie znikają na zawsze, są śledzeni w świecie gry (`PF_WandererTracker`) i po pewnym czasie (losowy zakres dni, konfigurowalny) ich los się rozstrzyga: mogą **wrócić do kolonii** albo dołączyć do wrogiej frakcji (najgorszy, celowo niejednoznaczny scenariusz, gracz dostaje tylko lakoniczny list "brak wieści").
+###  Returning wanderers
+Colonists who left out of loneliness or wanderlust don't disappear forever. They are tracked in the world (`PF_WandererTracker`), and after some time (a random, configurable range of days) their fate is decided: they may **come back to the colony** or join a hostile faction (the worst, deliberately vague outcome: the player only gets a terse "no word" letter).
 
-- Po powrocie kolonista odzyskuje swój dawny **harmonogram pracy i grafik** (przywracane z zapisu).
-- Ubranie wędrowca jest odświeżane kosmetycznie (część noszonych przedmiotów może zostać wymieniona na nowe egzemplarze tego samego typu, symulacja "zużycia w podróży").
-- Jeśli kolonista dołączy do wrogiej frakcji, bliscy pozostawieni w kolonii (partner/rodzina/przyjaciele) dostają negatywną myśl o niepewnym losie tej osoby, siła efektu skaluje się z bliskością relacji (partner > rodzina > przyjaciel).
+- On return, the colonist gets their old **work priorities and schedule** back (restored from a saved snapshot).
+- The wanderer's clothing is refreshed cosmetically (some worn items may be swapped for new ones of the same type, simulating wear on the road).
+- If the colonist joins a hostile faction, the loved ones left behind (partner/family/friends) get a negative thought about their uncertain fate, scaled by closeness (partner > family > friend).
 
-### 🐾 Zwierzęta ze związkiem (bond)
-Jeśli odchodzący kolonista ma zwierzę, z którym łączy go więź (bond), zwierzę **podąża za nim** i opuszcza kolonię razem z właścicielem. Dotyczy to wszystkich trzech ścieżek odejścia (dołączenie do frakcji, samotność, wanderlust).
+###  Bonded animals
+If a departing colonist has an animal they are bonded with, the animal **follows them** and leaves the colony together with its owner. This applies to all three ways of leaving (joining a faction, loneliness, wanderlust).
 
-### 💭 Reakcje kolonii
-Odejście kolonisty nie przechodzi bez echa:
-- Inni koloniści, którzy go nie lubili, odczuwają **ulgę** (plusowa myśl).
-- Ci, którzy go lubili, odczuwają **żal** (minusowa myśl).
-- Przed samym odejściem kolonista odwiedza swój pokój/łóżko na 1-3 godziny w grze, moment na "pożegnanie", zanim opuści mapę.
+###  Colony reactions
+A departure doesn't go unnoticed:
+- Colonists who disliked the departing colonist feel **relief** (positive thought).
+- Those who liked them feel **sorrow** (negative thought).
+- Before leaving, the colonist visits their own room/bed for 1-3 in-game hours to say goodbye before heading off the map.
 
-### 🌐 Lokalizacja
-Pełne tłumaczenie **polskie i angielskie** (`Languages/Polish`, `Languages/English`), łącznie z rozróżnieniem płci w tekstach tam, gdzie to ma znaczenie.
+###  Localization
+Fully translated into **English and Polish** (`Common/Languages/English`, `Common/Languages/Polish`), including gendered wording where it matters.
 
-## Ustawienia moda
+## Mod settings
 
-Wszystkie progi i szanse są konfigurowalne w oknie ustawień moda.
+All thresholds and chances are configurable in the mod settings window.
 
-| Sekcja | Co reguluje |
+| Section | What it controls |
 |---|---|
-| Dołączanie do wizytujących | Liczba rozmów z gościem przed podjęciem decyzji, minimalna waga relacji wymagana do rozważenia |
-| Samotność | Szansa sprawdzenia, próg średniej opinii, próg pojedynczej opinii blokujący event |
-| Wędrowcy | Min/max liczba dni do rozstrzygnięcia losu wędrowca, włącz/wyłącz list o dołączeniu do wrogiej frakcji |
-| Wanderlust | Włącz/wyłącz mechanikę, szansa sprawdzenia |
-| List z daleka | Włącz/wyłącz |
-| Debug | Tryb debug, logowanie do pliku, generowanie raportu diagnostycznego, podgląd wszystkich aktywnych wędrowców |
+| Joining visitors | Number of talks with the visitor before the decision, minimum relation importance required |
+| Loneliness | Check chance, average opinion threshold, single-opinion threshold that blocks the event |
+| Wanderers | Min/max days until a wanderer's fate is decided, toggle for the "joined a hostile faction" letter |
+| Wanderlust | Toggle the mechanic, check chance |
+| Letters from afar | Toggle |
+| Debug | Debug mode, file logging, diagnostic report generation, overview of all active wanderers |
 
-Każdą odrzuconą prośbę pamięta osobny cooldown na kolonistę i typ eventu. Odrzucenie jednej prośby (np. dołączenia do wizytujących) nie blokuje tej samej osoby od innych typów próśb (samotność, wanderlust), ani nie wpływa na innych kolonistów.
+Each refused request has its own cooldown per colonist and event type. Refusing one request (e.g. joining visitors) doesn't block the same colonist from other request types (loneliness, wanderlust), and doesn't affect other colonists.
 
-## Struktura projektu
+## Project structure
 
 ```
-About/                      metadane moda (About.xml)
-LoadFolders.xml
+About/                      mod metadata (About.xml)
+LoadFolders.xml             1.6 -> 1.6 + Common, 1.7 -> 1.7 + Common
+Common/                     content shared by all game versions
+  Defs/                     definitions (jobs, thoughts, letters, interactions)
+  Languages/                EN/PL translations (Keyed + DefInjected)
 1.6/
-  Defs/                     definicje (joby, myśli, listy, interakcje)
-  Languages/                tłumaczenia EN/PL (Keyed + DefInjected)
-  Assemblies/               skompilowany DLL (generowany przy buildzie, poza repo)
+  Assemblies/               DLL for 1.6 (generated by the build, not in the repo)
+1.7/
+  Assemblies/               DLL for 1.7 (generated by the build, not in the repo)
 Source/PeacefulFarewell/
-  Core/                     logika mechanik, skanery, ustawienia, generator raportów
-  DefOf/                    referencje do Defów RimWorld (thoughty, joby, listy, interakcje)
-  Harmony/                  patche Harmony
-  JobDrivers/               niestandardowe joby (odejście, rozmowy z gośćmi, podążanie zwierzęcia, itp.)
-  Letters/                  listy z prośbami (akceptuj/odrzuć) i powiadomieniami
-  FarewellUtility.cs        współdzielone funkcje pomocnicze
+  Core/                     mechanics logic, scanners, settings, logging, report generator
+  DefOf/                    references to the mod's Defs (thoughts, jobs, letters, interactions)
+  Harmony/                  Harmony patches
+  JobDrivers/               custom jobs (leaving, talks with visitors, animal following, etc.)
+  Letters/                  request letters (accept/refuse), shared base ChoiceLetter_PF_Request
+  FarewellUtility.cs        shared helper functions
 ```
 
-Build (`PeacefulFarewell.csproj`) kopiuje DLL do `1.6/Assemblies` i synchronizuje cały folder moda do `RimWorld/Mods/PeacefulFarewell`.
+## Building
 
-## Wymagania
+By default, `PeacefulFarewell.csproj` compiles the 1.7 version against the local game install and copies the DLL to `1.7/Assemblies`:
 
-- RimWorld 1.6
-- [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077) (ładowany przed tym modem)
+```
+dotnet build
+```
 
-## Autor
+The 1.6 version is compiled against the `Krafs.Rimworld.Ref` reference package and goes to `1.6/Assemblies`:
 
-Ghost, with use of AI tool (Claude Code)
+```
+dotnet build -p:GameVersion=1.6
+```
+
+After the build, the whole mod folder is synced to `RimWorld/Mods/PeacefulFarewell`. The game path defaults to `H:\SteamLibrary\steamapps\common\RimWorld`; override it with `-p:RimWorldPath="..."`.
+
+## Requirements
+
+- RimWorld 1.6 or 1.7
+- [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077) (loaded before this mod)
+
+## Author
+
+Ghost, with the use of an AI tool (Claude Code)
