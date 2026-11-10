@@ -69,10 +69,8 @@ namespace PeacefulFarewell
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 File.WriteAllLines(path, lines);
 
-                if (PeacefulFarewellMod.Settings.debugMode)
-                {
+                if (PF_Log.DebugMode)
                     PF_Log.Message($"PF_WorkAndScheduleFileStore: saved backup file for {pawn.LabelShort} at {path}");
-                }
             }
             catch (Exception ex)
             {
@@ -142,10 +140,8 @@ namespace PeacefulFarewell
                     }
                 }
 
-                if (PeacefulFarewellMod.Settings.debugMode)
-                {
+                if (PF_Log.DebugMode)
                     PF_Log.Message($"PF_WorkAndScheduleFileStore: loaded backup file for {pawn.LabelShort} from {path}");
-                }
 
                 return snapshot;
             }

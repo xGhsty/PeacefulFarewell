@@ -92,6 +92,8 @@
   <PF_Overview_JumpToSettlement>Przejdź do {0}</PF_Overview_JumpToSettlement>
   <PF_Overview_DepartedOn>Wyruszył/a: {0}</PF_Overview_DepartedOn>
   <PF_Overview_DaysAgoFallback>{0}d temu</PF_Overview_DaysAgoFallback>
+  <PF_Overview_SettledCardSub>{0} ({1})</PF_Overview_SettledCardSub>
+  <PF_ResidentPresentMessage>{0}, dawny członek twojej kolonii, mieszka w osadzie {1} i jest teraz na miejscu.</PF_ResidentPresentMessage>
 
   <PF_LonelinessRequestLabel>Brak poczucia przynależności</PF_LonelinessRequestLabel>
   <PF_LonelinessRequestText0>{PAWN_nameDef} czuje się {PAWN_gender ? nielubiany : nielubiana} przez resztę kolonii i chce odejść, by znaleźć miejsce, do którego będzie {PAWN_gender ? przynależał : przynależała}.\n\nJeśli się zgodzisz, {PAWN_nameDef} odejdzie i spróbuje szczęścia w świecie. Jeśli odmówisz, {PAWN_nameDef} będzie tym nieco {PAWN_gender ? zmartwiony : zmartwiona}.</PF_LonelinessRequestText0>
@@ -157,6 +159,8 @@
   <PF_Setting_Section_LetterFromAfar>Listy z oddali (osiedleni wędrowcy)</PF_Setting_Section_LetterFromAfar>
   <PF_Setting_LetterFromAfarEnabledLabel>Włącz listy z oddali</PF_Setting_LetterFromAfarEnabledLabel>
   <PF_Setting_LetterFromAfarEnabledTooltip>Pozwala osadnikowi, który odszedł i osiadł na stałe w przyjaznej frakcji, okazjonalnie wysłać list do bliskiej osoby wciąż przebywającej w kolonii.</PF_Setting_LetterFromAfarEnabledTooltip>
+  <PF_Setting_LettersPerQuadrumLabel>Maks. listów z daleka na porę roku: {0}</PF_Setting_LettersPerQuadrumLabel>
+  <PF_Setting_LettersPerQuadrumTooltip>Limit łączny dla wszystkich osiadłych osadników. Listy ponad limit są przekładane na kolejną porę roku, a nie tracone.</PF_Setting_LettersPerQuadrumTooltip>
 
   <PF_MissingSituationLabel>{PAWN_gender ? Zaginiony : Zaginiona}</PF_MissingSituationLabel>
 

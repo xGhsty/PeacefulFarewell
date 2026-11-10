@@ -117,12 +117,7 @@ namespace PeacefulFarewell
     {
         public static void Postfix(Pawn pawn, ref string __result)
         {
-            if (Current.Game?.World == null)
-            {
-                return;
-            }
-
-            if (Current.Game.World.GetComponent<PF_WandererTracker>()?.IsTracked(pawn) == true)
+            if (PF_WandererTracker.Instance?.IsTracked(pawn) == true)
             {
                 __result = "PF_MissingSituationLabel".Translate(pawn.Named("PAWN"));
             }
@@ -148,17 +143,10 @@ namespace PeacefulFarewell
     {
         public static bool Prefix(Pawn pawn, ref bool __result)
         {
-            if (Current.Game?.World == null)
+            if (PF_WandererTracker.Instance?.IsTracked(pawn) == true)
             {
-                return true;
-            }
-
-            if (Current.Game.World.GetComponent<PF_WandererTracker>()?.IsTracked(pawn) == true)
-            {
-                if (PeacefulFarewellMod.Settings.debugMode)
-                {
+                if (PF_Log.DebugMode)
                     PF_Log.Message($"Blocked vanilla redress of tracked wanderer {pawn.LabelShort} - fate still pending in PF_WandererTracker.");
-                }
                 __result = false;
                 return false;
             }
@@ -182,18 +170,11 @@ namespace PeacefulFarewell
 
         public static void Prefix(Pawn __instance)
         {
-            if (__instance.Faction != null || Current.Game?.World == null)
-            {
-                return;
-            }
-
-            if (Current.Game.World.GetComponent<PF_WandererTracker>()?.IsTracked(__instance) == true)
+            if (__instance.Faction == null && PF_WandererTracker.Instance?.IsTracked(__instance) == true)
             {
                 suppressFreeSituationFor = __instance;
-                if (PeacefulFarewellMod.Settings.debugMode)
-                {
+                if (PF_Log.DebugMode)
                     PF_Log.Message($"Blocked vanilla random-faction assignment on PassToWorld for tracked wanderer {__instance.LabelShort}.");
-                }
             }
         }
 
@@ -211,6 +192,85 @@ namespace PeacefulFarewell
             if (__result == WorldPawnSituation.Free && p != null && p == Patch_NotifyPassedToWorld.suppressFreeSituationFor)
             {
                 __result = WorldPawnSituation.ReservedByQuest;
+            }
+        }
+    }
+
+    // Vanilla settlement maps (the player attacking or visiting one): by the
+    // end of GenerateMap the settlement's garrison and its defend-base lord
+    // already exist, so settled former colonists who live there can be put
+    // among them. See PF_SettlementPresence.
+    [HarmonyPatch(typeof(MapGenerator), nameof(MapGenerator.GenerateMap))]
+    public static class Patch_GenerateMap_SettlementResidents
+    {
+        public static void Postfix(Map __result)
+        {
+            try
+            {
+                if (__result?.Parent is Settlement settlement)
+                {
+                    PF_SettlementPresence.PlaceResidents(__result, settlement, notifyPlayer: true);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                PF_Log.Error("Exception placing settled residents on a generated settlement map: " + ex);
+            }
+        }
+    }
+
+    // Dynamic Diplomacy faction battles - patched manually from
+    // PeacefulFarewellMod, and only when DD is loaded, since the target type
+    // lives in DD's assembly. InitArenaMap spawns the defenders and gives
+    // them their lord, so residents are placed afterwards to join them.
+    // combatLoc is the settlement being fought over and baseDefender the
+    // faction holding it - only that side's residents are home.
+    //
+    // Also strips settled pawns out of DD's lhs/rhs lists: DD Destroy()s
+    // everyone in them when an unwatched battle ends, and pawn-recycling
+    // mods (Eternal Pawns) can hand one of our settled pawns to DD's
+    // SpawnPawnSet as a "veteran" of their faction. Left on the map but out
+    // of the lists, they go back to the world when the arena map closes.
+    public static class Patch_DD_InitArenaMap_SettlementResidents
+    {
+        public static void Postfix(MapParent mapParent, Faction baseDefender, Settlement combatLoc)
+        {
+            try
+            {
+                if (mapParent != null)
+                {
+                    ProtectSettledPawns(mapParent, "lhs");
+                    ProtectSettledPawns(mapParent, "rhs");
+                }
+
+                if (combatLoc != null && combatLoc.Faction == baseDefender && mapParent != null && mapParent.HasMap)
+                {
+                    PF_SettlementPresence.PlaceResidents(mapParent.Map, combatLoc, notifyPlayer: false);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                PF_Log.Error("Exception placing settled residents on a Dynamic Diplomacy battle map: " + ex);
+            }
+        }
+
+        private static void ProtectSettledPawns(MapParent mapParent, string fieldName)
+        {
+            PF_WandererTracker tracker = PF_WandererTracker.Instance;
+            if (tracker == null || !(AccessTools.Field(mapParent.GetType(), fieldName)?.GetValue(mapParent) is List<Pawn> side))
+            {
+                return;
+            }
+
+            // Never empty a side outright - DD reads an empty list as that
+            // side already wiped out and would end the battle on the spot.
+            for (int i = side.Count - 1; i >= 0 && side.Count > 1; i--)
+            {
+                if (side[i] != null && tracker.IsSettled(side[i]))
+                {
+                    PF_WandererDebugLog.LogEvent($"{side[i].LabelShort} was drafted into a Dynamic Diplomacy battle - removed from DD's '{fieldName}' list so DD won't destroy them afterwards.");
+                    side.RemoveAt(i);
+                }
             }
         }
     }

@@ -27,6 +27,7 @@ namespace PeacefulFarewell
         public float wanderlustChancePerCheck = 0.005f;
 
         public bool letterFromAfarEnabled = true;
+        public int maxLettersFromAfarPerQuadrum = 1;
 
         private Vector2 scrollPosition = Vector2.zero;
         private float viewHeight = 1450f;
@@ -48,6 +49,7 @@ namespace PeacefulFarewell
             Scribe_Values.Look(ref wanderlustEnabled, "wanderlustEnabled", true);
             Scribe_Values.Look(ref wanderlustChancePerCheck, "wanderlustChancePerCheck", 0.005f);
             Scribe_Values.Look(ref letterFromAfarEnabled, "letterFromAfarEnabled", true);
+            Scribe_Values.Look(ref maxLettersFromAfarPerQuadrum, "maxLettersFromAfarPerQuadrum", 1);
         }
 
         public void DoWindowContents(Rect inRect)
@@ -147,6 +149,13 @@ namespace PeacefulFarewell
             Text.Font = GameFont.Small;
 
             listing.CheckboxLabeled("PF_Setting_LetterFromAfarEnabledLabel".Translate(), ref letterFromAfarEnabled, "PF_Setting_LetterFromAfarEnabledTooltip".Translate());
+
+            if (letterFromAfarEnabled)
+            {
+                listing.Gap();
+                listing.Label("PF_Setting_LettersPerQuadrumLabel".Translate(maxLettersFromAfarPerQuadrum), tooltip: "PF_Setting_LettersPerQuadrumTooltip".Translate());
+                maxLettersFromAfarPerQuadrum = Mathf.RoundToInt(listing.Slider(maxLettersFromAfarPerQuadrum, 1f, 10f));
+            }
 
             listing.GapLine();
 

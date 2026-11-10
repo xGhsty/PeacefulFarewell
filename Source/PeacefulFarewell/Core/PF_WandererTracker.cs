@@ -45,6 +45,18 @@ namespace PeacefulFarewell
         // not when they settled) - kept so the overview/report can show "left
         // on <date>" for settled pawns too, not just still-wandering ones.
         private List<int> settledDepartureTick = new List<int>();
+        // The specific settlement each settled pawn actually lives in - what
+        // the overview's jump button points at, and where PF_SettlementPresence
+        // physically places them whenever that settlement gets a map (player
+        // attack, Dynamic Diplomacy battle). Null until one can be picked (old
+        // saves, or a faction with no settlements); EnsureHomeSettlement fills
+        // it in and re-picks it whenever the old one is razed or conquered.
+        private List<Settlement> settledHomes = new List<Settlement>();
+        // True for pawns who left by joining a visiting group rather than as
+        // wanderers who settled on their own - they write home far more
+        // rarely, and their home settlement is picked as if they'd travelled
+        // a few days with the visitors (see VisitorJoinTravelDays).
+        private List<bool> settledViaVisitors = new List<bool>();
 
         // Per-save random offset added to TicksGame before the % CheckIntervalTicks
         // test in WorldComponentTick, so the check's phase isn't pinned to
@@ -57,9 +69,16 @@ namespace PeacefulFarewell
         // double-firing near the boundary) on every load.
         private int checkPhaseOffset = -1;
 
+        // Global cap on letters from afar per quadrum, so many settled pawns
+        // don't turn into letter spam.
+        private int letterQuadrumIndex = -1;
+        private int lettersSentThisQuadrum = 0;
+
         public PF_WandererTracker(World world) : base(world)
         {
         }
+
+        public static PF_WandererTracker Instance => Current.Game?.World?.GetComponent<PF_WandererTracker>();
 
         public override void ExposeData()
         {
@@ -69,6 +88,8 @@ namespace PeacefulFarewell
             {
                 checkPhaseOffset = Rand.Range(0, CheckIntervalTicks);
             }
+            Scribe_Values.Look(ref letterQuadrumIndex, "letterQuadrumIndex", -1);
+            Scribe_Values.Look(ref lettersSentThisQuadrum, "lettersSentThisQuadrum", 0);
 
             Scribe_Collections.Look(ref wanderers, "wanderers", LookMode.Reference);
             Scribe_Collections.Look(ref registerTick, "registerTick", LookMode.Value);
@@ -119,6 +140,8 @@ namespace PeacefulFarewell
             Scribe_Collections.Look(ref settledOriginMaps, "settledOriginMaps", LookMode.Reference);
             Scribe_Collections.Look(ref nextLetterCheckTick, "nextLetterCheckTick", LookMode.Value);
             Scribe_Collections.Look(ref settledDepartureTick, "settledDepartureTick", LookMode.Value);
+            Scribe_Collections.Look(ref settledHomes, "settledHomes", LookMode.Reference);
+            Scribe_Collections.Look(ref settledViaVisitors, "settledViaVisitors", LookMode.Value);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
@@ -153,6 +176,27 @@ namespace PeacefulFarewell
                 {
                     settledDepartureTick.Add(Find.TickManager.TicksGame);
                 }
+                // Null (old saves, or a settlement reference that no longer
+                // resolves because it was removed) gets a fresh pick the next
+                // time EnsureHomeSettlement runs.
+                if (settledHomes == null)
+                {
+                    settledHomes = new List<Settlement>();
+                }
+                while (settledHomes.Count < settledPawns.Count)
+                {
+                    settledHomes.Add(null);
+                }
+                // Visitor-joiners were never registered before this field
+                // existed, so every pre-existing entry is a wanderer.
+                if (settledViaVisitors == null)
+                {
+                    settledViaVisitors = new List<bool>();
+                }
+                while (settledViaVisitors.Count < settledPawns.Count)
+                {
+                    settledViaVisitors.Add(false);
+                }
             }
         }
 
@@ -162,12 +206,18 @@ namespace PeacefulFarewell
         // letter needed) and not for JoinHostileFaction (no reason for someone who
         // defected to a hostile faction to write home, and NotifyLovedOnesAboutLostWanderer
         // already covers that case with its own, deliberately grimmer thoughts).
-        private void RegisterSettled(Pawn pawn, Map originMap, int departureTick)
+        //
+        // Also called (viaVisitors: true) for colonists who left with a
+        // visiting group - see FarewellUtility.RegisterJoinedVisitors.
+        public void RegisterSettled(Pawn pawn, Map originMap, int departureTick, bool viaVisitors = false)
         {
             settledPawns.Add(pawn);
             settledOriginMaps.Add(originMap);
-            nextLetterCheckTick.Add(Find.TickManager.TicksGame + RollNextLetterIntervalTicks());
+            nextLetterCheckTick.Add(Find.TickManager.TicksGame + RollNextLetterIntervalTicks(viaVisitors));
             settledDepartureTick.Add(departureTick);
+            settledHomes.Add(null);
+            settledViaVisitors.Add(viaVisitors);
+            EnsureHomeSettlement(settledPawns.Count - 1);
         }
 
         public void Register(Pawn pawn, PF_WandererReason reason, Map originMap)
@@ -185,6 +235,13 @@ namespace PeacefulFarewell
         public bool IsTracked(Pawn pawn)
         {
             return wanderers.Contains(pawn);
+        }
+
+        // True for pawns who already settled with a friendly faction (the
+        // "writing home" list), as opposed to IsTracked's still-wandering ones.
+        public bool IsSettled(Pawn pawn)
+        {
+            return settledPawns.Contains(pawn);
         }
 
         // Read-only snapshot of every wanderer currently tracked, for display
@@ -258,6 +315,8 @@ namespace PeacefulFarewell
             public float DaysUntilNextLetterCheck;
             public int DepartureTick;
             public int DepartureTile;
+            public Settlement HomeSettlement;
+            public bool ViaVisitors;
         }
 
         public List<SettledOverviewEntry> GetSettledOverviewEntries()
@@ -276,10 +335,148 @@ namespace PeacefulFarewell
                     Pawn = pawn,
                     DaysUntilNextLetterCheck = (float)(nextLetterCheckTick[i] - Find.TickManager.TicksGame) / GenDate.TicksPerDay,
                     DepartureTick = settledDepartureTick[i],
-                    DepartureTile = DepartureTileFor(settledOriginMaps[i])
+                    DepartureTile = DepartureTileFor(settledOriginMaps[i]),
+                    HomeSettlement = EnsureHomeSettlement(i),
+                    ViaVisitors = settledViaVisitors[i]
                 });
             }
             return entries;
+        }
+
+        // Settled pawns who live in this settlement and are actually there
+        // right now - alive, still with its faction, and sitting in the world
+        // pawn pool rather than spawned on some other map, travelling in a
+        // caravan, kidnapped or held by a quest. Used by PF_SettlementPresence
+        // when the settlement gets a map, to put them physically on it.
+        public List<Pawn> SettledResidentsOf(Settlement settlement)
+        {
+            var result = new List<Pawn>();
+            if (settlement == null || settlement.Faction == null)
+            {
+                return result;
+            }
+
+            for (int i = 0; i < settledPawns.Count; i++)
+            {
+                Pawn pawn = settledPawns[i];
+                if (pawn == null || pawn.Discarded || pawn.Dead || pawn.Spawned || pawn.Faction != settlement.Faction)
+                {
+                    continue;
+                }
+                if (EnsureHomeSettlement(i) != settlement)
+                {
+                    continue;
+                }
+
+                WorldPawnSituation situation = Find.WorldPawns.GetSituation(pawn);
+                if (situation == WorldPawnSituation.Free || situation == WorldPawnSituation.FactionLeader)
+                {
+                    result.Add(pawn);
+                }
+            }
+            return result;
+        }
+
+        // Rough overland pace of a lone traveller, in world tiles per day of
+        // travel - only used to judge how far from the colony a wanderer
+        // could plausibly have got before settling down, not simulated.
+        private const float TilesPerTravelDay = 6f;
+
+        // Floor on that reach, so a pawn who settled almost immediately still
+        // has the settlements just around the colony to choose from.
+        private const float MinReachTiles = 10f;
+
+        // How far a pawn can move to find a new home within their faction
+        // after losing the old one (razed, conquered by another faction).
+        private const float RelocationTravelDays = 3f;
+
+        // Assumed journey for a colonist who left with visitors - vanilla
+        // doesn't record which settlement a visiting group came from, but
+        // visitors come from the region, so this keeps the pick among the
+        // faction's nearer settlements.
+        private const float VisitorJoinTravelDays = 5f;
+
+        // Returns the settlement settled pawn `index` lives in, picking (or
+        // re-picking) one first if there isn't a valid one: never assigned
+        // yet, razed/removed, or taken over by another faction (Dynamic
+        // Diplomacy conquest replaces the Settlement object outright, vanilla
+        // and other mods can also just change its faction). A pawn who lost
+        // their home moves to one of their faction's settlements near the
+        // old one; otherwise the pick is based on how long they'd been on
+        // the road since leaving the colony.
+        private Settlement EnsureHomeSettlement(int index)
+        {
+            Pawn pawn = settledPawns[index];
+            Settlement home = settledHomes[index];
+            if (pawn == null || pawn.Faction == null)
+            {
+                return home;
+            }
+            if (home != null && !home.Destroyed && Find.WorldObjects.Contains(home) && home.Faction == pawn.Faction)
+            {
+                return home;
+            }
+
+            Settlement newHome;
+            if (home != null)
+            {
+                newHome = PickHomeSettlement(pawn.Faction, home.Tile, RelocationTravelDays);
+            }
+            else
+            {
+                float daysTravelled = settledViaVisitors[index]
+                    ? VisitorJoinTravelDays
+                    : (float)(Find.TickManager.TicksGame - settledDepartureTick[index]) / GenDate.TicksPerDay;
+                newHome = PickHomeSettlement(pawn.Faction, DepartureTileFor(settledOriginMaps[index]), daysTravelled);
+            }
+
+            settledHomes[index] = newHome;
+            if (newHome != null)
+            {
+                PF_WandererDebugLog.LogEvent(home == null
+                    ? $"{pawn.LabelShort} now lives in {newHome.Label} ({pawn.Faction.Name})."
+                    : $"{pawn.LabelShort} lost their home {home.Label} and moved to {newHome.Label} ({pawn.Faction.Name}).");
+            }
+            return newHome;
+        }
+
+        // Picks one of the faction's settlements a traveller starting at
+        // `fromTile` could have reached in `travelDays`. Farther settlements
+        // within that reach are weighted up, so a long journey tends to end
+        // somewhere distant while a short one stays close to the colony -
+        // but it stays a weighted roll, not a deterministic "farthest wins".
+        // If nothing is within reach, falls back to the nearest settlement.
+        private static Settlement PickHomeSettlement(Faction faction, PlanetTile fromTile, float travelDays)
+        {
+            List<Settlement> owned = Find.WorldObjects.Settlements
+                .Where((Settlement s) => s.Faction == faction && !s.Destroyed)
+                .ToList();
+            if (owned.Count == 0)
+            {
+                return null;
+            }
+
+            // Distances only make sense on the same planet layer (Odyssey's
+            // orbit is a separate layer) - otherwise just pick at random.
+            List<Settlement> sameLayer = fromTile.Valid
+                ? owned.Where((Settlement s) => s.Tile.Layer == fromTile.Layer).ToList()
+                : new List<Settlement>();
+            if (sameLayer.Count == 0)
+            {
+                return owned.RandomElement();
+            }
+
+            float reach = System.Math.Max(MinReachTiles, travelDays * TilesPerTravelDay);
+            List<Settlement> reachable = sameLayer
+                .Where((Settlement s) => Find.WorldGrid.ApproxDistanceInTiles(fromTile, s.Tile) <= reach)
+                .ToList();
+            if (reachable.Count == 0)
+            {
+                return GenCollection.MinBy(sameLayer, (Settlement s) => Find.WorldGrid.ApproxDistanceInTiles(fromTile, s.Tile));
+            }
+
+            return reachable.RandomElementByWeight(
+                (Settlement s) => 0.25f + Find.WorldGrid.ApproxDistanceInTiles(fromTile, s.Tile) / reach);
         }
 
         public override void WorldComponentTick()
@@ -311,6 +508,15 @@ namespace PeacefulFarewell
             catch (System.Exception ex)
             {
                 PF_Log.Error("Exception in PF_WandererTracker.RecoverLostDepartedPawns: " + ex);
+            }
+
+            try
+            {
+                MaintainSettledPawns();
+            }
+            catch (System.Exception ex)
+            {
+                PF_Log.Error("Exception in PF_WandererTracker.MaintainSettledPawns: " + ex);
             }
 
             try
@@ -392,10 +598,8 @@ namespace PeacefulFarewell
                     int minTicks = (int)(minDays * GenDate.TicksPerDay);
                     if (Find.TickManager.TicksGame < registerTick[i] + minTicks)
                     {
-                        if (PeacefulFarewellMod.Settings.debugMode)
-                        {
+                        if (PF_Log.DebugMode)
                             PF_Log.Message($"Wanderer {pawn.LabelShort} was assigned faction {pawn.Faction.Name} outside PF_WandererTracker before wandererMinCheckDays elapsed - reverting to factionless and continuing to wait.");
-                        }
                         pawn.SetFaction(null);
                         return;
                     }
@@ -403,10 +607,8 @@ namespace PeacefulFarewell
                     bool hostile = pawn.Faction.HostileTo(Faction.OfPlayer);
                     bool poorRelations = hostile && HadPoorColonyRelations(pawn, originMaps[i]);
 
-                    if (PeacefulFarewellMod.Settings.debugMode)
-                    {
+                    if (PF_Log.DebugMode)
                         PF_Log.Message($"Wanderer {pawn.LabelShort} already has faction {pawn.Faction.Name} (assigned outside PF_WandererTracker, hostile={hostile}, poorRelations={poorRelations}) - stopping tracking without rerolling.");
-                    }
 
                     if (PeacefulFarewellMod.Settings.wandererJoinedFactionLetterEnabled)
                     {
@@ -513,6 +715,17 @@ namespace PeacefulFarewell
                 return;
             }
 
+            int quadrum = Find.TickManager.TicksAbs / GenDate.TicksPerQuadrum;
+            if (quadrum != letterQuadrumIndex)
+            {
+                letterQuadrumIndex = quadrum;
+                lettersSentThisQuadrum = 0;
+            }
+
+            int maxPerQuadrum = PeacefulFarewellMod.Settings.maxLettersFromAfarPerQuadrum;
+            int now = Find.TickManager.TicksGame;
+            List<int> due = new List<int>();
+
             for (int i = settledPawns.Count - 1; i >= 0; i--)
             {
                 Pawn pawn = settledPawns[i];
@@ -523,14 +736,67 @@ namespace PeacefulFarewell
                     continue;
                 }
 
-                if (Find.TickManager.TicksGame < nextLetterCheckTick[i])
+                if (now >= nextLetterCheckTick[i])
                 {
+                    due.Add(i);
+                }
+            }
+
+            // Random order so the same pawn doesn't always win the limited slots.
+            due.Shuffle();
+
+            foreach (int i in due)
+            {
+                if (lettersSentThisQuadrum >= maxPerQuadrum)
+                {
+                    // Limit reached: push this pawn's letter to a random point
+                    // in the next quadrum instead of dropping it.
+                    int ticksToNextQuadrum = GenDate.TicksPerQuadrum - Find.TickManager.TicksAbs % GenDate.TicksPerQuadrum;
+                    nextLetterCheckTick[i] = now + ticksToNextQuadrum + Rand.Range(0, GenDate.TicksPerQuadrum);
                     continue;
                 }
 
-                nextLetterCheckTick[i] = Find.TickManager.TicksGame + RollNextLetterIntervalTicks();
+                nextLetterCheckTick[i] = now + RollNextLetterIntervalTicks(settledViaVisitors[i]);
 
-                FarewellUtility.TrySendLetterFromAfar(pawn);
+                if (FarewellUtility.TrySendLetterFromAfar(settledPawns[i]))
+                {
+                    lettersSentThisQuadrum++;
+                }
+            }
+        }
+
+        // Runs regardless of letterFromAfarEnabled - keeps each settled pawn's
+        // home settlement valid, drops pawns who came back to the player
+        // (recruited after being captured from their settlement), and re-pins
+        // pawns as kept world pawns. The pin matters after PF_SettlementPresence
+        // put them on a settlement map: when that map closes, vanilla's
+        // MapDeiniter passes them back to the world with the default
+        // "decide" discard mode, which would otherwise let the world pawn
+        // GC eventually throw them away.
+        private void MaintainSettledPawns()
+        {
+            for (int i = settledPawns.Count - 1; i >= 0; i--)
+            {
+                Pawn pawn = settledPawns[i];
+                if (pawn == null || pawn.Discarded || pawn.Dead)
+                {
+                    RemoveSettledAt(i);
+                    continue;
+                }
+
+                if (pawn.Faction != null && pawn.Faction.IsPlayer)
+                {
+                    PF_WandererDebugLog.LogEvent($"{pawn.LabelShort} is with the player again - no longer tracked as settled.");
+                    RemoveSettledAt(i);
+                    continue;
+                }
+
+                EnsureHomeSettlement(i);
+
+                if (Find.WorldPawns.Contains(pawn) && !Find.WorldPawns.ForcefullyKeptPawns.Contains(pawn))
+                {
+                    Find.WorldPawns.ForcefullyKeptPawns.Add(pawn);
+                }
             }
         }
 
@@ -540,13 +806,20 @@ namespace PeacefulFarewell
             settledOriginMaps.RemoveAt(index);
             nextLetterCheckTick.RemoveAt(index);
             settledDepartureTick.RemoveAt(index);
+            settledHomes.RemoveAt(index);
+            settledViaVisitors.RemoveAt(index);
         }
 
         // Wide window (5-15 days) between letter rolls per pawn - letters are
         // meant to be a rare, pleasant surprise, not a recurring notification.
-        private int RollNextLetterIntervalTicks()
+        // Colonists who left with visitors get a much wider one (30-60 days):
+        // they're registered so they have a real home and presence, not to
+        // add another regular source of letters.
+        private int RollNextLetterIntervalTicks(bool viaVisitors = false)
         {
-            return (int)(Rand.Range(5f, 15f) * GenDate.TicksPerDay);
+            return viaVisitors
+                ? (int)(Rand.Range(30f, 60f) * GenDate.TicksPerDay)
+                : (int)(Rand.Range(5f, 15f) * GenDate.TicksPerDay);
         }
 
         // Safety net for pawns whose departure job got interrupted after
@@ -675,10 +948,8 @@ namespace PeacefulFarewell
             // decided now, so this is purely return-vs-join, no "keep wandering".
             int outcome = Rand.RangeInclusive(0, 1);
 
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"Wanderer outcome check for {pawn.LabelShort}: rolled {outcome} (0=return, 1=join faction)");
-            }
 
             switch (outcome)
             {
@@ -697,10 +968,8 @@ namespace PeacefulFarewell
         {
             int outcome = Rand.RangeInclusive(0, 2);
 
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"Wanderlust outcome check for {pawn.LabelShort}: rolled {outcome} (0=return, 1=join friendly, 2=join hostile)");
-            }
 
             switch (outcome)
             {
@@ -806,42 +1075,6 @@ namespace PeacefulFarewell
         // rather than letting enough friends fully cancel it out.
         private const float MinFamilyFactionWeightMultiplier = 3f;
 
-        // How many close, mutual friendships the departing pawn is leaving
-        // behind in the colony they actually left from - used to dilute
-        // FamilyFactionWeightMultiplier so a wanderer with many strong bonds at
-        // home isn't overwhelmingly drawn to a faction over just one relative.
-        //
-        // Uses FarewellUtility.RealFriendOpinionOf (memory-based) rather than
-        // raw Pawn_RelationsTracker.OpinionOf - OpinionOf also folds in purely
-        // situational/passive social thoughts (e.g. a beauty-related trait's
-        // effect on how everyone perceives that pawn), which would count a
-        // colonist as a "strong friend" of everyone around them regardless of
-        // any actual history, inflating this count for reasons unrelated to a
-        // real bond.
-        private static int CountStrongFriendsInColony(Pawn pawn, Map originMap)
-        {
-            if (pawn.relations == null || originMap == null || !originMap.IsPlayerHome)
-            {
-                return 0;
-            }
-
-            int count = 0;
-            foreach (Pawn other in originMap.mapPawns.FreeColonistsSpawned)
-            {
-                if (other == pawn || other.Dead || other.relations == null)
-                {
-                    continue;
-                }
-
-                if (FarewellUtility.RealFriendOpinionOf(pawn, other) >= FarewellUtility.StrongFriendOpinionThreshold
-                    && FarewellUtility.RealFriendOpinionOf(other, pawn) >= FarewellUtility.StrongFriendOpinionThreshold)
-                {
-                    count++;
-                }
-            }
-
-            return count;
-        }
 
         // Excludes factions with no real presence on the world map (e.g. vanilla
         // Beggars/Pilgrims - already caught by def.hidden above, but this also
@@ -885,7 +1118,8 @@ namespace PeacefulFarewell
 
             HashSet<Faction> familyFactions = FindFamilyFactions(pawn, candidates);
 
-            int strongFriendsInColony = CountStrongFriendsInColony(pawn, originMap);
+            // Strong bonds left behind dilute the pull towards a family faction.
+            int strongFriendsInColony = originMap != null && originMap.IsPlayerHome ? FarewellUtility.CountStrongFriendsInColony(pawn, originMap) : 0;
             float familyWeight = FamilyFactionWeightMultiplier;
             if (strongFriendsInColony > 0)
             {
@@ -895,10 +1129,8 @@ namespace PeacefulFarewell
             Faction targetFaction = candidates.RandomElementByWeight(
                 (Faction f) => familyFactions.Contains(f) ? familyWeight : 1f);
 
-            if (PeacefulFarewellMod.Settings.debugMode && familyFactions.Count > 0)
-            {
+            if (PF_Log.DebugMode && familyFactions.Count > 0)
                 PF_Log.Message($"JoinRandomFaction for {pawn.LabelShort}: family/partner found in faction(s) [{string.Join(", ", familyFactions.Select(f => f.Name))}], strongFriendsInColony={strongFriendsInColony}, familyWeight={familyWeight}, rolled {targetFaction.Name}");
-            }
 
             pawn.SetFaction(targetFaction);
             Find.WorldPawns.PassToWorld(pawn, PawnDiscardDecideMode.KeepForever);
@@ -915,10 +1147,8 @@ namespace PeacefulFarewell
                     PF_Text.Variant("PF_WandererJoinedFactionText", 4, pawn.Named("PAWN"), targetFaction.Name),
                     LetterDefOf.NeutralEvent);
 
-                if (PeacefulFarewellMod.Settings.debugMode)
-                {
+                if (PF_Log.DebugMode)
                     PF_Log.Message($"Wanderer {pawn.LabelShort} joined faction {targetFaction.Name}, letter sent");
-                }
             }
             else if (PeacefulFarewellMod.Settings.debugMode)
             {
@@ -973,10 +1203,8 @@ namespace PeacefulFarewell
                 }
             }
 
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"Wanderer {pawn.LabelShort} joined hostile faction {targetFaction.Name}, poorRelations={poorRelations}, letter sent={PeacefulFarewellMod.Settings.wandererJoinedFactionLetterEnabled}");
-            }
         }
 
         // Which of the candidate factions the departing pawn has a positive/

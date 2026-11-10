@@ -42,6 +42,17 @@ namespace PeacefulFarewell
                 new Type[] { typeof(Pawn), typeof(PawnGenerationRequest) });
             harmony.Patch(isValidCandidateToRedress, prefix: new HarmonyMethod(typeof(Patch_IsValidCandidateToRedress), nameof(Patch_IsValidCandidateToRedress.Prefix)));
 
+            // Optional Dynamic Diplomacy support - its battle maps never pass
+            // through the vanilla settlement path. Resolved by name so DD
+            // stays a soft dependency. See Patch_DD_InitArenaMap_SettlementResidents.
+            Type ddConquest = AccessTools.TypeByName("DynamicDiplomacy.IncidentWorker_NPCConquest");
+            MethodInfo ddInitArenaMap = ddConquest == null ? null : AccessTools.Method(ddConquest, "InitArenaMap");
+            if (ddInitArenaMap != null)
+            {
+                harmony.Patch(ddInitArenaMap, postfix: new HarmonyMethod(typeof(Patch_DD_InitArenaMap_SettlementResidents), nameof(Patch_DD_InitArenaMap_SettlementResidents.Postfix)));
+                PF_Log.Message("Dynamic Diplomacy detected - settled colonists will be present in its battles.");
+            }
+
             PF_FileLog.WriteSessionHeaderIfNeeded();
             PF_Log.Message("Mod loaded.");
         }

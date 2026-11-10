@@ -62,10 +62,8 @@ namespace PeacefulFarewell
             // Player.log).
             follow.AddFinishAction(() =>
             {
-                if (PeacefulFarewellMod.Settings.debugMode)
-                {
+                if (PF_Log.DebugMode)
                     PF_Log.Message($"JobDriver_JoinVisitingFaction follow toil finish action for {pawn.LabelShort}: ended={ended}, spawned={pawn.Spawned}, map={pawn.Map}, position={pawn.Position}, faction={pawn.Faction?.Name ?? "null"}, discarded={pawn.Discarded}");
-                }
             });
             yield return follow;
 
@@ -132,6 +130,9 @@ namespace PeacefulFarewell
             }
 
             Faction targetFaction = FarewellJob.targetFaction;
+            // Captured up front - the fallback path below despawns the pawn
+            // before registering them, which clears pawn.Map.
+            Map originMap = pawn.Map;
 
             if (targetFaction == null || targetFaction.IsPlayer)
             {
@@ -164,11 +165,10 @@ namespace PeacefulFarewell
                 Job exitJob = JobMaker.MakeJob(JobDefOf.Goto, exitSpot);
                 exitJob.exitMapOnArrival = true;
                 pawn.jobs.jobQueue.EnqueueFirst(exitJob);
-                if (PeacefulFarewellMod.Settings.debugMode)
-                {
+                if (PF_Log.DebugMode)
                     PF_Log.Message($"DoJoinFaction for {pawn.LabelShort}: met relative of Hospitality guest group, walking off the map to {exitSpot} as {targetFaction.Name}.");
-                }
                 FarewellUtility.SendJoinedLetter(pawn, targetFaction);
+                FarewellUtility.RegisterJoinedVisitors(pawn, originMap);
                 return;
             }
 
@@ -181,11 +181,10 @@ namespace PeacefulFarewell
 
                 FarewellUtility.ApplyJoinVisitingFactionThoughts(pawn);
                 visitingLord.AddPawn(pawn);
-                if (PeacefulFarewellMod.Settings.debugMode)
-                {
+                if (PF_Log.DebugMode)
                     PF_Log.Message($"DoJoinFaction for {pawn.LabelShort}: joined visiting lord ({visitingLord.LordJob?.GetType().Name}, {visitingLord.ownedPawns.Count} pawns) of {targetFaction.Name}.");
-                }
                 FarewellUtility.SendJoinedLetter(pawn, targetFaction);
+                FarewellUtility.RegisterJoinedVisitors(pawn, originMap);
                 return;
             }
 
@@ -209,6 +208,7 @@ namespace PeacefulFarewell
             Find.WorldPawns.PassToWorld(pawn, PawnDiscardDecideMode.KeepForever);
 
             FarewellUtility.SendJoinedLetter(pawn, targetFaction);
+            FarewellUtility.RegisterJoinedVisitors(pawn, originMap);
         }
 
         private bool CanJoinLord(Lord lord, Faction targetFaction)

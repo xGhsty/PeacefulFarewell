@@ -4,12 +4,14 @@ using Verse.AI;
 
 namespace PeacefulFarewell
 {
-    // Carries the target faction alongside the job so it survives save/load via
-    // Pawn_JobTracker's normal Scribe_Deep polymorphic job saving - unlike the old
-    // PF_PendingFarewell static dictionary, which was lost on reload and left
-    // mid-departure pawns factionless. The visiting Lord doesn't need a field of
-    // its own here since vanilla Job already has a scribed "lord" field.
-    public class PF_Job_JoinVisitingFaction : Job
+    // Carries the target faction alongside the job so it survives save/load
+    // via Pawn_JobTracker's normal polymorphic job saving. The visiting Lord
+    // uses vanilla Job's own scribed "lord" field.
+    //
+    // IExposable is re-declared on purpose: Job.ExposeData() isn't virtual,
+    // so without re-implementing the interface here Scribe would keep calling
+    // Job's version and targetFaction would never be saved.
+    public class PF_Job_JoinVisitingFaction : Job, IExposable
     {
         public Faction targetFaction;
 
@@ -23,9 +25,6 @@ namespace PeacefulFarewell
             this.targetFaction = targetFaction;
         }
 
-        // Job.ExposeData() is not virtual - Scribe_Deep dispatches through the
-        // IExposable interface reference, so a `new` redeclaration here is still
-        // called correctly on the concrete subclass instance.
         public new void ExposeData()
         {
             base.ExposeData();

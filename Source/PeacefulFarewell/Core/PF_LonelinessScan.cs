@@ -141,10 +141,8 @@ namespace PeacefulFarewell
                 }
             }
 
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"PF_LonelinessScan on {Map}: colonistsChecked={colonists.Count}, options={Results.Count}, avgThreshold={avgThreshold}, maxSingleThreshold={maxSingleThreshold}");
-            }
 
             return true;
         }

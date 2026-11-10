@@ -42,7 +42,7 @@ namespace PeacefulFarewell
 
         public override void DoWindowContents(Rect inRect)
         {
-            PF_WandererTracker tracker = Current.Game?.World?.GetComponent<PF_WandererTracker>();
+            PF_WandererTracker tracker = PF_WandererTracker.Instance;
             if (tracker == null)
             {
                 Widgets.Label(inRect, "PF_Overview_NoWorld".Translate());
@@ -157,17 +157,20 @@ namespace PeacefulFarewell
                 entry.DaysTracked.ToString("F1"));
             string departureText = "PF_Overview_DepartedOn".Translate(DepartureDateString(entry.DepartureTick, entry.DepartureTile));
 
-            DrawCardFrame(rect, pawn, statusColor, statusText, subText, departureText);
+            DrawCardFrame(rect, pawn, statusColor, statusText, subText, departureText, home: null);
         }
 
         private void DrawSettledCard(Rect rect, PF_WandererTracker.SettledOverviewEntry entry)
         {
             Pawn pawn = entry.Pawn;
             string statusText = "PF_Overview_NextLetterInDays".Translate(entry.DaysUntilNextLetterCheck.ToString("F1"));
-            string subText = pawn.Faction?.Name ?? "PF_Overview_NoFaction".Translate();
+            string factionName = pawn.Faction?.Name ?? "PF_Overview_NoFaction".Translate();
+            string subText = entry.HomeSettlement != null
+                ? "PF_Overview_SettledCardSub".Translate(entry.HomeSettlement.Label, factionName)
+                : factionName;
             string departureText = "PF_Overview_DepartedOn".Translate(DepartureDateString(entry.DepartureTick, entry.DepartureTile));
 
-            DrawCardFrame(rect, pawn, ColorSettled, statusText, subText, departureText);
+            DrawCardFrame(rect, pawn, ColorSettled, statusText, subText, departureText, entry.HomeSettlement);
         }
 
         // Full calendar date (day/quadrum/year) the pawn originally left the
@@ -185,7 +188,10 @@ namespace PeacefulFarewell
             return "PF_Overview_DaysAgoFallback".Translate(daysAgo.ToString("F1"));
         }
 
-        private void DrawCardFrame(Rect rect, Pawn pawn, Color statusColor, string statusText, string subText, string departureText)
+        // `home` is the settlement the pawn actually lives in (settled pawns
+        // only) - the jump button is shown only when there is one, rather
+        // than pointing at an arbitrary settlement of their faction.
+        private void DrawCardFrame(Rect rect, Pawn pawn, Color statusColor, string statusText, string subText, string departureText, Settlement home)
         {
             Widgets.DrawBoxSolid(rect, new Color(1f, 1f, 1f, 0.03f));
             if (Mouse.IsOver(rect))
@@ -233,15 +239,14 @@ namespace PeacefulFarewell
                 Rect factionIconRect = new Rect(rect.xMax - 26f, rect.y + 4f, 20f, 20f);
                 FactionUIUtility.DrawFactionIconWithTooltip(factionIconRect, faction);
 
-                Settlement settlement = FindFactionSettlement(faction);
-                if (settlement != null)
+                if (home != null)
                 {
                     Rect jumpRect = new Rect(rect.xMax - 26f, rect.yMax - 24f, 20f, 20f);
                     if (Widgets.ButtonImage(jumpRect, TexButton.Search))
                     {
-                        JumpToSettlement(settlement);
+                        JumpToSettlement(home);
                     }
-                    TooltipHandler.TipRegion(jumpRect, "PF_Overview_JumpToSettlement".Translate(settlement.Label));
+                    TooltipHandler.TipRegion(jumpRect, "PF_Overview_JumpToSettlement".Translate(home.Label));
                 }
             }
 
@@ -255,19 +260,6 @@ namespace PeacefulFarewell
         {
             RenderTexture portrait = PortraitsCache.Get(pawn, rect.size, Rot4.South, compensateForUIScale: true);
             GUI.DrawTexture(rect, portrait);
-        }
-
-        // Only settlements (permanent bases), not any other world object type,
-        // count as a meaningful "jump to" target - and only the first one, since
-        // a pawn only ever belongs to one faction at a time here.
-        private static Settlement FindFactionSettlement(Faction faction)
-        {
-            List<Settlement> settlements = Find.WorldObjects?.Settlements;
-            if (settlements == null)
-            {
-                return null;
-            }
-            return settlements.FirstOrDefault(s => s.Faction == faction);
         }
 
         private static void JumpToSettlement(Settlement settlement)

@@ -10,56 +10,30 @@ namespace PeacefulFarewell
     {
         private const int CheckIntervalTicks = 2500;
 
-        // Wanderlust eligibility spans a full 5-year age band (13-18, see
-        // IsWanderlustEligible), so rolling wanderlustChancePerCheck on the
-        // same hourly cadence as the other checks means a pawn accumulates
-        // thousands of independent rolls over that window - even a "rare"
-        // 0.5% setting then fires for almost every teenager within days of
-        // turning 13 (1 - 0.005)^(hourly rolls over 5 years) rounds to ~0%
-        // survival. Checking once per in-game day instead keeps the setting's
-        // displayed percentage meaningful as a genuine per-roll rarity.
+        // Rolled once per in-game day rather than hourly: the 13-18 age band
+        // spans 5 years, and hourly rolls would make even a 0.5% chance fire
+        // for almost every teenager within days of turning 13.
         private const int WanderlustCheckIntervalTicks = GenDate.TicksPerDay;
         private int nextWanderlustCheckTick = -1;
 
-        // FindLonelyColonists is O(n^2) OpinionOf calls, and OpinionOf itself is
-        // one of the more expensive vanilla calls (it walks the full social
-        // thought list for the pair). With large colonies/many bases that adds
-        // up to thousands of calls if run in a single tick, which shows up as a
-        // visible freeze. Instead the scan is spread across many ticks, doing at
-        // most this many OpinionOf evaluations per tick.
+        // The loneliness scan is O(n^2) OpinionOf calls - spread across ticks,
+        // at most this many evaluations per tick, to avoid a visible freeze.
         private const int OpinionEvaluationsPerTick = 200;
 
-        // How long a colonist who just returned from wandering off out of
-        // loneliness is shielded from being picked as a loneliness candidate
-        // again, giving the player a real window to fix their relations
-        // instead of the request firing again almost immediately.
+        // "Just landed in the colony" shields from the loneliness check -
+        // after returning from wandering off, or after being recruited - so
+        // relationships have a chance to form before anyone is judged on them.
         private const int LonelinessReturnCooldownTicks = 5 * GenDate.TicksPerDay;
-
-        // A colonist fresh out of the prison cell hasn't had time to build up
-        // opinions with the rest of the colony yet, so a straight OpinionOf
-        // scan can flag them as "lonely" within the first in-game hour purely
-        // for lack of history, not because anyone dislikes them. Shield them
-        // from being picked as a loneliness candidate for a while after
-        // recruitment so relationships have a chance to actually form first.
         private const int RecruitedLonelinessCooldownTicks = 5 * GenDate.TicksPerDay;
 
-        // How long a colonist is shielded from being offered the same kind of
-        // request again after the player rejected it, matching the duration of
-        // the "denied" thought that rejection grants them (see
-        // ThoughtDefs_PeacefulFarewell.xml) - the request stops re-firing for
-        // them for as long as they're still stewing over being told no.
+        // After the player refuses a request, it isn't offered again for as
+        // long as the matching "denied" thought lasts (ThoughtDefs XML).
         private const int JoinDeniedCooldownTicks = 4 * GenDate.TicksPerDay;
         private const int LonelinessDeniedCooldownTicks = 4 * GenDate.TicksPerDay;
         private const int WanderlustDeniedCooldownTicks = 3 * GenDate.TicksPerDay;
 
-        // How long a colonist who just settled back in after a Wanderlust
-        // journey is shielded from being picked as a Wanderlust candidate
-        // again - 2 in-game years (GenDate.DaysPerYear = 60). Not permanent:
-        // per user request, someone who's had time to miss the road again
-        // should eventually be able to get the itch once more. In practice
-        // IsWanderlustEligible's 13-18 age band often excludes them again
-        // naturally before this even lapses - this cooldown mainly matters
-        // for mods/scenarios that widen that band.
+        // A pawn back from a Wanderlust journey isn't offered another one for
+        // 2 in-game years (not permanent - they may miss the road again).
         private const int WanderlustReturnCooldownTicks = 2 * GenDate.DaysPerYear * GenDate.TicksPerDay;
 
         private Queue<Map> pendingLonelinessMaps = new Queue<Map>();
@@ -68,40 +42,29 @@ namespace PeacefulFarewell
         private Dictionary<Pawn, int> joinDeniedCooldownUntilTick = new Dictionary<Pawn, int>();
         private Dictionary<Pawn, int> lonelinessDeniedCooldownUntilTick = new Dictionary<Pawn, int>();
         private Dictionary<Pawn, int> wanderlustDeniedCooldownUntilTick = new Dictionary<Pawn, int>();
-
-        // Pawns who just settled back in after a Wanderlust journey - shielded
-        // from being re-offered Wanderlust until the cooldown above lapses.
         private Dictionary<Pawn, int> wanderlustReturnCooldownUntilTick = new Dictionary<Pawn, int>();
 
-        // Pawns who have EVER returned from a Wanderlust journey, at any point
-        // in this save - permanent, never cleared. Unlike the cooldown above,
-        // this doesn't gate eligibility at all; it's only consulted to pick a
-        // different ("returning veteran", nostalgic) letter text variant when
-        // such a pawn is offered Wanderlust again after their cooldown lapses.
+        // Pawns who have EVER returned from a Wanderlust journey - never
+        // cleared, only picks the "returning veteran" letter text.
         private HashSet<Pawn> everReturnedFromWanderlust = new HashSet<Pawn>();
 
-        // Snapshot of a former colonist's work priorities and daily schedule,
-        // taken right before they leave the colony (still a full colonist at
-        // that point) and restored when/if they come back. Without this,
-        // SetFaction(Faction.OfPlayer) on return re-initializes both to
-        // vanilla defaults the same way a freshly recruited pawn would get,
-        // wiping out whatever the player had configured for them.
+        // Work priorities, schedule and apparel policy of a colonist who left,
+        // restored if they come back (SetFaction(OfPlayer) resets them).
         private Dictionary<Pawn, PF_WorkAndScheduleSnapshot> savedWorkAndSchedule = new Dictionary<Pawn, PF_WorkAndScheduleSnapshot>();
 
-        // Per-save random offset added to TicksGame before the % CheckIntervalTicks
-        // test in GameComponentTick, so the check's phase isn't pinned to
-        // multiples of CheckIntervalTicks in absolute game time. Without this,
-        // any save whose TicksGame happens to land on such a multiple (which
-        // includes every exact day boundary, since a day is 60000 ticks - a
-        // multiple of 2500) fires the check on the very first tick after
-        // loading, every time. Rolled once and persisted so it stays stable
-        // for the life of the save rather than re-randomizing (and briefly
-        // double-firing near the boundary) on every load.
+        // Scribe working lists - dictionaries keyed by a Pawn reference need
+        // them to survive the load passes; without them the dictionaries came
+        // back empty after every load.
+        private readonly List<Pawn>[] tmpKeys = new List<Pawn>[6];
+        private readonly List<int>[] tmpTicks = new List<int>[5];
+        private List<PF_WorkAndScheduleSnapshot> tmpSnapshots;
+
+        // Random per-save phase for the hourly check, so it doesn't always
+        // fire on the very first tick after loading at a day boundary.
         private int checkPhaseOffset = -1;
 
         // Colonists meeting a close relation/friend among friendly visitors
-        // (see PF_VisitMeeting). Ticked every VisitMeetingTickInterval to
-        // send the colonist over for a talk when it's due and they're free.
+        // (see PF_VisitMeeting), ticked every VisitMeetingTickInterval.
         private List<PF_VisitMeeting> visitMeetings = new List<PF_VisitMeeting>();
         private const int VisitMeetingTickInterval = 250;
 
@@ -110,91 +73,63 @@ namespace PeacefulFarewell
         private static readonly IntRange FirstVisitTalkDelayTicks = new IntRange(250, GenDate.TicksPerHour);
         private static readonly IntRange VisitTalkIntervalTicks = new IntRange(3 * GenDate.TicksPerHour, 4 * GenDate.TicksPerHour);
 
-        // If a started talk falls through (visitor out of reach, colonist
-        // drafted, ...), wait this long before sending them again.
+        // If a started talk falls through, wait this long before trying again.
         private const int VisitTalkRetryTicks = GenDate.TicksPerHour;
 
         public PF_GameComponent(Game game)
         {
         }
 
+        private static PF_GameComponent Instance => Current.Game?.GetComponent<PF_GameComponent>();
+
         public override void ExposeData()
         {
             base.ExposeData();
             Scribe_Values.Look(ref checkPhaseOffset, "checkPhaseOffset", -1);
-            if (Scribe.mode == LoadSaveMode.PostLoadInit && checkPhaseOffset < 0)
-            {
-                checkPhaseOffset = Rand.Range(0, CheckIntervalTicks);
-            }
-
             Scribe_Values.Look(ref nextWanderlustCheckTick, "nextWanderlustCheckTick", -1);
-            if (Scribe.mode == LoadSaveMode.PostLoadInit && nextWanderlustCheckTick < 0)
-            {
-                nextWanderlustCheckTick = Find.TickManager.TicksGame + WanderlustCheckIntervalTicks;
-            }
 
-            Scribe_Collections.Look(ref lonelinessCooldownUntilTick, "lonelinessCooldownUntilTick", LookMode.Reference, LookMode.Value);
-            if (Scribe.mode == LoadSaveMode.PostLoadInit && lonelinessCooldownUntilTick == null)
-            {
-                lonelinessCooldownUntilTick = new Dictionary<Pawn, int>();
-            }
-
-            Scribe_Collections.Look(ref joinDeniedCooldownUntilTick, "joinDeniedCooldownUntilTick", LookMode.Reference, LookMode.Value);
-            if (Scribe.mode == LoadSaveMode.PostLoadInit && joinDeniedCooldownUntilTick == null)
-            {
-                joinDeniedCooldownUntilTick = new Dictionary<Pawn, int>();
-            }
-
-            Scribe_Collections.Look(ref lonelinessDeniedCooldownUntilTick, "lonelinessDeniedCooldownUntilTick", LookMode.Reference, LookMode.Value);
-            if (Scribe.mode == LoadSaveMode.PostLoadInit && lonelinessDeniedCooldownUntilTick == null)
-            {
-                lonelinessDeniedCooldownUntilTick = new Dictionary<Pawn, int>();
-            }
-
-            Scribe_Collections.Look(ref wanderlustDeniedCooldownUntilTick, "wanderlustDeniedCooldownUntilTick", LookMode.Reference, LookMode.Value);
-            if (Scribe.mode == LoadSaveMode.PostLoadInit && wanderlustDeniedCooldownUntilTick == null)
-            {
-                wanderlustDeniedCooldownUntilTick = new Dictionary<Pawn, int>();
-            }
-
-            Scribe_Collections.Look(ref savedWorkAndSchedule, "savedWorkAndSchedule", LookMode.Reference, LookMode.Deep);
-            if (Scribe.mode == LoadSaveMode.PostLoadInit && savedWorkAndSchedule == null)
-            {
-                savedWorkAndSchedule = new Dictionary<Pawn, PF_WorkAndScheduleSnapshot>();
-            }
-
-            Scribe_Collections.Look(ref wanderlustReturnCooldownUntilTick, "wanderlustReturnCooldownUntilTick", LookMode.Reference, LookMode.Value);
-            if (Scribe.mode == LoadSaveMode.PostLoadInit && wanderlustReturnCooldownUntilTick == null)
-            {
-                wanderlustReturnCooldownUntilTick = new Dictionary<Pawn, int>();
-            }
+            LookPawnDict(ref lonelinessCooldownUntilTick, "lonelinessCooldownUntilTick", LookMode.Value, ref tmpKeys[0], ref tmpTicks[0]);
+            LookPawnDict(ref joinDeniedCooldownUntilTick, "joinDeniedCooldownUntilTick", LookMode.Value, ref tmpKeys[1], ref tmpTicks[1]);
+            LookPawnDict(ref lonelinessDeniedCooldownUntilTick, "lonelinessDeniedCooldownUntilTick", LookMode.Value, ref tmpKeys[2], ref tmpTicks[2]);
+            LookPawnDict(ref wanderlustDeniedCooldownUntilTick, "wanderlustDeniedCooldownUntilTick", LookMode.Value, ref tmpKeys[3], ref tmpTicks[3]);
+            LookPawnDict(ref savedWorkAndSchedule, "savedWorkAndSchedule", LookMode.Deep, ref tmpKeys[4], ref tmpSnapshots);
+            LookPawnDict(ref wanderlustReturnCooldownUntilTick, "wanderlustReturnCooldownUntilTick", LookMode.Value, ref tmpKeys[5], ref tmpTicks[4]);
 
             Scribe_Collections.Look(ref everReturnedFromWanderlust, "everReturnedFromWanderlust", LookMode.Reference);
-            if (Scribe.mode == LoadSaveMode.PostLoadInit && everReturnedFromWanderlust == null)
-            {
-                everReturnedFromWanderlust = new HashSet<Pawn>();
-            }
-
             Scribe_Collections.Look(ref visitMeetings, "visitMeetings", LookMode.Deep);
+
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
-                if (visitMeetings == null)
+                if (checkPhaseOffset < 0)
                 {
-                    visitMeetings = new List<PF_VisitMeeting>();
+                    checkPhaseOffset = Rand.Range(0, CheckIntervalTicks);
                 }
+                if (nextWanderlustCheckTick < 0)
+                {
+                    nextWanderlustCheckTick = Find.TickManager.TicksGame + WanderlustCheckIntervalTicks;
+                }
+                everReturnedFromWanderlust = everReturnedFromWanderlust ?? new HashSet<Pawn>();
+                visitMeetings = visitMeetings ?? new List<PF_VisitMeeting>();
                 visitMeetings.RemoveAll((PF_VisitMeeting m) => m == null || m.colonist == null || m.relative == null);
             }
         }
 
-        // Captures the pawn's current work priorities (per WorkTypeDef),
-        // timetable (per hour), and apparel policy (Rules/Outfits selection)
-        // so they can be restored later. Called right before a colonist
-        // leaves the colony (BecomeWanderer/BecomeWanderlustWanderer), while
-        // workSettings/timetable/outfits still reflect what the player
-        // configured for them.
+        private static void LookPawnDict<V>(ref Dictionary<Pawn, V> dict, string label, LookMode valueLookMode, ref List<Pawn> keys, ref List<V> values)
+        {
+            // logNullErrors off: a pawn that no longer exists (e.g. discarded
+            // after dying) just drops out of the dictionary.
+            Scribe_Collections.Look(ref dict, label, LookMode.Reference, valueLookMode, ref keys, ref values, logNullErrors: false);
+            if (Scribe.mode == LoadSaveMode.PostLoadInit && dict == null)
+            {
+                dict = new Dictionary<Pawn, V>();
+            }
+        }
+
+        // Captures the pawn's work priorities, timetable and apparel policy
+        // right before they leave (BecomeWanderer/BecomeWanderlustWanderer).
         public static void SaveWorkAndSchedule(Pawn pawn)
         {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
+            PF_GameComponent component = Instance;
             if (component == null)
             {
                 return;
@@ -222,19 +157,16 @@ namespace PeacefulFarewell
 
             component.savedWorkAndSchedule[pawn] = snapshot;
 
-            // Independent file-based backup, keyed by ThingID rather than a
-            // Scribed Pawn reference - see PF_WorkAndScheduleFileStore for why.
+            // Independent file-based backup, keyed by ThingID - see
+            // PF_WorkAndScheduleFileStore.
             PF_WorkAndScheduleFileStore.Save(pawn, snapshot);
         }
 
-        // Restores whatever SaveWorkAndSchedule captured for this pawn, if
-        // anything - called after ReturnToColony spawns them back in and
-        // vanilla has already reset workSettings/timetable to defaults via
-        // SetFaction(Faction.OfPlayer). Silently does nothing if there's no
-        // snapshot (e.g. the pawn joined the colony some other way).
+        // Restores what SaveWorkAndSchedule captured, after ReturnToColony
+        // spawned the pawn back in. Does nothing if there's no snapshot.
         public static void RestoreWorkAndSchedule(Pawn pawn)
         {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
+            PF_GameComponent component = Instance;
             if (component == null)
             {
                 return;
@@ -243,10 +175,7 @@ namespace PeacefulFarewell
             bool hasDictSnapshot = component.savedWorkAndSchedule.TryGetValue(pawn, out PF_WorkAndScheduleSnapshot snapshot);
             component.savedWorkAndSchedule.Remove(pawn);
 
-            // The Scribed dictionary is the primary source when it resolved
-            // correctly. If it didn't (e.g. the Pawn reference failed to
-            // fix up across a save/load while this pawn was off-map), fall
-            // back to the file backup instead of silently restoring nothing.
+            // Fall back to the file backup if the scribed entry didn't survive.
             if (!hasDictSnapshot)
             {
                 snapshot = PF_WorkAndScheduleFileStore.TryLoad(pawn);
@@ -255,10 +184,8 @@ namespace PeacefulFarewell
                     return;
                 }
 
-                if (PeacefulFarewellMod.Settings.debugMode)
-                {
+                if (PF_Log.DebugMode)
                     PF_Log.Message($"RestoreWorkAndSchedule: no Scribed snapshot found for {pawn.LabelShort}, recovered from file backup instead.");
-                }
             }
 
             PF_WorkAndScheduleFileStore.Discard(pawn);
@@ -289,191 +216,68 @@ namespace PeacefulFarewell
                 pawn.outfits.CurrentApparelPolicy = snapshot.apparelPolicy;
             }
 
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"Restored saved work priorities and schedule for returning colonist {pawn.LabelShort}");
-            }
         }
 
-        // Pawns currently mid-departure per this mod's own bookkeeping - a
-        // saved snapshot exists from SaveWorkAndSchedule and hasn't been
-        // consumed by RestoreWorkAndSchedule yet, i.e. they left but haven't
-        // come back. Used by PF_WandererTracker's lost-pawn sweep to find
-        // pawns who should be tracked but currently aren't (e.g. a departure
-        // job that got interrupted between clearing Faction and reaching the
-        // toil that calls PF_WandererTracker.Register).
+        // Pawns who left (snapshot saved) but haven't come back - used by
+        // PF_WandererTracker's lost-pawn sweep to find untracked departures.
         public static List<Pawn> GetPawnsWithPendingDeparture()
         {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
-            if (component == null)
-            {
-                return new List<Pawn>();
-            }
-
-            return component.savedWorkAndSchedule.Keys.ToList();
+            PF_GameComponent component = Instance;
+            return component != null ? component.savedWorkAndSchedule.Keys.ToList() : new List<Pawn>();
         }
 
-        // Drops a pending-departure snapshot without restoring it - for a pawn
-        // found to have already settled somewhere (e.g. picked up by vanilla's
-        // faction "redress" system while untracked) rather than one being
-        // recovered back into the tracker. Without this, such a pawn would
-        // keep showing up in GetPawnsWithPendingDeparture forever.
+        // Drops a pending-departure snapshot without restoring it (the pawn
+        // already settled somewhere), so it stops showing up above.
         public static void DiscardPendingDeparture(Pawn pawn)
         {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
-            component?.savedWorkAndSchedule.Remove(pawn);
+            Instance?.savedWorkAndSchedule.Remove(pawn);
             PF_WorkAndScheduleFileStore.Discard(pawn);
         }
 
-        public static void NotifyReturnedFromLoneliness(Pawn pawn)
+        // ---- Cooldowns ----
+
+        private static void SetCooldown(Dictionary<Pawn, int> cooldowns, Pawn pawn, int ticks)
         {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
-            if (component == null)
+            if (cooldowns != null)
             {
-                return;
+                cooldowns[pawn] = Find.TickManager.TicksGame + ticks;
             }
-            component.lonelinessCooldownUntilTick[pawn] = Find.TickManager.TicksGame + LonelinessReturnCooldownTicks;
         }
 
-        // Reuses the same cooldown dictionary as NotifyReturnedFromLoneliness -
-        // both represent "just landed in the colony, hasn't had time to build
-        // real relationships yet" and should block the loneliness check for
-        // the same kind of reason.
-        public static void NotifyRecruited(Pawn pawn)
+        private static bool OnCooldown(Dictionary<Pawn, int> cooldowns, Pawn pawn)
         {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
-            if (component == null)
-            {
-                return;
-            }
-            component.lonelinessCooldownUntilTick[pawn] = Find.TickManager.TicksGame + RecruitedLonelinessCooldownTicks;
+            return cooldowns != null && cooldowns.TryGetValue(pawn, out int untilTick) && Find.TickManager.TicksGame < untilTick;
         }
 
-        public static void NotifyJoinRequestDenied(Pawn pawn)
-        {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
-            if (component == null)
-            {
-                return;
-            }
-            component.joinDeniedCooldownUntilTick[pawn] = Find.TickManager.TicksGame + JoinDeniedCooldownTicks;
-        }
+        public static void NotifyReturnedFromLoneliness(Pawn pawn) => SetCooldown(Instance?.lonelinessCooldownUntilTick, pawn, LonelinessReturnCooldownTicks);
+        public static void NotifyRecruited(Pawn pawn) => SetCooldown(Instance?.lonelinessCooldownUntilTick, pawn, RecruitedLonelinessCooldownTicks);
+        public static void NotifyJoinRequestDenied(Pawn pawn) => SetCooldown(Instance?.joinDeniedCooldownUntilTick, pawn, JoinDeniedCooldownTicks);
+        public static void NotifyLonelinessRequestDenied(Pawn pawn) => SetCooldown(Instance?.lonelinessDeniedCooldownUntilTick, pawn, LonelinessDeniedCooldownTicks);
+        public static void NotifyWanderlustRequestDenied(Pawn pawn) => SetCooldown(Instance?.wanderlustDeniedCooldownUntilTick, pawn, WanderlustDeniedCooldownTicks);
 
-        public static void NotifyLonelinessRequestDenied(Pawn pawn)
-        {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
-            if (component == null)
-            {
-                return;
-            }
-            component.lonelinessDeniedCooldownUntilTick[pawn] = Find.TickManager.TicksGame + LonelinessDeniedCooldownTicks;
-        }
-
-        public static void NotifyWanderlustRequestDenied(Pawn pawn)
-        {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
-            if (component == null)
-            {
-                return;
-            }
-            component.wanderlustDeniedCooldownUntilTick[pawn] = Find.TickManager.TicksGame + WanderlustDeniedCooldownTicks;
-        }
-
-        // Called once, when a Wanderlust wanderer returns to the colony rather
-        // than joining a faction or vanishing. Starts the return cooldown
-        // (see WanderlustReturnCooldownTicks) and permanently marks the pawn
-        // as a "returning veteran" for text-variant purposes - see
-        // IsWanderlustReturnOnCooldown and HasEverReturnedFromWanderlust.
+        // Starts the Wanderlust return cooldown, marks the pawn as a
+        // "returning veteran", and also shields them from the loneliness
+        // check for a while, like any other fresh arrival.
         public static void NotifyReturnedFromWanderlust(Pawn pawn)
         {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
+            PF_GameComponent component = Instance;
             if (component == null)
             {
                 return;
             }
-            component.wanderlustReturnCooldownUntilTick[pawn] = Find.TickManager.TicksGame + WanderlustReturnCooldownTicks;
+            SetCooldown(component.wanderlustReturnCooldownUntilTick, pawn, WanderlustReturnCooldownTicks);
             component.everReturnedFromWanderlust.Add(pawn);
-
-            // Also shields them from the unrelated Loneliness check for a
-            // while - without this a pawn could get the "what a wonderful
-            // journey" mood buff and then get flagged as disliked-here almost
-            // immediately, since nothing else gates Loneliness eligibility
-            // right after a Wanderlust return. Reuses the same dictionary as
-            // NotifyReturnedFromLoneliness/NotifyRecruited for the same
-            // "hasn't had time to rebuild relationships yet" reasoning.
-            component.lonelinessCooldownUntilTick[pawn] = Find.TickManager.TicksGame + LonelinessReturnCooldownTicks;
+            SetCooldown(component.lonelinessCooldownUntilTick, pawn, LonelinessReturnCooldownTicks);
         }
 
-        // Whether this pawn is still within the post-return cooldown window -
-        // used by IsWanderlustEligible to keep them off the candidate list for
-        // a while after settling back in.
-        public static bool IsWanderlustReturnOnCooldown(Pawn pawn)
-        {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
-            if (component == null || !component.wanderlustReturnCooldownUntilTick.TryGetValue(pawn, out int untilTick))
-            {
-                return false;
-            }
-            return Find.TickManager.TicksGame < untilTick;
-        }
-
-        // Whether this pawn has EVER returned from a Wanderlust journey, at
-        // any point in this save - permanent, never cleared, and independent
-        // of the cooldown above. Used only to pick the "returning veteran"
-        // letter text variant when they're offered Wanderlust again.
-        public static bool HasEverReturnedFromWanderlust(Pawn pawn)
-        {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
-            return component != null && component.everReturnedFromWanderlust.Contains(pawn);
-        }
-
-        private bool IsOnLonelinessCooldown(Pawn pawn)
-        {
-            return lonelinessCooldownUntilTick.TryGetValue(pawn, out int untilTick)
-                && Find.TickManager.TicksGame < untilTick;
-        }
-
-        private bool IsOnJoinDeniedCooldown(Pawn pawn)
-        {
-            return joinDeniedCooldownUntilTick.TryGetValue(pawn, out int untilTick)
-                && Find.TickManager.TicksGame < untilTick;
-        }
-
-        private bool IsOnLonelinessDeniedCooldown(Pawn pawn)
-        {
-            return lonelinessDeniedCooldownUntilTick.TryGetValue(pawn, out int untilTick)
-                && Find.TickManager.TicksGame < untilTick;
-        }
-
-        private bool IsOnWanderlustDeniedCooldown(Pawn pawn)
-        {
-            return wanderlustDeniedCooldownUntilTick.TryGetValue(pawn, out int untilTick)
-                && Find.TickManager.TicksGame < untilTick;
-        }
-
-        public static bool IsLonelinessCooldownActive(Pawn pawn)
-        {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
-            return component != null && component.IsOnLonelinessCooldown(pawn);
-        }
-
-        public static bool IsJoinRequestOnCooldown(Pawn pawn)
-        {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
-            return component != null && component.IsOnJoinDeniedCooldown(pawn);
-        }
-
-        public static bool IsLonelinessRequestOnCooldown(Pawn pawn)
-        {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
-            return component != null && component.IsOnLonelinessDeniedCooldown(pawn);
-        }
-
-        public static bool IsWanderlustRequestOnCooldown(Pawn pawn)
-        {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
-            return component != null && component.IsOnWanderlustDeniedCooldown(pawn);
-        }
+        public static bool IsWanderlustReturnOnCooldown(Pawn pawn) => OnCooldown(Instance?.wanderlustReturnCooldownUntilTick, pawn);
+        public static bool HasEverReturnedFromWanderlust(Pawn pawn) => Instance?.everReturnedFromWanderlust.Contains(pawn) == true;
+        public static bool IsLonelinessCooldownActive(Pawn pawn) => OnCooldown(Instance?.lonelinessCooldownUntilTick, pawn);
+        public static bool IsJoinRequestOnCooldown(Pawn pawn) => OnCooldown(Instance?.joinDeniedCooldownUntilTick, pawn);
+        public static bool IsLonelinessRequestOnCooldown(Pawn pawn) => OnCooldown(Instance?.lonelinessDeniedCooldownUntilTick, pawn);
+        public static bool IsWanderlustRequestOnCooldown(Pawn pawn) => OnCooldown(Instance?.wanderlustDeniedCooldownUntilTick, pawn);
 
         public override void GameComponentTick()
         {
@@ -481,10 +285,8 @@ namespace PeacefulFarewell
 
             if ((tick + checkPhaseOffset) % CheckIntervalTicks == 0)
             {
-                if (PeacefulFarewellMod.Settings.debugMode)
-                {
+                if (PF_Log.DebugMode)
                     PF_Log.Message($"GameComponentTick check at tick {tick}, maps={Find.Maps?.Count ?? -1}");
-                }
 
                 try
                 {
@@ -607,10 +409,8 @@ namespace PeacefulFarewell
                 };
                 visitMeetings.Add(meeting);
 
-                if (PeacefulFarewellMod.Settings.debugMode)
-                {
+                if (PF_Log.DebugMode)
                     PF_Log.Message($"Visit meeting started: {meeting}");
-                }
             }
         }
 
@@ -658,10 +458,8 @@ namespace PeacefulFarewell
                 }
                 if (!FarewellUtility.CanStartVisitTalk(meeting.colonist, meeting.relative, meeting.debugForceNextTalk, out string blockReason))
                 {
-                    if (PeacefulFarewellMod.Settings.debugMode && blockReason != meeting.lastBlockReason)
-                    {
+                    if (PF_Log.DebugMode && blockReason != meeting.lastBlockReason)
                         PF_Log.Message($"Visit talk blocked ({blockReason}): {meeting}");
-                    }
                     meeting.lastBlockReason = blockReason;
                     continue;
                 }
@@ -671,10 +469,8 @@ namespace PeacefulFarewell
                 meeting.nextTalkTick = now + VisitTalkRetryTicks;
                 FarewellUtility.StartVisitTalk(meeting.colonist, meeting.relative);
 
-                if (PeacefulFarewellMod.Settings.debugMode)
-                {
+                if (PF_Log.DebugMode)
                     PF_Log.Message($"Visit talk started: {meeting}, colonist job now={meeting.colonist.CurJobDef?.defName ?? "null"}");
-                }
             }
         }
 
@@ -688,16 +484,14 @@ namespace PeacefulFarewell
                 FarewellUtility.GiveGoodToSeeVisitorThought(meeting.colonist, meeting.relative);
             }
 
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"Visit meeting ended without a decision: {meeting}");
-            }
         }
 
         // Called by JobDriver_TalkWithVisitingRelative when a talk ends.
         public static void NotifyVisitTalkFinished(Pawn colonist, Pawn relative, FarewellUtility.VisitTalkOutcome outcome)
         {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
+            PF_GameComponent component = Instance;
             if (component == null)
             {
                 return;
@@ -717,10 +511,8 @@ namespace PeacefulFarewell
             }
             meeting.nextTalkTick = Find.TickManager.TicksGame + VisitTalkIntervalTicks.RandomInRange;
 
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"Visit talk finished ({outcome}): {meeting}");
-            }
 
             if (meeting.talksDone >= PeacefulFarewellMod.Settings.visitTalksBeforeDecision)
             {
@@ -740,10 +532,8 @@ namespace PeacefulFarewell
                 && !FarewellUtility.HasPendingRequestLetter(meeting.colonist)
                 && !IsJoinRequestOnCooldown(meeting.colonist);
 
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"Visit meeting decision for {meeting.colonist.LabelShort}: {breakdown} -> {(canAsk ? "asks to leave" : wantsToLeave ? "wants to leave, but can't ask now" : "stays")}");
-            }
 
             if (canAsk)
             {
@@ -762,7 +552,7 @@ namespace PeacefulFarewell
         // soft checks (work, schedule, needs) in CanStartVisitTalk.
         public static int DebugHurryVisitTalks(Map map)
         {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
+            PF_GameComponent component = Instance;
             if (component == null || map == null)
             {
                 return 0;
@@ -785,8 +575,7 @@ namespace PeacefulFarewell
 
         public static List<PF_VisitMeeting> GetVisitMeetings()
         {
-            PF_GameComponent component = Current.Game?.GetComponent<PF_GameComponent>();
-            return component != null ? component.visitMeetings : new List<PF_VisitMeeting>();
+            return Instance?.visitMeetings ?? new List<PF_VisitMeeting>();
         }
 
         // Debug-only: skips the talks and sends the letter straight away.
@@ -816,10 +605,8 @@ namespace PeacefulFarewell
 
             Find.LetterStack.ReceiveLetter(letter);
 
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"Letter sent for colonist {colonist.LabelShort} -> {targetFaction.Name} (bond={bond}, relation={otherFamilyRelation?.defName ?? "-"}, afterTalks={afterTalks})");
-            }
         }
 
         private void FinishLonelinessScan(PF_LonelinessScan scan)
@@ -859,7 +646,7 @@ namespace PeacefulFarewell
                 // colony yet, so skip them entirely (no thought, no letter) until
                 // the cooldown lapses, instead of flagging them as disliked for
                 // simply lacking history.
-                if (IsOnLonelinessCooldown(pawn))
+                if (OnCooldown(lonelinessCooldownUntilTick, pawn))
                 {
                     continue;
                 }
@@ -868,7 +655,7 @@ namespace PeacefulFarewell
                 {
                     // Still stewing over a recent rejection - give the player the
                     // time that cooldown is meant for before asking again.
-                    if (!IsOnLonelinessDeniedCooldown(pawn) && !FarewellUtility.HasPendingRequestLetter(pawn))
+                    if (!OnCooldown(lonelinessDeniedCooldownUntilTick, pawn) && !FarewellUtility.HasPendingRequestLetter(pawn))
                     {
                         readyForLetter.Add(pawn);
                     }
@@ -919,10 +706,8 @@ namespace PeacefulFarewell
 
             Find.LetterStack.ReceiveLetter(letter);
 
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"Loneliness letter sent for colonist {candidate.LabelShort}");
-            }
         }
 
         // Pools candidates from every player home map before rolling, so the
@@ -986,10 +771,8 @@ namespace PeacefulFarewell
 
             Find.LetterStack.ReceiveLetter(letter);
 
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"Wanderlust letter sent for colonist {pawn.LabelShort}");
-            }
         }
     }
 }

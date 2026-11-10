@@ -20,23 +20,11 @@ namespace PeacefulFarewell
         private const int MinWanderIntervalTicks = 250;
         private const int MaxWanderIntervalTicks = 600;
 
-        // Shared by all 3 departure JobDrivers: before heading for the map edge,
-        // a colonist with an assigned bed stops by their room first and lingers
-        // for 1-3 in-game hours, purely for immersion (a moment to take in the
-        // place they're leaving) before the actual exit toil begins. The linger
-        // timer only starts once they've actually arrived at the bed, not from
-        // toil start - the walk there doesn't count against it. While lingering,
-        // the pawn periodically wanders to another spot in the same room instead
-        // of standing still at the bed the whole time. Colonists with no owned
-        // bed (e.g. never assigned one) skip straight to the exit toil.
-        //
-        // Takes the bed as a parameter (captured by the caller before clearing
-        // the pawn's faction) rather than reading pawn.ownership.OwnedBed live -
-        // SetFaction(null) wipes ownership as a side effect, and by the time
-        // this toil runs the pawn is already faction-less (see StartXJob's
-        // callers, which now clear faction up front - see the SetFaction(null)
-        // job-suicide comment on the exit toils for why it can no longer happen
-        // mid-job).
+        // Shared by all departure jobs: a colonist with a bed first walks to
+        // their room and lingers there 1-3 in-game hours (timer starts on
+        // arrival), wandering around the room, before heading out. No bed -
+        // straight to the exit toil. The bed is passed in because it was
+        // captured before SetFaction wiped the pawn's ownership.
         public static Toil MakeRoomVisitToil(Building_Bed bed)
         {
             Toil visit = new Toil();
@@ -49,19 +37,15 @@ namespace PeacefulFarewell
                 Pawn pawn = visit.actor;
                 if (bed == null || !bed.Spawned || bed.Map != pawn.Map)
                 {
-                    if (PeacefulFarewellMod.Settings.debugMode)
-                    {
+                    if (PF_Log.DebugMode)
                         PF_Log.Message($"MakeRoomVisitToil for {pawn.LabelShort}: skipping room visit - bed={(bed == null ? "null" : bed.LabelShort)}, spawned={bed?.Spawned}, bedMap={bed?.Map}, pawnMap={pawn.Map}");
-                    }
                     visit.actor.jobs.curDriver.ReadyForNextToil();
                     return;
                 }
 
                 IntVec3 sleepSpot = RestUtility.GetBedSleepingSlotPosFor(pawn, bed);
-                if (PeacefulFarewellMod.Settings.debugMode)
-                {
+                if (PF_Log.DebugMode)
                     PF_Log.Message($"MakeRoomVisitToil for {pawn.LabelShort}: heading to bed {bed.LabelShort} at {sleepSpot}, pawn currently at {pawn.Position}.");
-                }
                 pawn.pather.StartPath(sleepSpot, PathEndMode.OnCell);
             };
             visit.tickIntervalAction = delegate(int delta)
@@ -83,19 +67,15 @@ namespace PeacefulFarewell
 
                     arrivedTick = Find.TickManager.TicksGame + Rand.RangeInclusive(MinRoomVisitTicks, MaxRoomVisitTicks);
                     nextWanderTick = Find.TickManager.TicksGame + Rand.RangeInclusive(MinWanderIntervalTicks, MaxWanderIntervalTicks);
-                    if (PeacefulFarewellMod.Settings.debugMode)
-                    {
+                    if (PF_Log.DebugMode)
                         PF_Log.Message($"MakeRoomVisitToil for {pawn.LabelShort}: arrived at bed, lingering until tick {arrivedTick} (current {Find.TickManager.TicksGame}).");
-                    }
                     return;
                 }
 
                 if (Find.TickManager.TicksGame >= arrivedTick)
                 {
-                    if (PeacefulFarewellMod.Settings.debugMode)
-                    {
+                    if (PF_Log.DebugMode)
                         PF_Log.Message($"MakeRoomVisitToil for {pawn.LabelShort}: linger done, moving to next toil.");
-                    }
                     visit.actor.jobs.curDriver.ReadyForNextToil();
                     return;
                 }
@@ -218,11 +198,8 @@ namespace PeacefulFarewell
                     }
                     colonistsChecked++;
 
-                    // Cheap check first: this runs every hour for every
-                    // colonist while visitors are around (it used to run only
-                    // when the old per-visit chance rolled), so the
-                    // colony-wide scans below only happen for the few
-                    // colonists who actually have someone among the visitors.
+                    // Cheap check first - the colony-wide scans below run
+                    // only for colonists who have someone among the visitors.
                     Pawn closePawn = FindClosestRelation(colonist, visitors);
                     if (closePawn == null)
                     {
@@ -232,15 +209,9 @@ namespace PeacefulFarewell
                     {
                         continue;
                     }
-                    // A colonist with several real (memory-based) close
-                    // friendships already in the colony has more to lose than
-                    // gain from leaving for one visiting friend/relative -
-                    // per user request, don't offer this choice to a colonist
-                    // who'd be abandoning a bigger support network for a
-                    // smaller one. HasFamilyInColony above already excludes
-                    // colonists with formal family here; this catches the
-                    // plain-friendship case that check doesn't cover.
-                    if (CountStrongFriendsInColony(colonist) >= 2)
+                    // Several real friends in the colony outweigh one
+                    // visiting friend/relative - don't offer the choice.
+                    if (CountStrongFriendsInColony(colonist, colonist.Map) >= 2)
                     {
                         continue;
                     }
@@ -255,10 +226,8 @@ namespace PeacefulFarewell
                 }
             }
 
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"FindRequestCandidates on {map}: lordsTotal={lordsTotal}, lordsEligible={lordsEligible}, colonistsChecked={colonistsChecked}, options={options.Count}, minImportance={PeacefulFarewellMod.Settings.minRelationImportance}");
-            }
 
             return options;
         }
@@ -351,9 +320,7 @@ namespace PeacefulFarewell
 
             foreach (Letter letter in letters)
             {
-                if ((letter is ChoiceLetter_WanderlustRequest w && !w.decided && w.colonist == pawn)
-                    || (letter is ChoiceLetter_LonelinessRequest l && !l.decided && l.colonist == pawn)
-                    || (letter is ChoiceLetter_JoinRequest j && !j.decided && j.colonist == pawn))
+                if (letter is ChoiceLetter_PF_Request request && !request.decided && request.colonist == pawn)
                 {
                     return true;
                 }
@@ -398,11 +365,8 @@ namespace PeacefulFarewell
                     continue;
                 }
 
-                // PawnRelationUtility.GetRelations (not just DirectRelations) so
-                // virtual/inferred kinships like Sibling (computed from shared
-                // parents, not always a physical DirectRelation entry) still
-                // count - see the matching comment on GetLovedOneCloseness below,
-                // which hit the same gap for the wanderlust-return notify.
+                // GetRelations, not DirectRelations: also covers inferred
+                // kinships like Sibling (computed from shared parents).
                 foreach (PawnRelationDef relationDef in PawnRelationUtility.GetRelations(pawn, other))
                 {
                     if (StayForFamilyRelations.Contains(relationDef))
@@ -415,36 +379,24 @@ namespace PeacefulFarewell
             return false;
         }
 
-        // Same "good friend" bar used elsewhere (relations tab parity, and
-        // PF_WandererTracker's family-faction weighting) for "counts as a real
-        // bond". Checked both directions via RealFriendOpinionOf so a
-        // one-sided crush doesn't count as a mutual friendship, and using the
-        // memory-based helper (not raw OpinionOf) so a passive/situational
-        // bonus (e.g. a beauty-related trait) can't inflate the count.
-        // Internal (not private) - PF_WandererTracker.CountStrongFriendsInColony
-        // reuses the same bar (its own version takes an explicit originMap
-        // since a resolving wanderer is already off the map, unlike a colonist
-        // still spawned when TryFindRequestCandidate runs).
+        // "Good friend" bar (relations tab parity) for a real, mutual bond.
         internal const float StrongFriendOpinionThreshold = 40f;
 
-        // How many close, mutual friendships this colonist has in their own
-        // colony right now - used by TryFindRequestCandidate below to weigh a
-        // visiting relation/friend against what the colonist would actually be
-        // leaving behind. Per user request: a colonist shouldn't be offered
-        // the choice to abandon several real friends in the colony just
-        // because a visiting caravan happens to include one person they like -
-        // that's the reverse of the family-faction weighting fix in
-        // PF_WandererTracker (leaving should be biased toward strong ties, not
-        // away from them).
-        internal static int CountStrongFriendsInColony(Pawn pawn)
+        // How many close, mutual friendships the pawn has among the free
+        // colonists of `map` - checked both ways with RealFriendOpinionOf, so
+        // neither a one-sided crush nor a passive bonus (e.g. beauty) counts.
+        // Used to keep colonists with several real friends from being offered
+        // a join request, and by PF_WandererTracker to dilute family-faction
+        // weighting for a wanderer with strong bonds back home.
+        internal static int CountStrongFriendsInColony(Pawn pawn, Map map)
         {
-            if (pawn.relations == null || pawn.Map == null)
+            if (pawn.relations == null || map == null)
             {
                 return 0;
             }
 
             int count = 0;
-            foreach (Pawn other in pawn.Map.mapPawns.FreeColonistsSpawned)
+            foreach (Pawn other in map.mapPawns.FreeColonistsSpawned)
             {
                 if (other == pawn || other.Dead || other.relations == null)
                 {
@@ -461,49 +413,23 @@ namespace PeacefulFarewell
             return count;
         }
 
-        // A former partner is, by definition, no longer a reason to leave the
-        // colony for - excluded here so an ex-spouse/ex-lover visiting never
-        // outranks (or substitutes for) an actual current relation as the
-        // reason a colonist wants to join a visiting faction.
+        // A former partner is no reason to leave the colony.
         private static readonly HashSet<PawnRelationDef> ExcludedFromJoinRequest = new HashSet<PawnRelationDef>
         {
             PawnRelationDefOf.ExSpouse,
             PawnRelationDefOf.ExLover,
         };
 
-        // Family outranks a plain friendship by default (see bestImportance's
-        // relation.def.importance ranking below), but a colonist doesn't
-        // automatically want to leave with a relative they dislike - e.g. a
-        // misogynist colonist's opinion of a sister can be negative purely
-        // from a trait, despite Sibling's normally-positive stock importance.
-        // A relative only wins here if the colonist's actual opinion of them
-        // isn't negative; otherwise we fall through to the best close-friend
-        // visitor (opinion-based, no formal relation required) instead.
-        // Internal (not private) - PF_WandererTracker.FindFamilyFactionCandidates
-        // reuses the same threshold for the same reason (a negative-opinion
-        // relative shouldn't bias faction choice either).
+        // Family outranks friendship, but not a relative the colonist
+        // dislikes (e.g. through a trait) - then the best close friend wins.
+        // Also used by PF_WandererTracker's family-faction weighting.
         internal const float MinRelativeOpinionToFollow = 0f;
 
-        // Pawn.relations.OpinionOf(other) sums formal relation offsets AND
-        // *every* social thought, including purely situational/passive ones
-        // (e.g. a beauty-related trait's social effect) that say nothing about
-        // an actual bond between these two specific pawns - a beautiful pawn
-        // gets an inflated OpinionOf from everyone, "friend" or not. Per user
-        // request (confirmed case: a colonist favored leaving several real
-        // friends behind for one distant relation, because raw OpinionOf
-        // treated a passive bonus the same as an earned one), "is this a real
-        // friendship" checks should use this instead of raw OpinionOf.
-        //
-        // Sums formal relation.opinionOffset (Sibling/Spouse/etc - an actual
-        // relation, not a passive trait) plus only the *memory* social
-        // thoughts targeting `other` (RimWorld.Thought_MemorySocial and
-        // subclasses implementing ISocialThought - GotVisited, SharedBed,
-        // conversation-based thoughts, etc: things that happened between
-        // these two pawns specifically). Deliberately excludes
-        // SituationalThoughtHandler's output (what OpinionOf's
-        // TotalOpinionOffset(other) also includes) since situational thoughts
-        // are recomputed from current passive state (beauty, nudity, room
-        // sharing) rather than an accumulated history with this specific pawn.
+        // Opinion from an actual shared history: formal relation offsets plus
+        // memory social thoughts about the other pawn (chats, insults, ...).
+        // Unlike raw OpinionOf it leaves out situational thoughts (beauty,
+        // nudity, ...), which inflate everyone's opinion of a pawn equally.
+        // Use this for every "is this a real friendship" check.
         internal static int RealFriendOpinionOf(Pawn pawn, Pawn other)
         {
             if (pawn?.relations == null || other == null || !other.RaceProps.Humanlike || pawn == other || pawn.Dead)
@@ -548,13 +474,7 @@ namespace PeacefulFarewell
 
                 bool hasFormalRelation = false;
 
-                // PawnRelationUtility.GetRelations, not just DirectRelations -
-                // Sibling (and some other kinships) is a virtual/inferred relation
-                // computed from shared parents, not always a physical DirectRelation
-                // entry on either pawn. Scanning DirectRelations alone silently
-                // missed a colonist's sibling visiting with another faction - see
-                // the matching comment on GetLovedOneCloseness below for the same
-                // gap found earlier in the wanderlust-return notify.
+                // GetRelations, not DirectRelations - see HasFamilyInColony.
                 foreach (PawnRelationDef relationDef in PawnRelationUtility.GetRelations(colonist, visitor))
                 {
                     if (ExcludedFromJoinRequest.Contains(relationDef))
@@ -574,15 +494,8 @@ namespace PeacefulFarewell
                     }
                 }
 
-                // Only counts as a "friend" candidate if there's no formal
-                // relation at all - an actively disliked relative shouldn't
-                // also get double-checked against the friend threshold using
-                // the same relation.
-                //
-                // RealFriendOpinionOf, not raw OpinionOf - per user report, a
-                // beautiful visitor plus one small chat (+41 raw, +1 real) was
-                // enough to trigger a join request. Passive/situational bonuses
-                // don't make someone a friend worth leaving the colony for.
+                // Only visitors with no formal relation can count as friends,
+                // judged by RealFriendOpinionOf (passive bonuses don't count).
                 if (!hasFormalRelation)
                 {
                     float opinion = RealFriendOpinionOf(colonist, visitor);
@@ -1004,39 +917,24 @@ namespace PeacefulFarewell
                 return;
             }
 
-            // Captured before SetFaction below wipes ownership, so
-            // JobDriver_JoinVisitingFaction's room-visit toil can still find
-            // the pawn's own bed after they've already left the player faction.
-            // Carried via targetB (targetA is already relatedPawn) since it's
-            // part of vanilla Job and survives save/load the same way
-            // targetA/lord do.
+            // Captured before SetFaction below wipes ownership, for the
+            // room-visit toil; carried in targetB (targetA is the relative).
             Building_Bed ownedBed = colonist.ownership?.OwnedBed;
 
-            // targetFaction (and vanilla's own Job.lord field) travel on the Job
-            // itself instead of a side dictionary, so they survive save/load via
-            // Pawn_JobTracker's normal job scribing - a plain static dictionary here
-            // would be lost on reload and leave a mid-departure pawn factionless.
+            // Faction and lord travel on the Job itself, so they survive save/load.
             PF_Job_JoinVisitingFaction job = new PF_Job_JoinVisitingFaction(PF_JobDefOf.PF_JoinVisitingFaction, relatedPawn, targetFaction)
             {
                 lord = visitingLord,
                 targetB = ownedBed
             };
 
-            // Joins the target faction right away (per user request - once the
-            // player says yes, the colonist already belongs to them while
-            // walking over), rather than being factionless until the map
-            // edge like the loneliness/wanderlust departures. Done here,
-            // before the job starts - see the matching comment in
-            // StartLeaveOutOfLonelinessJob for why this can't happen from
-            // inside the job's own follow toil (SetFaction force-ends
-            // whatever job is currently running).
+            // Joins the faction right away, while walking over - and before
+            // the job starts, since SetFaction ends the pawn's current job.
             colonist.SetFaction(targetFaction);
 
             bool tookJob = colonist.jobs.TryTakeOrderedJob(job, JobTag.Misc);
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"StartJoinJob for {colonist.LabelShort}: TryTakeOrderedJob={tookJob}, CurJobDef right after={colonist.CurJobDef?.defName ?? "null"}");
-            }
             if (!tookJob)
             {
                 // Something with higher priority (a mental break, medical emergency,
@@ -1094,6 +992,23 @@ namespace PeacefulFarewell
             string label = "PF_LetterLabel".Translate();
             TaggedString text = PF_Text.Variant("PF_LetterText", 4, colonist.Named("PAWN"), targetFaction.Name);
             Find.LetterStack.ReceiveLetter(label, text, LetterDefOf.NeutralEvent);
+        }
+
+        // A colonist who left with visitors becomes a settled pawn like a
+        // wanderer who joined a faction - home settlement, presence on its
+        // map, overview entry - but writes home only very rarely (see
+        // PF_WandererTracker.RollNextLetterIntervalTicks). Registered while
+        // still walking out with the visitors: PF_SettlementPresence ignores
+        // spawned pawns, so nothing tries to place them anywhere until they've
+        // actually left the map.
+        public static void RegisterJoinedVisitors(Pawn pawn, Map originMap)
+        {
+            PF_WandererTracker tracker = PF_WandererTracker.Instance;
+            if (tracker == null || tracker.IsSettled(pawn))
+            {
+                return;
+            }
+            tracker.RegisterSettled(pawn, originMap, Find.TickManager.TicksGame, viaVisitors: true);
         }
 
         // The departing pawn's own reunion thought is given earlier, in
@@ -1155,56 +1070,35 @@ namespace PeacefulFarewell
 
         public static void StartLeaveOutOfLonelinessJob(Pawn colonist)
         {
-            // Captured before SetFaction(null) below wipes ownership, so
-            // JobDriver_LeaveOutOfLoneliness's room-visit toil can still find
-            // the pawn's own bed after they're already faction-less.
+            // Captured before SetFaction(null) below wipes ownership.
             Building_Bed ownedBed = colonist.ownership?.OwnedBed;
 
-            // Snapshotted before SetFaction(null) - OpinionOf includes vanilla
-            // social thoughts that are conditional on the subject still being a
-            // colonist (e.g. ThoughtWorkers gated on pawn.IsColonist). Calling
-            // OpinionOf after SetFaction(null) silently drops those components,
-            // which was observed pulling a strongly negative opinion (-40) up to
-            // >= 0 by the time NotifyColonyAboutLonelinessDeparture checked it -
-            // relief/pity was keying off a distorted, post-faction-loss number.
+            // Snapshotted before SetFaction(null) - some social thoughts only
+            // apply while the subject is a colonist, so opinions read afterwards
+            // are distorted (a -40 was seen turning into >= 0).
             Dictionary<Pawn, int> opinionsBeforeDeparture = SnapshotColonyOpinions(colonist);
 
             Job job = JobMaker.MakeJob(PF_JobDefOf.PF_LeaveOutOfLoneliness);
             job.locomotionUrgency = LocomotionUrgency.Walk;
             job.targetA = ownedBed;
 
-            // Cleared here, before the job starts, rather than from inside the
-            // job's own exit toil - Pawn.SetFaction ends with
-            // ClearMind_NewTemp() -> jobs.StopAll(), which force-ends whatever
-            // job is currently running. Calling it from inside this job's own
-            // initAction was silently killing the job the instant it started
-            // (JobCondition.InterruptForced, no exception, no clean way to
-            // detect it short of hooking Toil.AddFinishAction) - the pawn would
-            // then get picked up by vanilla's faction-less-pawn AI and wander
-            // off the map on its own, without JobDriver_LeaveOutOfLoneliness's
-            // finish toil ever running, so BecomeWanderer/Register() never
-            // fired and PF_WandererTracker never learned about them.
+            // Cleared before the job starts, never from inside it: SetFaction
+            // ends with jobs.StopAll(), which silently killed the job and let
+            // the pawn walk off without ever being registered with the tracker.
             colonist.SetFaction(null);
 
             bool tookJob = colonist.jobs.TryTakeOrderedJob(job, JobTag.Misc);
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"StartLeaveOutOfLonelinessJob for {colonist.LabelShort}: TryTakeOrderedJob={tookJob}, CurJobDef right after={colonist.CurJobDef?.defName ?? "null"}");
-            }
             if (!tookJob)
             {
-                // Faction was already cleared above - something with higher
-                // priority (mental break, medical emergency, forced job, etc.)
-                // blocked the job from actually starting, which would otherwise
-                // leave this colonist a faction-less pawn on the player's map
-                // with no departure job running at all.
+                // Something with higher priority blocked the job - undo the
+                // faction change instead of leaving a factionless pawn behind.
                 colonist.SetFaction(Faction.OfPlayer);
                 SendDepartureFailedLetter(colonist);
                 return;
             }
-            // Applied immediately on acceptance rather than when the pawn
-            // actually reaches the map edge, since the walk can be interrupted
-            // and colonists shouldn't have to wait to react to the departure.
+            // The colony reacts on acceptance, not at the map edge.
             NotifyColonyAboutLonelinessDeparture(colonist, opinionsBeforeDeparture);
             TrySendBondedAnimalAlong(colonist, unhurried: true);
         }
@@ -1221,9 +1115,8 @@ namespace PeacefulFarewell
 
         public static void BecomeWanderer(Pawn pawn)
         {
-            // Captured before DeSpawn clears it - PF_WandererTracker needs to know
-            // which colony this pawn actually left so it can later judge their
-            // relations against the colonists who knew them, not every player map.
+            // Captured before DeSpawn clears it - the tracker judges relations
+            // against the colony the pawn actually left.
             Map originMap = pawn.Map;
 
             // Relief/pity thoughts for the rest of the colony are applied in
@@ -1234,9 +1127,7 @@ namespace PeacefulFarewell
                 pawn.needs.mood.thoughts.memories.TryGainMemory(PF_ThoughtDefOf.PF_LonelinessExcitedToLeave);
             }
 
-            // Captured before SetFaction(null)/PassToWorld - if this pawn ever
-            // returns, ReturnToColony's SetFaction(Faction.OfPlayer) would
-            // otherwise reset work priorities and schedule to vanilla defaults.
+            // Restored if they ever return (SetFaction resets these to defaults).
             PF_GameComponent.SaveWorkAndSchedule(pawn);
 
             if (pawn.Spawned)
@@ -1244,12 +1135,10 @@ namespace PeacefulFarewell
                 pawn.DeSpawn(DestroyMode.Vanish);
             }
 
-            // Register BEFORE PassToWorld: vanilla Pawn.Notify_PassedToWorld hands
-            // every factionless humanlike "Free" world pawn a random faction on
-            // the spot, and only Patch_NotifyPassedToWorld (which keys off
-            // IsTracked) stops that. Faction was already cleared in
-            // StartLeaveOutOfLonelinessJob, right when the player accepted.
-            Current.Game.World.GetComponent<PF_WandererTracker>().Register(pawn, PF_WandererReason.Loneliness, originMap);
+            // Register BEFORE PassToWorld, which would otherwise hand a
+            // factionless world pawn a random faction (see
+            // Patch_NotifyPassedToWorld, which keys off IsTracked).
+            PF_WandererTracker.Instance.Register(pawn, PF_WandererReason.Loneliness, originMap);
 
             Find.WorldPawns.PassToWorld(pawn, PawnDiscardDecideMode.KeepForever);
         }
@@ -1298,30 +1187,22 @@ namespace PeacefulFarewell
 
         public static void StartLeaveOutOfWanderlustJob(Pawn colonist)
         {
-            // Captured before SetFaction(null) below wipes ownership, so
-            // JobDriver_LeaveOutOfWanderlust's room-visit toil can still find
-            // the pawn's own bed after they're already faction-less.
+            // Captured before SetFaction(null) below wipes ownership.
             Building_Bed ownedBed = colonist.ownership?.OwnedBed;
 
             Job job = JobMaker.MakeJob(PF_JobDefOf.PF_LeaveOutOfWanderlust);
             job.locomotionUrgency = LocomotionUrgency.Walk;
             job.targetA = ownedBed;
 
-            // Cleared here, before the job starts - see the matching comment in
-            // StartLeaveOutOfLonelinessJob for why this can no longer happen
-            // from inside the job's own exit toil (SetFaction force-ends
-            // whatever job is currently running).
+            // Before the job starts - see StartLeaveOutOfLonelinessJob.
             colonist.SetFaction(null);
 
             bool tookJob = colonist.jobs.TryTakeOrderedJob(job, JobTag.Misc);
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"StartLeaveOutOfWanderlustJob for {colonist.LabelShort}: TryTakeOrderedJob={tookJob}, CurJobDef right after={colonist.CurJobDef?.defName ?? "null"}");
-            }
             if (!tookJob)
             {
-                // Faction was already cleared above - see the matching comment
-                // in StartLeaveOutOfLonelinessJob for why this restore is needed.
+                // Undo the faction change - see StartLeaveOutOfLonelinessJob.
                 colonist.SetFaction(Faction.OfPlayer);
                 SendDepartureFailedLetter(colonist);
                 return;
@@ -1373,10 +1254,8 @@ namespace PeacefulFarewell
             Pawn animal = FindBondedAnimal(colonist);
             if (animal == null || !animal.Spawned)
             {
-                if (PeacefulFarewellMod.Settings.debugMode)
-                {
+                if (PF_Log.DebugMode)
                     PF_Log.Message($"TrySendBondedAnimalAlong for {colonist.LabelShort}: no spawned bonded animal found.");
-                }
                 return;
             }
 
@@ -1386,10 +1265,8 @@ namespace PeacefulFarewell
                 job.locomotionUrgency = LocomotionUrgency.Walk;
             }
             bool tookJob = animal.jobs.TryTakeOrderedJob(job, JobTag.Misc);
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"TrySendBondedAnimalAlong for {colonist.LabelShort}: bonded animal={animal.LabelShort}, TryTakeOrderedJob={tookJob}, CurJobDef right after={animal.CurJobDef?.defName ?? "null"}");
-            }
         }
 
         // Called from JobDriver_FollowDepartingOwner right as the owner leaves
@@ -1407,10 +1284,8 @@ namespace PeacefulFarewell
             animal.SetFaction(owner.Faction);
             Find.WorldPawns.PassToWorld(animal, PawnDiscardDecideMode.KeepForever);
 
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"Bonded animal {animal.LabelShort} followed {owner.LabelShort} out, faction={owner.Faction?.Name ?? "none"}");
-            }
         }
 
         public static void SendDepartureFailedLetter(Pawn colonist)
@@ -1435,10 +1310,8 @@ namespace PeacefulFarewell
             // Captured before DeSpawn clears it - see BecomeWanderer for why.
             Map originMap = pawn.Map;
 
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"BecomeWanderlustWanderer for {pawn.LabelShort}: entering, originMap={originMap}, spawned={pawn.Spawned}, faction={pawn.Faction?.Name ?? "null"}");
-            }
 
             // See BecomeWanderer for why this needs to happen before the pawn
             // loses its player faction.
@@ -1451,14 +1324,12 @@ namespace PeacefulFarewell
 
             // Register BEFORE PassToWorld - see BecomeWanderer. Faction was already
             // cleared in StartLeaveOutOfWanderlustJob, right when the player accepted.
-            Current.Game.World.GetComponent<PF_WandererTracker>().Register(pawn, PF_WandererReason.Wanderlust, originMap);
+            PF_WandererTracker.Instance.Register(pawn, PF_WandererReason.Wanderlust, originMap);
 
             Find.WorldPawns.PassToWorld(pawn, PawnDiscardDecideMode.KeepForever);
 
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"BecomeWanderlustWanderer for {pawn.LabelShort}: registered with PF_WandererTracker, discarded={pawn.Discarded}");
-            }
         }
 
         public static void NotifyFamilyAboutWanderlustReturn(Pawn returned)
@@ -1472,10 +1343,6 @@ namespace PeacefulFarewell
 
             int notified = 0;
 
-            // Mirror NotifyLovedOnesAboutLostWanderer: use GetLovedOneCloseness
-            // (which checks PawnRelationUtility.GetRelations, not just
-            // DirectRelations) so virtual relations like Sibling are caught,
-            // and close friends without a formal relation get the mood boost too.
             foreach (Pawn other in map.mapPawns.FreeColonistsSpawned)
             {
                 if (other == returned || other.needs?.mood == null)
@@ -1498,18 +1365,11 @@ namespace PeacefulFarewell
             PF_Log.Message($"NotifyFamilyAboutWanderlustReturn: {returned.LabelShort} returned, notified {notified} loved one(s)");
         }
 
-        // "Good friend" opinion bar used elsewhere in vanilla RimWorld (e.g. the
-        // relations tab coloring) - reused here so a close bond without a formal
-        // family/partner relation still counts as a loved one.
+        // "Good friend" bar (relations tab parity) for a loved one with no
+        // formal relation.
         private const float CloseFriendOpinionThreshold = 40f;
 
-        // Blood family (parent/child/sibling) shouldn't need "good friend" levels
-        // of opinion to grieve/celebrate a wanderer - that's what silently dropped
-        // parents below the friend threshold (confirmed by user: mother and father
-        // got no thought because their opinion was under 40). Family still needs
-        // a low bar though, so a relation that's actively hostile (e.g. an
-        // estranged/hated parent) doesn't get a mood swing over someone they
-        // don't care about.
+        // Blood family needs only a low bar - just not an estranged relative.
         private const float FamilyOpinionThreshold = 10f;
 
         private enum LovedOneCloseness
@@ -1541,12 +1401,7 @@ namespace PeacefulFarewell
                 return LovedOneCloseness.None;
             }
 
-            // PawnRelationUtility.GetRelations, not other.relations.DirectRelations -
-            // Sibling (and some other kinships) is a *virtual*/inferred relation
-            // computed from shared parents, not always a physical DirectRelation
-            // entry on either pawn. Scanning DirectRelations alone silently missed
-            // siblings entirely (confirmed by user: father/mother/siblings left
-            // behind got no thought at all).
+            // GetRelations, not DirectRelations - see HasFamilyInColony.
             bool isFamily = false;
             foreach (PawnRelationDef relationDef in PawnRelationUtility.GetRelations(other, subject))
             {
@@ -1575,10 +1430,8 @@ namespace PeacefulFarewell
             return LovedOneCloseness.None;
         }
 
-        // defName prefix per tier ("PF_WordNeverCame" + tier + variant index,
-        // e.g. "PF_WordNeverCameFamily2") - avoids a PF_ThoughtDefOf field per
-        // variant. Looked up once per tier and cached instead of a static field
-        // per ThoughtDef, since [DefOf] only works for exact fixed field names.
+        // ThoughtDefs named "PF_WordNeverCame" + tier + index (e.g.
+        // "PF_WordNeverCameFamily2"), looked up once per tier and cached.
         private const int WordNeverCameVariantCount = 5;
 
         private static readonly Dictionary<LovedOneCloseness, ThoughtDef[]> WordNeverCameVariantsByTier =
@@ -1601,11 +1454,9 @@ namespace PeacefulFarewell
             return variants;
         }
 
-        // Called when a wanderer's fate resolves to "lost" - they joined a
-        // hostile faction and the colony only ever gets the deliberately vague
-        // "No word" letter. Family, partners and close friends left behind never
-        // learn the truth either, just that word never came - partners take it
-        // hardest, then blood family, then close friends, per closeness tier.
+        // A wanderer's fate resolved to "lost" (secretly joined a hostile
+        // faction) - loved ones only learn that word never came, graded by
+        // closeness tier.
         public static void NotifyLovedOnesAboutLostWanderer(Pawn missing)
         {
             List<Map> maps = Find.Maps;
@@ -1637,8 +1488,7 @@ namespace PeacefulFarewell
             PF_Log.Message($"NotifyLovedOnesAboutLostWanderer: {missing.LabelShort} lost, notified {notified} loved one(s) across {maps.Count} map(s)");
         }
 
-        // defName prefix per tier ("PF_HeardTheyreSafe" + tier + variant index),
-        // mirroring GetWordNeverCameVariants below.
+        // "PF_HeardTheyreSafe" + tier + index, like GetWordNeverCameVariants.
         private const int HeardTheyreSafeVariantCount = 4;
 
         private static readonly Dictionary<LovedOneCloseness, ThoughtDef[]> HeardTheyreSafeVariantsByTier =
@@ -1661,11 +1511,8 @@ namespace PeacefulFarewell
             return variants;
         }
 
-        // Called when a wanderer's fate resolves to "settled with a friendly
-        // faction" - the mirror-image of NotifyLovedOnesAboutLostWanderer. Family,
-        // partners and close friends left behind get a mood boost from knowing
-        // the wanderer made it somewhere safe, graded by closeness tier the same
-        // way the negative version is.
+        // A wanderer settled with a friendly faction - loved ones get a mood
+        // boost, graded by closeness tier.
         public static void NotifyLovedOnesAboutSafeWanderer(Pawn settled)
         {
             List<Map> maps = Find.Maps;
@@ -1697,15 +1544,8 @@ namespace PeacefulFarewell
             PF_Log.Message($"NotifyLovedOnesAboutSafeWanderer: {settled.LabelShort} settled safely, notified {notified} loved one(s) across {maps.Count} map(s)");
         }
 
-        // "Letter from afar" - a settled pawn (already resolved via
-        // NotifyLovedOnesAboutSafeWanderer, now living their new life with a
-        // friendly faction) occasionally writes back. Unlike the one-time
-        // settle notification, this fires repeatedly over the course of the
-        // save, so only one random loved one gets picked per letter rather
-        // than notifying everyone at once - it reads as "a letter arrived,
-        // addressed to someone in particular" rather than a colony-wide news
-        // bulletin. Returns false (and does nothing) if no eligible loved one
-        // is currently in the colony to receive it.
+        // A settled pawn occasionally writes home to one loved one. Returns
+        // false if no loved one is in the colony to receive it.
         public static bool TrySendLetterFromAfar(Pawn sender)
         {
             List<Map> maps = Find.Maps;
@@ -1735,13 +1575,8 @@ namespace PeacefulFarewell
                 return false;
             }
 
-            // Prefer the closest available loved one rather than picking
-            // uniformly at random across every qualifying tier - a Partner
-            // should always hear first if one's present, then Family, and
-            // only Friend (the loosest tier, opinion-based rather than a
-            // real relation) as a last resort. Within a tier, still pick
-            // randomly among equally-close candidates (e.g. multiple family
-            // members) rather than always the highest-opinion one.
+            // Closest tier first (partner, then family, then friend), random
+            // within the tier.
             LovedOneCloseness bestTier = candidates.Max(c => c.closeness);
             List<Pawn> bestTierCandidates = candidates
                 .Where(c => c.closeness == bestTier)
@@ -1766,13 +1601,8 @@ namespace PeacefulFarewell
         private const float ApparelRefreshChancePerItem = 0.4f;
         private const int MaxApparelItemsRefreshed = 2;
 
-        // Purely cosmetic flavor for a returning wanderer: RimWorld doesn't tick
-        // world pawns, so nothing about their gear actually ages while they're
-        // out there. Instead, on return, we just roll a chance to swap a couple
-        // of worn items for freshly generated ones of the same ThingDef (so
-        // layer/body coverage/quality band stay sensible) - selling the idea
-        // that they traded, wore through, or replaced things on the road,
-        // without tracking any real wear-and-tear over time.
+        // Cosmetic: a returning wanderer swaps up to a couple of worn items
+        // for fresh ones of the same def, as if replaced on the road.
         public static void RefreshApparelAfterJourney(Pawn pawn)
         {
             if (pawn.apparel == null || !pawn.RaceProps.Humanlike)
@@ -1806,10 +1636,7 @@ namespace PeacefulFarewell
                     continue;
                 }
 
-                // Don't TryDrop - that spawns oldApparel on the ground right next
-                // to the pawn, littering the map with "leftover" clothing from a
-                // trip that was never actually tracked as worn-out. Just remove and
-                // destroy it; the new item replaces it invisibly.
+                // Destroyed, not dropped - no leftover clothing on the map.
                 pawn.apparel.Remove(oldApparel);
                 oldApparel.Destroy();
                 pawn.apparel.Wear(newApparel, dropReplacedApparel: true, locked: false);
@@ -1818,18 +1645,13 @@ namespace PeacefulFarewell
                 swappedLabels.Add(oldApparel.def.defName);
             }
 
-            if (PeacefulFarewellMod.Settings.debugMode && swapped > 0)
-            {
+            if (PF_Log.DebugMode && swapped > 0)
                 PF_Log.Message($"RefreshApparelAfterJourney: {pawn.LabelShort} came back with {swapped} item(s) replaced ({string.Join(", ", swappedLabels)})");
-            }
         }
 
-        // Grants a Thought_MemoryWithSubject-backed thought with subjectLabel set
-        // to the subject's name. Needed because plain Thought_Memory has no
-        // otherPawn field and never substitutes {0} on its own - only
-        // Thought_MemorySocial does, and that shows in the Social tab instead of
-        // Needs, which some of these thoughts (Needs-tab-visible on purpose)
-        // can't use. def's thoughtClass must be PeacefulFarewell.Thought_MemoryWithSubject.
+        // A Needs-tab memory naming the subject (plain Thought_Memory can't, and
+        // Thought_MemorySocial would show in the Social tab instead). The def's
+        // thoughtClass must be PeacefulFarewell.Thought_MemoryWithSubject.
         public static void GainMemoryWithSubject(Pawn pawn, ThoughtDef def, Pawn subject)
         {
             Thought_MemoryWithSubject thought = (Thought_MemoryWithSubject)ThoughtMaker.MakeThought(def);
@@ -1838,10 +1660,7 @@ namespace PeacefulFarewell
             pawn.needs.mood.thoughts.memories.TryGainMemory(thought);
         }
 
-        // Captures each remaining colonist's opinion of departing while they're
-        // still a colonist themselves - see the call site comment in
-        // StartLeaveOutOfLonelinessJob for why this must happen before
-        // SetFaction(null).
+        // See StartLeaveOutOfLonelinessJob for why this runs before SetFaction(null).
         private static Dictionary<Pawn, int> SnapshotColonyOpinions(Pawn departing)
         {
             Dictionary<Pawn, int> opinions = new Dictionary<Pawn, int>();
@@ -1869,10 +1688,8 @@ namespace PeacefulFarewell
             Map originMap = departing.MapHeld;
             if (opinionsBeforeDeparture.Count == 0)
             {
-                if (PeacefulFarewellMod.Settings.debugMode)
-                {
+                if (PF_Log.DebugMode)
                     PF_Log.Message($"NotifyColonyAboutLonelinessDeparture: {departing.LabelShort} has no snapshotted opinions, skipping notify entirely");
-                }
                 return;
             }
 
@@ -1896,10 +1713,8 @@ namespace PeacefulFarewell
                 notified++;
             }
 
-            if (PeacefulFarewellMod.Settings.debugMode)
-            {
+            if (PF_Log.DebugMode)
                 PF_Log.Message($"NotifyColonyAboutLonelinessDeparture: {departing.LabelShort} departed from {originMap}, notified {notified} colonist(s) (relief/pity)");
-            }
         }
     }
 }

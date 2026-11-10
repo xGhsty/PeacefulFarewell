@@ -4,7 +4,11 @@ namespace PeacefulFarewell
 {
     public static class PF_Log
     {
-        private const string Prefix = "<color=#33CC33>[PeacefulFarewell]</color>";
+        internal const string Prefix = "<color=#33CC33>[PeacefulFarewell]</color>";
+
+        // Call sites guard on this before building the message, so debug
+        // strings cost nothing when debug mode is off.
+        public static bool DebugMode => PeacefulFarewellMod.Settings.debugMode;
 
         public static void Message(string text)
         {

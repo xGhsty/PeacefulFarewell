@@ -6,6 +6,7 @@ obj/
 
 # Compiled mod assembly - rebuilt by MSBuild on every build
 1.6/Assemblies/*.dll
+1.7/Assemblies/*.dll
 
 # Local Claude Code settings
 .claude/

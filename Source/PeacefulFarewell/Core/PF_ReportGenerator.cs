@@ -83,6 +83,7 @@ namespace PeacefulFarewell
             sb.AppendLine($"wanderlustEnabled = {s.wanderlustEnabled}");
             sb.AppendLine($"wanderlustChancePerCheck = {s.wanderlustChancePerCheck}");
             sb.AppendLine($"letterFromAfarEnabled = {s.letterFromAfarEnabled}");
+            sb.AppendLine($"maxLettersFromAfarPerQuadrum = {s.maxLettersFromAfarPerQuadrum}");
             sb.AppendLine($"debugMode = {s.debugMode}");
             sb.AppendLine($"customFileLoggingEnabled = {s.customFileLoggingEnabled}");
             sb.AppendLine();
@@ -92,7 +93,7 @@ namespace PeacefulFarewell
         {
             sb.AppendLine("----- Live wanderer snapshot -----");
 
-            PF_WandererTracker tracker = Current.Game?.World?.GetComponent<PF_WandererTracker>();
+            PF_WandererTracker tracker = PF_WandererTracker.Instance;
             if (tracker == null)
             {
                 sb.AppendLine("(no active world)");
@@ -126,6 +127,7 @@ namespace PeacefulFarewell
             {
                 sb.AppendLine(
                     $"  {entry.Pawn.LabelShort} | faction={entry.Pawn.Faction?.Name ?? "none"} | " +
+                    $"home={entry.HomeSettlement?.Label ?? "none"} | spawned={entry.Pawn.Spawned} | viaVisitors={entry.ViaVisitors} | " +
                     $"departed={DepartureDateString(entry.DepartureTick, entry.DepartureTile)} | " +
                     $"nextLetterCheckInDays={entry.DaysUntilNextLetterCheck:F2}");
             }

@@ -92,6 +92,8 @@
   <PF_Overview_JumpToSettlement>Jump to {0}</PF_Overview_JumpToSettlement>
   <PF_Overview_DepartedOn>Departed: {0}</PF_Overview_DepartedOn>
   <PF_Overview_DaysAgoFallback>{0}d ago</PF_Overview_DaysAgoFallback>
+  <PF_Overview_SettledCardSub>{0} ({1})</PF_Overview_SettledCardSub>
+  <PF_ResidentPresentMessage>{0}, who once left your colony, lives in {1} and is here now.</PF_ResidentPresentMessage>
 
   <PF_LonelinessRequestLabel>Not feeling welcome</PF_LonelinessRequestLabel>
   <PF_LonelinessRequestText0>{PAWN_nameDef} feels disliked by everyone else in the colony and wants to leave to find somewhere they belong.\n\nIf you allow it, {PAWN_nameDef} will walk off and try their luck in the world. If you refuse, {PAWN_nameDef} will be a bit upset about it.</PF_LonelinessRequestText0>
@@ -157,6 +159,8 @@
   <PF_Setting_Section_LetterFromAfar>Letters from afar (settled wanderers)</PF_Setting_Section_LetterFromAfar>
   <PF_Setting_LetterFromAfarEnabledLabel>Enable letters from afar</PF_Setting_LetterFromAfarEnabledLabel>
   <PF_Setting_LetterFromAfarEnabledTooltip>Lets a colonist who left and settled down with a friendly faction occasionally send a letter back to a loved one still in the colony.</PF_Setting_LetterFromAfarEnabledTooltip>
+  <PF_Setting_LettersPerQuadrumLabel>Max letters from afar per season: {0}</PF_Setting_LettersPerQuadrumLabel>
+  <PF_Setting_LettersPerQuadrumTooltip>Limit for all settled colonists combined. Letters over the limit are postponed to the next season, not lost.</PF_Setting_LettersPerQuadrumTooltip>
 
   <PF_MissingSituationLabel>Missing</PF_MissingSituationLabel>
 
