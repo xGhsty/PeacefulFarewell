@@ -23,7 +23,15 @@ namespace PeacefulFarewell
         // few ms on a ~280-colonist save and showed up as FPS drops, worse
         // at higher game speeds where several ticks run per frame).
         private const double LonelinessScanBudgetMsPerTick = 0.25;
-        private const int LonelinessScanMinEvaluationsPerTick = 10;
+        // One OpinionOf can cost ~0.3 ms on its own on a big modded save, so
+        // the guaranteed minimum must stay at a single evaluation - a floor
+        // of 10 used to push every scan tick to ~5 ms regardless of budget.
+        private const int LonelinessScanMinEvaluationsPerTick = 1;
+
+        // Pawn -> colonist whose opinion disqualified them from loneliness on
+        // the last scan; asked first next time (see PF_LonelinessScan). A
+        // pure speed hint - not saved, rebuilt by the first scan after load.
+        private readonly Dictionary<Pawn, Pawn> lonelinessLastFan = new Dictionary<Pawn, Pawn>();
         private static readonly long LonelinessScanBudgetStopwatchTicks =
             (long)(Stopwatch.Frequency * LonelinessScanBudgetMsPerTick / 1000.0);
 
@@ -361,8 +369,11 @@ namespace PeacefulFarewell
                 return;
             }
 
-            pendingLonelinessMaps.Clear();
+            // Loneliness maps are NOT cleared and re-queued: if a scan cycle
+            // ever runs longer than CheckIntervalTicks, clearing would restart
+            // from the first map every time and starve the maps at the end.
             pendingVisitorMaps.Clear();
+            PruneLonelinessLastFan();
 
             bool runWanderlustCheck = Find.TickManager.TicksGame >= nextWanderlustCheckTick;
             if (runWanderlustCheck)
@@ -378,7 +389,10 @@ namespace PeacefulFarewell
                 }
 
                 pendingVisitorMaps.Enqueue(map);
-                pendingLonelinessMaps.Enqueue(map);
+                if (activeScan?.Map != map && !pendingLonelinessMaps.Contains(map))
+                {
+                    pendingLonelinessMaps.Enqueue(map);
+                }
             }
 
             if (runWanderlustCheck)
@@ -387,6 +401,27 @@ namespace PeacefulFarewell
                 CheckWanderlustRequest();
                 LogPerf("Wanderlust check", start);
             }
+        }
+
+        // Drops hint entries for pawns that are gone, so the dictionary
+        // doesn't keep dead/discarded pawns alive over a long game.
+        private readonly List<Pawn> tmpFanKeysToRemove = new List<Pawn>();
+
+        private void PruneLonelinessLastFan()
+        {
+            foreach (KeyValuePair<Pawn, Pawn> entry in lonelinessLastFan)
+            {
+                if (entry.Key == null || entry.Key.Dead || entry.Key.Discarded
+                    || entry.Value == null || entry.Value.Dead || entry.Value.Discarded)
+                {
+                    tmpFanKeysToRemove.Add(entry.Key);
+                }
+            }
+            foreach (Pawn key in tmpFanKeysToRemove)
+            {
+                lonelinessLastFan.Remove(key);
+            }
+            tmpFanKeysToRemove.Clear();
         }
 
         // Debug mode only: reports a stage that took longer than
@@ -417,12 +452,12 @@ namespace PeacefulFarewell
                 }
 
                 Map map = pendingLonelinessMaps.Dequeue();
-                if (map == null || !map.IsPlayerHome)
+                if (map == null || !map.IsPlayerHome || !Find.Maps.Contains(map))
                 {
                     return;
                 }
 
-                activeScan = PF_LonelinessScan.Start(map);
+                activeScan = PF_LonelinessScan.Start(map, lonelinessLastFan);
                 if (activeScan == null)
                 {
                     return;
