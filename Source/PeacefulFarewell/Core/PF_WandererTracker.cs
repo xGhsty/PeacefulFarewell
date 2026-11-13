@@ -486,6 +486,7 @@ namespace PeacefulFarewell
                 return;
             }
 
+            long start = System.Diagnostics.Stopwatch.GetTimestamp();
             try
             {
                 DoCheck();
@@ -494,6 +495,7 @@ namespace PeacefulFarewell
             {
                 PF_Log.Error("Exception in PF_WandererTracker.WorldComponentTick: " + ex);
             }
+            PF_GameComponent.LogPerf("Wanderer tracker check", start);
         }
 
         private void DoCheck()
@@ -946,6 +948,24 @@ namespace PeacefulFarewell
             // Whether to resolve at all was already decided by the ResolveChance
             // roll in DoCheck - reaching here means this pawn's fate IS being
             // decided now, so this is purely return-vs-join, no "keep wandering".
+            Faction familyFaction = PickFamilyFactionAnyStance(pawn);
+            if (familyFaction != null && Rand.Chance(PeacefulFarewellMod.Settings.lonelinessFamilyFactionChance))
+            {
+                if (PF_Log.DebugMode)
+                    PF_Log.Message($"Wanderer outcome for {pawn.LabelShort}: going to family in {familyFaction.Name} (hostile={familyFaction.HostileTo(Faction.OfPlayer)})");
+
+                if (familyFaction.HostileTo(Faction.OfPlayer))
+                {
+                    JoinHostileFaction(pawn, originMap, registerTick[index], familyFaction);
+                }
+                else
+                {
+                    JoinRandomFaction(pawn, PF_WandererReason.Loneliness, originMap, registerTick[index], familyFaction);
+                }
+                RemoveAt(index);
+                return;
+            }
+
             int outcome = Rand.RangeInclusive(0, 1);
 
             if (PF_Log.DebugMode)
@@ -1094,11 +1114,25 @@ namespace PeacefulFarewell
             return false;
         }
 
-        private void JoinRandomFaction(Pawn pawn, PF_WandererReason reason, Map originMap, int originalRegisterTick)
+        // A random faction (friendly or hostile) where the pawn has family,
+        // or null if there is none.
+        private static Faction PickFamilyFactionAnyStance(Pawn pawn)
         {
             List<Faction> candidates = Find.FactionManager.AllFactions
-                .Where((Faction f) => !f.IsPlayer && !f.Hidden && !f.def.hidden && f.def.humanlikeFaction && !f.HostileTo(Faction.OfPlayer) && HasAnySettlement(f))
+                .Where((Faction f) => !f.IsPlayer && !f.Hidden && !f.def.hidden && f.def.humanlikeFaction && HasAnySettlement(f))
                 .ToList();
+
+            HashSet<Faction> familyFactions = FindFamilyFactions(pawn, candidates);
+            return familyFactions.Count > 0 ? familyFactions.RandomElement() : null;
+        }
+
+        private void JoinRandomFaction(Pawn pawn, PF_WandererReason reason, Map originMap, int originalRegisterTick, Faction forcedFaction = null)
+        {
+            List<Faction> candidates = forcedFaction != null
+                ? new List<Faction> { forcedFaction }
+                : Find.FactionManager.AllFactions
+                    .Where((Faction f) => !f.IsPlayer && !f.Hidden && !f.def.hidden && f.def.humanlikeFaction && !f.HostileTo(Faction.OfPlayer) && HasAnySettlement(f))
+                    .ToList();
 
             if (candidates.Count == 0)
             {
@@ -1156,11 +1190,13 @@ namespace PeacefulFarewell
             }
         }
 
-        private void JoinHostileFaction(Pawn pawn, Map originMap, int originalRegisterTick)
+        private void JoinHostileFaction(Pawn pawn, Map originMap, int originalRegisterTick, Faction forcedFaction = null)
         {
-            List<Faction> candidates = Find.FactionManager.AllFactions
-                .Where((Faction f) => !f.IsPlayer && !f.Hidden && !f.def.hidden && f.def.humanlikeFaction && f.HostileTo(Faction.OfPlayer) && HasAnySettlement(f))
-                .ToList();
+            List<Faction> candidates = forcedFaction != null
+                ? new List<Faction> { forcedFaction }
+                : Find.FactionManager.AllFactions
+                    .Where((Faction f) => !f.IsPlayer && !f.Hidden && !f.def.hidden && f.def.humanlikeFaction && f.HostileTo(Faction.OfPlayer) && HasAnySettlement(f))
+                    .ToList();
 
             if (candidates.Count == 0)
             {

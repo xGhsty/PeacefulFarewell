@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using RimWorld;
 using Verse;
@@ -24,6 +25,16 @@ namespace PeacefulFarewell
         private int maxOpinion;
         private int otherCount;
         private bool disqualified;
+
+        // Perf stats for the debug log: total time spent inside Step() and
+        // over how many game ticks the scan was spread.
+        private long elapsedStopwatchTicks;
+        private int stepCalls;
+        private int evaluations;
+
+        // How often (in pair evaluations) Step checks the clock - reading
+        // the Stopwatch is cheap, but not free.
+        private const int ClockCheckInterval = 8;
 
         private PF_LonelinessScan(Map map, List<Pawn> colonists)
         {
@@ -79,8 +90,28 @@ namespace PeacefulFarewell
         }
 
         // Returns true once the whole scan has finished and Results is final.
-        public bool Step(int budget)
+        // Runs until deadlineTimestamp (Stopwatch.GetTimestamp units), but
+        // always does at least minEvaluations so a slow machine still
+        // finishes eventually. Time-based rather than a fixed pair count:
+        // OpinionOf cost grows with how many thoughts a pawn carries, so a
+        // fixed 200 pairs per tick was a few ms on big colonies.
+        public bool Step(long deadlineTimestamp, int minEvaluations)
         {
+            long start = Stopwatch.GetTimestamp();
+            stepCalls++;
+            try
+            {
+                return StepInternal(deadlineTimestamp, minEvaluations);
+            }
+            finally
+            {
+                elapsedStopwatchTicks += Stopwatch.GetTimestamp() - start;
+            }
+        }
+
+        private bool StepInternal(long deadlineTimestamp, int minEvaluations)
+        {
+            int done = 0;
             while (pawnIndex < colonists.Count)
             {
                 Pawn pawn = colonists[pawnIndex];
@@ -93,7 +124,8 @@ namespace PeacefulFarewell
 
                 while (otherIndex < colonists.Count)
                 {
-                    if (budget <= 0)
+                    if (done >= minEvaluations && done % ClockCheckInterval == 0
+                        && Stopwatch.GetTimestamp() >= deadlineTimestamp)
                     {
                         return false;
                     }
@@ -106,7 +138,8 @@ namespace PeacefulFarewell
                         continue;
                     }
 
-                    budget--;
+                    done++;
+                    evaluations++;
 
                     int opinion = other.relations.OpinionOf(pawn);
                     total += opinion;
@@ -142,7 +175,7 @@ namespace PeacefulFarewell
             }
 
             if (PF_Log.DebugMode)
-                PF_Log.Message($"PF_LonelinessScan on {Map}: colonistsChecked={colonists.Count}, options={Results.Count}, avgThreshold={avgThreshold}, maxSingleThreshold={maxSingleThreshold}");
+                PF_Log.Message($"PF_LonelinessScan on {Map}: colonistsChecked={colonists.Count}, options={Results.Count}, avgThreshold={avgThreshold}, maxSingleThreshold={maxSingleThreshold}, perf: {evaluations} opinions in {elapsedStopwatchTicks * 1000.0 / Stopwatch.Frequency:F1} ms over {stepCalls} ticks");
 
             return true;
         }

@@ -164,7 +164,9 @@ namespace PeacefulFarewell
 
         // Every colonist/visitor pair on the map that qualifies for a join
         // request right now - one entry per (visiting lord, colonist).
-        public static List<RequestCandidate> FindRequestCandidates(Map map)
+        // skipColonist: lets the caller drop colonists up front (e.g. ones
+        // already in a visit meeting) before the per-visitor relation checks.
+        public static List<RequestCandidate> FindRequestCandidates(Map map, System.Predicate<Pawn> skipColonist = null)
         {
             List<RequestCandidate> options = new List<RequestCandidate>();
 
@@ -189,6 +191,10 @@ namespace PeacefulFarewell
                 foreach (Pawn colonist in map.mapPawns.FreeColonistsSpawned.ToList())
                 {
                     if (!IsEligibleAdultColonist(colonist))
+                    {
+                        continue;
+                    }
+                    if (skipColonist != null && skipColonist(colonist))
                     {
                         continue;
                     }

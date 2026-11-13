@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using RimWorld;
 using Verse;
@@ -16,9 +17,23 @@ namespace PeacefulFarewell
         private const int WanderlustCheckIntervalTicks = GenDate.TicksPerDay;
         private int nextWanderlustCheckTick = -1;
 
-        // The loneliness scan is O(n^2) OpinionOf calls - spread across ticks,
-        // at most this many evaluations per tick, to avoid a visible freeze.
-        private const int OpinionEvaluationsPerTick = 200;
+        // The loneliness scan is O(n^2) OpinionOf calls - spread across ticks
+        // with a time budget per tick (not a fixed pair count: OpinionOf gets
+        // slower the more thoughts pawns carry, so 200 pairs per tick cost a
+        // few ms on a ~280-colonist save and showed up as FPS drops, worse
+        // at higher game speeds where several ticks run per frame).
+        private const double LonelinessScanBudgetMsPerTick = 0.25;
+        private const int LonelinessScanMinEvaluationsPerTick = 10;
+        private static readonly long LonelinessScanBudgetStopwatchTicks =
+            (long)(Stopwatch.Frequency * LonelinessScanBudgetMsPerTick / 1000.0);
+
+        // Visitor-candidate scans are queued and run one map per tick instead
+        // of every home map in the same tick.
+        private readonly Queue<Map> pendingVisitorMaps = new Queue<Map>();
+
+        // Debug-mode perf log: a stage is only reported when it took longer
+        // than this, so the log stays readable.
+        private const double PerfLogThresholdMs = 1.0;
 
         // "Just landed in the colony" shields from the loneliness check -
         // after returning from wandering off, or after being recruited - so
@@ -298,6 +313,24 @@ namespace PeacefulFarewell
                 }
             }
 
+            if (pendingVisitorMaps.Count > 0)
+            {
+                Map map = pendingVisitorMaps.Dequeue();
+                try
+                {
+                    if (map != null && map.IsPlayerHome && Find.Maps.Contains(map))
+                    {
+                        long start = Stopwatch.GetTimestamp();
+                        CheckVisitorRequest(map);
+                        LogPerf("Visitor candidate scan on " + map, start);
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    PF_Log.Error("Exception in visitor request check: " + ex);
+                }
+            }
+
             try
             {
                 TickLonelinessScan();
@@ -329,6 +362,7 @@ namespace PeacefulFarewell
             }
 
             pendingLonelinessMaps.Clear();
+            pendingVisitorMaps.Clear();
 
             bool runWanderlustCheck = Find.TickManager.TicksGame >= nextWanderlustCheckTick;
             if (runWanderlustCheck)
@@ -343,13 +377,30 @@ namespace PeacefulFarewell
                     continue;
                 }
 
-                CheckVisitorRequest(map);
+                pendingVisitorMaps.Enqueue(map);
                 pendingLonelinessMaps.Enqueue(map);
             }
 
             if (runWanderlustCheck)
             {
+                long start = Stopwatch.GetTimestamp();
                 CheckWanderlustRequest();
+                LogPerf("Wanderlust check", start);
+            }
+        }
+
+        // Debug mode only: reports a stage that took longer than
+        // PerfLogThresholdMs, to find what causes FPS drops on big saves.
+        internal static void LogPerf(string stage, long startTimestamp)
+        {
+            if (!PF_Log.DebugMode)
+            {
+                return;
+            }
+            double ms = (Stopwatch.GetTimestamp() - startTimestamp) * 1000.0 / Stopwatch.Frequency;
+            if (ms >= PerfLogThresholdMs)
+            {
+                PF_Log.Message($"[perf] {stage}: {ms:F1} ms");
             }
         }
 
@@ -378,7 +429,8 @@ namespace PeacefulFarewell
                 }
             }
 
-            if (activeScan.Step(OpinionEvaluationsPerTick))
+            long now = Stopwatch.GetTimestamp();
+            if (activeScan.Step(now + LonelinessScanBudgetStopwatchTicks, LonelinessScanMinEvaluationsPerTick))
             {
                 FinishLonelinessScan(activeScan);
                 activeScan = null;
@@ -389,7 +441,10 @@ namespace PeacefulFarewell
         // among the visitors gets a meeting, and the talks decide.
         private void CheckVisitorRequest(Map map)
         {
-            foreach (FarewellUtility.RequestCandidate candidate in FarewellUtility.FindRequestCandidates(map))
+            // Colonists already in a meeting are skipped before the expensive
+            // relation/friendship checks rather than after - otherwise every
+            // hourly check re-ran them for the whole visit.
+            foreach (FarewellUtility.RequestCandidate candidate in FarewellUtility.FindRequestCandidates(map, HasVisitMeeting))
             {
                 // A colonist can qualify for several visiting groups at once -
                 // the first one wins. Also skips colonists whose meeting

@@ -132,6 +132,8 @@
   <PF_Setting_LonelinessAvgOpinionLabel>Average opinion from others must be below: {0}</PF_Setting_LonelinessAvgOpinionLabel>
   <PF_Setting_LonelinessMaxSingleOpinionLabel>No single colonist's opinion may be above: {0}</PF_Setting_LonelinessMaxSingleOpinionLabel>
   <PF_Setting_LonelinessMinDaysInColonyLabel>Minimum days in the colony before this can trigger: {0}</PF_Setting_LonelinessMinDaysInColonyLabel>
+  <PF_Setting_LonelinessFamilyFactionChanceLabel>Chance an unwelcome colonist goes to their family in another faction: {0}</PF_Setting_LonelinessFamilyFactionChanceLabel>
+  <PF_Setting_LonelinessFamilyFactionChanceTooltip>When the fate of a colonist who left for not feeling welcome is decided, and they have family in another faction (friendly or hostile), this is the chance they join that faction. Otherwise the usual roll applies: return home or join a random friendly faction.</PF_Setting_LonelinessFamilyFactionChanceTooltip>
   <PF_Setting_Section_Wanderer>Wanderer's fate after leaving the colony</PF_Setting_Section_Wanderer>
   <PF_Setting_WandererMinCheckDaysLabel>Earliest a wanderer's fate can be decided: {0} days</PF_Setting_WandererMinCheckDaysLabel>
   <PF_Setting_WandererMaxCheckDaysLabel>A wanderer's fate is guaranteed decided by: {0} days</PF_Setting_WandererMaxCheckDaysLabel>

@@ -132,6 +132,8 @@
   <PF_Setting_LonelinessAvgOpinionLabel>Średnia opinia innych musi być poniżej: {0}</PF_Setting_LonelinessAvgOpinionLabel>
   <PF_Setting_LonelinessMaxSingleOpinionLabel>Opinia żadnego pojedynczego osadnika nie może przekraczać: {0}</PF_Setting_LonelinessMaxSingleOpinionLabel>
   <PF_Setting_LonelinessMinDaysInColonyLabel>Minimalna liczba dni w kolonii, zanim to się uruchomi: {0}</PF_Setting_LonelinessMinDaysInColonyLabel>
+  <PF_Setting_LonelinessFamilyFactionChanceLabel>Szansa, że niechciany osadnik odejdzie do rodziny w innej frakcji: {0}</PF_Setting_LonelinessFamilyFactionChanceLabel>
+  <PF_Setting_LonelinessFamilyFactionChanceTooltip>Gdy rozstrzyga się los osadnika, który odszedł, bo nie czuł się mile widziany, a ma rodzinę w innej frakcji (przyjaznej lub wrogiej), to jest szansa, że do niej dołączy. W przeciwnym razie działa zwykłe losowanie: powrót do kolonii albo dołączenie do losowej przyjaznej frakcji.</PF_Setting_LonelinessFamilyFactionChanceTooltip>
   <PF_Setting_Section_Wanderer>Losy wędrowca po opuszczeniu kolonii</PF_Setting_Section_Wanderer>
   <PF_Setting_WandererMinCheckDaysLabel>Najwcześniej los wędrowca może zostać rozstrzygnięty po: {0} dniach</PF_Setting_WandererMinCheckDaysLabel>
   <PF_Setting_WandererMaxCheckDaysLabel>Los wędrowca na pewno zostanie rozstrzygnięty po: {0} dniach</PF_Setting_WandererMaxCheckDaysLabel>

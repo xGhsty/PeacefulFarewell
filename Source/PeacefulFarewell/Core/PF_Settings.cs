@@ -19,6 +19,7 @@ namespace PeacefulFarewell
         public float lonelinessAvgOpinionThreshold = -20f;
         public float lonelinessMaxSingleOpinionThreshold = 15f;
         public float lonelinessMinDaysInColony = 60f;
+        public float lonelinessFamilyFactionChance = 0.5f;
         public float wandererMinCheckDays = 7f;
         public float wandererMaxCheckDays = 30f;
         public bool wandererJoinedFactionLetterEnabled = true;
@@ -43,6 +44,7 @@ namespace PeacefulFarewell
             Scribe_Values.Look(ref lonelinessAvgOpinionThreshold, "lonelinessAvgOpinionThreshold", -20f);
             Scribe_Values.Look(ref lonelinessMaxSingleOpinionThreshold, "lonelinessMaxSingleOpinionThreshold", 15f);
             Scribe_Values.Look(ref lonelinessMinDaysInColony, "lonelinessMinDaysInColony", 60f);
+            Scribe_Values.Look(ref lonelinessFamilyFactionChance, "lonelinessFamilyFactionChance", 0.5f);
             Scribe_Values.Look(ref wandererMinCheckDays, "wandererMinCheckDays", 7f);
             Scribe_Values.Look(ref wandererMaxCheckDays, "wandererMaxCheckDays", 30f);
             Scribe_Values.Look(ref wandererJoinedFactionLetterEnabled, "wandererJoinedFactionLetterEnabled", true);
@@ -99,6 +101,11 @@ namespace PeacefulFarewell
 
             listing.Label("PF_Setting_LonelinessMinDaysInColonyLabel".Translate(lonelinessMinDaysInColony.ToString("F0")));
             lonelinessMinDaysInColony = listing.Slider(lonelinessMinDaysInColony, 0f, 180f);
+
+            listing.Gap();
+
+            listing.Label("PF_Setting_LonelinessFamilyFactionChanceLabel".Translate(lonelinessFamilyFactionChance.ToStringPercent()), tooltip: "PF_Setting_LonelinessFamilyFactionChanceTooltip".Translate());
+            lonelinessFamilyFactionChance = listing.Slider(lonelinessFamilyFactionChance, 0f, 1f);
 
             listing.GapLine();
 

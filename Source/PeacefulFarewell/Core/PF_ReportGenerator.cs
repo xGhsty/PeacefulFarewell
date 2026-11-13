@@ -77,6 +77,7 @@ namespace PeacefulFarewell
             sb.AppendLine($"lonelinessChancePerCheck = {s.lonelinessChancePerCheck}");
             sb.AppendLine($"lonelinessAvgOpinionThreshold = {s.lonelinessAvgOpinionThreshold}");
             sb.AppendLine($"lonelinessMaxSingleOpinionThreshold = {s.lonelinessMaxSingleOpinionThreshold}");
+            sb.AppendLine($"lonelinessFamilyFactionChance = {s.lonelinessFamilyFactionChance}");
             sb.AppendLine($"wandererMinCheckDays = {s.wandererMinCheckDays}");
             sb.AppendLine($"wandererMaxCheckDays = {s.wandererMaxCheckDays}");
             sb.AppendLine($"wandererJoinedFactionLetterEnabled = {s.wandererJoinedFactionLetterEnabled}");

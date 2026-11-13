@@ -141,12 +141,20 @@ namespace PeacefulFarewell
     // vanilla pawn-generation request picking them out of the world pawn pool.
     public static class Patch_IsValidCandidateToRedress
     {
+        // Vanilla asks about every world pawn in a burst whenever it
+        // generates a pawn, so the debug line used to repeat 15-20 times at
+        // once - log it at most once per game hour.
+        private static int lastLoggedTick = -999999;
+
         public static bool Prefix(Pawn pawn, ref bool __result)
         {
             if (PF_WandererTracker.Instance?.IsTracked(pawn) == true)
             {
-                if (PF_Log.DebugMode)
-                    PF_Log.Message($"Blocked vanilla redress of tracked wanderer {pawn.LabelShort} - fate still pending in PF_WandererTracker.");
+                if (PF_Log.DebugMode && Find.TickManager.TicksGame - lastLoggedTick >= GenDate.TicksPerHour)
+                {
+                    lastLoggedTick = Find.TickManager.TicksGame;
+                    PF_Log.Message($"Blocked vanilla redress of tracked wanderer {pawn.LabelShort} - fate still pending in PF_WandererTracker (further blocks this hour not logged).");
+                }
                 __result = false;
                 return false;
             }
