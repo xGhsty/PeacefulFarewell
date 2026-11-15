@@ -81,4 +81,21 @@
     <li>madeclear(INITIATOR_gender==female)->dała jasno do zrozumienia</li>
   </PF_VisitTalk_Snub.logRulesInitiator.rulesStrings>
 
+  <PF_PasserbyGoodbye.label>pożegnanie</PF_PasserbyGoodbye.label>
+  <PF_PasserbyGoodbye.logRulesInitiator.rulesStrings>
+    <li>r_logentry->[INITIATOR_nameDef] [caughtup] [RECIPIENT_nameDef] i [said] się z [RECIPIENT_objective].</li>
+    <li>r_logentry->[INITIATOR_nameDef] [hugged] [RECIPIENT_nameDef] na pożegnanie i [wished] [RECIPIENT_objective] szczęśliwej drogi.</li>
+    <li>r_logentry->[INITIATOR_nameDef] [told] [RECIPIENT_nameDef], że nie może iść razem, i pożegnali się.</li>
+    <li>caughtup(INITIATOR_gender==male)->dogonił</li>
+    <li>caughtup(INITIATOR_gender==female)->dogoniła</li>
+    <li>said(INITIATOR_gender==male)->pożegnał</li>
+    <li>said(INITIATOR_gender==female)->pożegnała</li>
+    <li>hugged(INITIATOR_gender==male)->uściskał</li>
+    <li>hugged(INITIATOR_gender==female)->uściskała</li>
+    <li>wished(INITIATOR_gender==male)->życzył</li>
+    <li>wished(INITIATOR_gender==female)->życzyła</li>
+    <li>told(INITIATOR_gender==male)->powiedział</li>
+    <li>told(INITIATOR_gender==female)->powiedziała</li>
+  </PF_PasserbyGoodbye.logRulesInitiator.rulesStrings>
+
 </LanguageData>

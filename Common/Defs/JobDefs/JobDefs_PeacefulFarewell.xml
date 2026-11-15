@@ -58,4 +58,15 @@
     <suspendable>false</suspendable>
   </JobDef>
 
+  <!-- The player refused a passerby's join request: the colonist runs
+       after the traveler to say goodbye before they leave the map. -->
+  <JobDef>
+    <defName>PF_SayGoodbyeToPasserby</defName>
+    <driverClass>PeacefulFarewell.JobDriver_SayGoodbyeToPasserby</driverClass>
+    <reportString>saying goodbye to TargetA.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+    <playerInterruptible>true</playerInterruptible>
+    <suspendable>false</suspendable>
+  </JobDef>
+
 </Defs>

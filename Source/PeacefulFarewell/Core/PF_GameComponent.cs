@@ -99,6 +99,16 @@ namespace PeacefulFarewell
         // If a started talk falls through, wait this long before trying again.
         private const int VisitTalkRetryTicks = GenDate.TicksPerHour;
 
+        // Passersby are on the map for a few hours at most - the colonist
+        // goes right away and retries quickly.
+        private static readonly IntRange PasserbyFirstTalkDelayTicks = new IntRange(0, VisitMeetingTickInterval);
+        private const int PasserbyTalkRetryTicks = 500;
+
+        private static int TalksNeeded(PF_VisitMeeting meeting)
+        {
+            return meeting.passerby ? 1 : PeacefulFarewellMod.Settings.visitTalksBeforeDecision;
+        }
+
         public PF_GameComponent(Game game)
         {
         }
@@ -495,7 +505,8 @@ namespace PeacefulFarewell
                     relative = candidate.relatedPawn,
                     lord = candidate.visitingLord,
                     faction = candidate.targetFaction,
-                    nextTalkTick = Find.TickManager.TicksGame + FirstVisitTalkDelayTicks.RandomInRange
+                    passerby = candidate.passerby,
+                    nextTalkTick = Find.TickManager.TicksGame + (candidate.passerby ? PasserbyFirstTalkDelayTicks : FirstVisitTalkDelayTicks).RandomInRange
                 };
                 visitMeetings.Add(meeting);
 
@@ -528,6 +539,15 @@ namespace PeacefulFarewell
             {
                 PF_VisitMeeting meeting = visitMeetings[i];
 
+                if (meeting.passerby && meeting.concluded && TickPendingPasserbyLetter(meeting, out bool remove))
+                {
+                    if (remove)
+                    {
+                        visitMeetings.RemoveAt(i);
+                    }
+                    continue;
+                }
+
                 if (!FarewellUtility.IsVisitMeetingStillPossible(meeting))
                 {
                     visitMeetings.RemoveAt(i);
@@ -556,12 +576,50 @@ namespace PeacefulFarewell
 
                 meeting.lastBlockReason = null;
                 meeting.debugForceNextTalk = false;
-                meeting.nextTalkTick = now + VisitTalkRetryTicks;
-                FarewellUtility.StartVisitTalk(meeting.colonist, meeting.relative);
+                meeting.nextTalkTick = now + (meeting.passerby ? PasserbyTalkRetryTicks : VisitTalkRetryTicks);
+                FarewellUtility.StartVisitTalk(meeting.colonist, meeting.relative, meeting.passerby);
 
                 if (PF_Log.DebugMode)
                     PF_Log.Message($"Visit talk started: {meeting}, colonist job now={meeting.colonist.CurJobDef?.defName ?? "null"}");
             }
+        }
+
+        // A passerby's join letter is still unanswered: the meeting stays
+        // until the traveler is gone (not just "leaving" - they're still
+        // walking to the edge and can be caught). Once they're off the map
+        // the letter expires and the colonist regrets not saying goodbye.
+        // Returns false when there's no such letter (normal handling).
+        private static bool TickPendingPasserbyLetter(PF_VisitMeeting meeting, out bool remove)
+        {
+            remove = false;
+            ChoiceLetter_JoinRequest letter = FarewellUtility.FindPendingPasserbyLetter(meeting.colonist, meeting.relative);
+            if (letter == null)
+            {
+                return false;
+            }
+
+            Pawn colonist = meeting.colonist;
+            Pawn relative = meeting.relative;
+            bool colonistGone = colonist == null || colonist.Dead || colonist.Faction != Faction.OfPlayer;
+            bool relativeGone = relative == null || relative.Dead || !relative.Spawned || colonist == null || relative.MapHeld != colonist.MapHeld;
+            if (!colonistGone && !relativeGone)
+            {
+                return true;
+            }
+
+            remove = true;
+            letter.decided = true;
+            Find.LetterStack.RemoveLetter(letter);
+            if (!colonistGone)
+            {
+                FarewellUtility.GiveMissedGoodbyeThought(colonist, relative);
+                Messages.Message("PF_PasserbyLeftUnanswered".Translate(colonist.Named("PAWN"), relative.Named("RELATIVE")),
+                    colonist, MessageTypeDefOf.NegativeEvent, historical: false);
+            }
+
+            if (PF_Log.DebugMode)
+                PF_Log.Message($"Passerby left with the join letter unanswered: {meeting}");
+            return true;
         }
 
         // The visitors left (or either pawn became unavailable) before the
@@ -571,7 +629,7 @@ namespace PeacefulFarewell
             if (meeting.talksDone > 0 && meeting.snubs == 0 && meeting.colonist != null
                 && !meeting.colonist.Dead && meeting.colonist.Faction == Faction.OfPlayer)
             {
-                FarewellUtility.GiveGoodToSeeVisitorThought(meeting.colonist, meeting.relative);
+                GiveGoodToSeeThought(meeting);
             }
 
             if (PF_Log.DebugMode)
@@ -604,7 +662,7 @@ namespace PeacefulFarewell
             if (PF_Log.DebugMode)
                 PF_Log.Message($"Visit talk finished ({outcome}): {meeting}");
 
-            if (meeting.talksDone >= PeacefulFarewellMod.Settings.visitTalksBeforeDecision)
+            if (meeting.talksDone >= TalksNeeded(meeting))
             {
                 DecideVisitMeeting(meeting);
             }
@@ -627,11 +685,23 @@ namespace PeacefulFarewell
 
             if (canAsk)
             {
-                SendJoinRequestLetter(meeting.colonist, meeting.relative, meeting.lord, meeting.faction, afterTalks: true);
+                SendJoinRequestLetter(meeting.colonist, meeting.relative, meeting.lord, meeting.faction, afterTalks: true, meeting.passerby);
                 return;
             }
 
             if (!wantsToLeave && meeting.snubs == 0)
+            {
+                GiveGoodToSeeThought(meeting);
+            }
+        }
+
+        private static void GiveGoodToSeeThought(PF_VisitMeeting meeting)
+        {
+            if (meeting.passerby)
+            {
+                FarewellUtility.GiveGoodToSeePasserbyThought(meeting.colonist, meeting.relative);
+            }
+            else
             {
                 FarewellUtility.GiveGoodToSeeVisitorThought(meeting.colonist, meeting.relative);
             }
@@ -676,11 +746,11 @@ namespace PeacefulFarewell
                 return false;
             }
 
-            SendJoinRequestLetter(candidate.colonist, candidate.relatedPawn, candidate.visitingLord, candidate.targetFaction, afterTalks: false);
+            SendJoinRequestLetter(candidate.colonist, candidate.relatedPawn, candidate.visitingLord, candidate.targetFaction, afterTalks: false, candidate.passerby);
             return true;
         }
 
-        private static void SendJoinRequestLetter(Pawn colonist, Pawn relatedPawn, Lord visitingLord, Faction targetFaction, bool afterTalks)
+        private static void SendJoinRequestLetter(Pawn colonist, Pawn relatedPawn, Lord visitingLord, Faction targetFaction, bool afterTalks, bool passerby = false)
         {
             FarewellUtility.JoinBond bond = FarewellUtility.GetJoinBond(colonist, relatedPawn, out PawnRelationDef otherFamilyRelation);
             ChoiceLetter_JoinRequest letter = (ChoiceLetter_JoinRequest)LetterMaker.MakeLetter(
@@ -691,6 +761,7 @@ namespace PeacefulFarewell
             letter.relatedPawn = relatedPawn;
             letter.visitingLord = visitingLord;
             letter.targetFaction = targetFaction;
+            letter.passerby = passerby;
             letter.lookTargets = new LookTargets(colonist);
 
             Find.LetterStack.ReceiveLetter(letter);

@@ -98,4 +98,19 @@
     </logRulesInitiator>
   </InteractionDef>
 
+  <!-- Colonist -> passerby, from JobDriver_SayGoodbyeToPasserby. -->
+  <InteractionDef>
+    <defName>PF_PasserbyGoodbye</defName>
+    <label>say goodbye</label>
+    <workerClass>InteractionWorker</workerClass>
+    <symbol>Things/Mote/SpeechSymbols/KindWords</symbol>
+    <logRulesInitiator>
+      <rulesStrings>
+        <li>r_logentry->[INITIATOR_nameDef] caught up with [RECIPIENT_nameDef] and said goodbye.</li>
+        <li>r_logentry->[INITIATOR_nameDef] hugged [RECIPIENT_nameDef] goodbye and wished [RECIPIENT_objective] a safe road.</li>
+        <li>r_logentry->[INITIATOR_nameDef] told [RECIPIENT_nameDef] [INITIATOR_pronoun] couldn't come along, and they said their goodbyes.</li>
+      </rulesStrings>
+    </logRulesInitiator>
+  </InteractionDef>
+
 </Defs>

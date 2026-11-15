@@ -196,4 +196,7 @@
   <PF_ReunitedSibling_SubjMale_desc>{0} and I are together again, just like when we were kids. It's good to have my brother back.</PF_ReunitedSibling_SubjMale_desc>
   <PF_ReunitedSibling_SubjFemale_desc>{0} and I are together again, just like when we were kids. It's good to have my sister back.</PF_ReunitedSibling_SubjFemale_desc>
 
+  <!-- Passersby -->
+  <PF_PasserbyLeftUnanswered>{RELATIVE_nameDef} has left the area. {PAWN_nameDef} never got to say goodbye.</PF_PasserbyLeftUnanswered>
+
 </LanguageData>

@@ -28,6 +28,12 @@ namespace PeacefulFarewell
         public int snubs;
         public bool concluded;
 
+        // The relative is only passing through (vanilla travelers,
+        // LordJob_TravelAndExit) rather than visiting: the colonist runs
+        // over at once, the traveler stops for them, and a single talk
+        // decides - see PF_GameComponent.TalksNeeded.
+        public bool passerby;
+
         // Not saved. Set by the debug "Hurry visitor talks" action so the
         // next talk skips the soft checks in CanStartVisitTalk; lastBlockReason
         // keeps the debug log from repeating the same reason every check.
@@ -45,11 +51,12 @@ namespace PeacefulFarewell
             Scribe_Values.Look(ref talkPoints, "talkPoints");
             Scribe_Values.Look(ref snubs, "snubs");
             Scribe_Values.Look(ref concluded, "concluded");
+            Scribe_Values.Look(ref passerby, "passerby");
         }
 
         public override string ToString()
         {
-            return $"{colonist?.LabelShort ?? "null"} <-> {relative?.LabelShort ?? "null"} ({faction?.Name ?? "null"}): talks={talksDone}, points={talkPoints}, snubs={snubs}, concluded={concluded}";
+            return $"{colonist?.LabelShort ?? "null"} <-> {relative?.LabelShort ?? "null"} ({faction?.Name ?? "null"}): passerby={passerby}, talks={talksDone}, points={talkPoints}, snubs={snubs}, concluded={concluded}";
         }
     }
 }

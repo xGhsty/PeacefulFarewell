@@ -371,4 +371,26 @@
   <PF_SnubbedByVisitor_SubjMale_desc>Podczas wizyty {0} prawie nie miał dla mnie czasu. A wydawało mi się, że tyle dla siebie znaczymy.</PF_SnubbedByVisitor_SubjMale_desc>
   <PF_SnubbedByVisitor_SubjFemale_desc>Podczas wizyty {0} prawie nie miała dla mnie czasu. A wydawało mi się, że tyle dla siebie znaczymy.</PF_SnubbedByVisitor_SubjFemale_desc>
 
+  <!-- Przechodnie (PF_VisitMeeting z passerby = true) -->
+  <PF_GoodToSeePasserby_SubjMale_label>dobrze było znów zobaczyć {0}</PF_GoodToSeePasserby_SubjMale_label>
+  <PF_GoodToSeePasserby_SubjFemale_label>dobrze było znów zobaczyć {0}</PF_GoodToSeePasserby_SubjFemale_label>
+  <PF_GoodToSeePasserby_SubjMale_desc>{0} był tylko przejazdem, ale znalazła się chwila na rozmowę. Moje miejsce jest tutaj, ale dobrze było go znów zobaczyć.</PF_GoodToSeePasserby_SubjMale_desc>
+  <PF_GoodToSeePasserby_SubjFemale_desc>{0} była tylko przejazdem, ale znalazła się chwila na rozmowę. Moje miejsce jest tutaj, ale dobrze było ją znów zobaczyć.</PF_GoodToSeePasserby_SubjFemale_desc>
+
+  <PF_FarewellToPasserby_SubjMale_label>dobrze było znów zobaczyć {0}</PF_FarewellToPasserby_SubjMale_label>
+  <PF_FarewellToPasserby_SubjFemale_label>dobrze było znów zobaczyć {0}</PF_FarewellToPasserby_SubjFemale_label>
+  <PF_FarewellToPasserby_SubjMale_desc>Nie mogę iść razem z {0}, ale udało się nam porządnie pożegnać, zanim ruszył dalej. Dobrze było go znów zobaczyć.</PF_FarewellToPasserby_SubjMale_desc>
+  <PF_FarewellToPasserby_SubjFemale_desc>Nie mogę iść razem z {0}, ale udało się nam porządnie pożegnać, zanim ruszyła dalej. Dobrze było ją znów zobaczyć.</PF_FarewellToPasserby_SubjFemale_desc>
+
+  <PF_MissedGoodbye_SubjMale_OwnerMale_label>nie zdążyłem pożegnać się z {0}</PF_MissedGoodbye_SubjMale_OwnerMale_label>
+  <PF_MissedGoodbye_SubjMale_OwnerFemale_label>nie zdążyłam pożegnać się z {0}</PF_MissedGoodbye_SubjMale_OwnerFemale_label>
+  <PF_MissedGoodbye_SubjFemale_OwnerMale_label>nie zdążyłem pożegnać się z {0}</PF_MissedGoodbye_SubjFemale_OwnerMale_label>
+  <PF_MissedGoodbye_SubjFemale_OwnerFemale_label>nie zdążyłam pożegnać się z {0}</PF_MissedGoodbye_SubjFemale_OwnerFemale_label>
+  <PF_MissedGoodbye_SubjMale_OwnerMale_desc>{0} był tylko przejazdem i zniknął, zanim zdążyłem się z nim pożegnać. Kto wie, kiedy znów się zobaczymy.</PF_MissedGoodbye_SubjMale_OwnerMale_desc>
+  <PF_MissedGoodbye_SubjMale_OwnerFemale_desc>{0} był tylko przejazdem i zniknął, zanim zdążyłam się z nim pożegnać. Kto wie, kiedy znów się zobaczymy.</PF_MissedGoodbye_SubjMale_OwnerFemale_desc>
+  <PF_MissedGoodbye_SubjFemale_OwnerMale_desc>{0} była tylko przejazdem i zniknęła, zanim zdążyłem się z nią pożegnać. Kto wie, kiedy znów się zobaczymy.</PF_MissedGoodbye_SubjFemale_OwnerMale_desc>
+  <PF_MissedGoodbye_SubjFemale_OwnerFemale_desc>{0} była tylko przejazdem i zniknęła, zanim zdążyłam się z nią pożegnać. Kto wie, kiedy znów się zobaczymy.</PF_MissedGoodbye_SubjFemale_OwnerFemale_desc>
+
+  <PF_PasserbyLeftUnanswered>{RELATIVE_nameDef} {RELATIVE_gender ? opuścił : opuściła} okolicę. {PAWN_nameDef} nie {PAWN_gender ? zdążył : zdążyła} się pożegnać.</PF_PasserbyLeftUnanswered>
+
 </LanguageData>

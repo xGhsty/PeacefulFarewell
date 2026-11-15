@@ -724,4 +724,51 @@
     </stages>
   </ThoughtDef>
 
+  <!-- Passersby (vanilla travelers crossing the map, PF_VisitMeeting with
+       passerby = true). GoodToSeePasserby: one talk, decided to stay.
+       FarewellToPasserby: asked to go, was refused, but caught them to say
+       goodbye. MissedGoodbye: the letter went unanswered until they left,
+       or the goodbye run fell through. -->
+  <ThoughtDef>
+    <defName>PF_GoodToSeePasserby</defName>
+    <thoughtClass>PeacefulFarewell.Thought_MemoryWithSubject</thoughtClass>
+    <durationDays>3</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages>
+      <li>
+        <label>good to see {0} again</label>
+        <description>{0} was only passing through, but we got a moment to talk. My place is here, but it was good to see them again.</description>
+        <baseMoodEffect>4</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+
+  <ThoughtDef>
+    <defName>PF_FarewellToPasserby</defName>
+    <thoughtClass>PeacefulFarewell.Thought_MemoryWithSubject</thoughtClass>
+    <durationDays>3</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages>
+      <li>
+        <label>good to see {0} again</label>
+        <description>I couldn't go with {0}, but I caught them before they left and we said a proper goodbye. It was good to see them again.</description>
+        <baseMoodEffect>4</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+
+  <ThoughtDef>
+    <defName>PF_MissedGoodbye</defName>
+    <thoughtClass>PeacefulFarewell.Thought_MemoryWithSubject</thoughtClass>
+    <durationDays>5</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages>
+      <li>
+        <label>never said goodbye to {0}</label>
+        <description>{0} was passing through, and before I could even say goodbye they were gone. Who knows when we'll see each other again.</description>
+        <baseMoodEffect>-10</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
+
 </Defs>

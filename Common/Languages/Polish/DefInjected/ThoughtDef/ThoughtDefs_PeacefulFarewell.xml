@@ -148,4 +148,13 @@
   <PF_SnubbedByVisitor.stages.0.label>zlekceważenie podczas wizyty</PF_SnubbedByVisitor.stages.0.label>
   <PF_SnubbedByVisitor.stages.0.description>Podczas wizyty {0} prawie nie miał(a) dla mnie czasu. A wydawało mi się, że tyle dla siebie znaczymy.</PF_SnubbedByVisitor.stages.0.description>
 
+  <PF_GoodToSeePasserby.stages.0.label>dobrze było znów zobaczyć {0}</PF_GoodToSeePasserby.stages.0.label>
+  <PF_GoodToSeePasserby.stages.0.description>{0} był(a) tylko przejazdem, ale znalazła się chwila na rozmowę. Moje miejsce jest tutaj, ale dobrze było znów się zobaczyć.</PF_GoodToSeePasserby.stages.0.description>
+
+  <PF_FarewellToPasserby.stages.0.label>dobrze było znów zobaczyć {0}</PF_FarewellToPasserby.stages.0.label>
+  <PF_FarewellToPasserby.stages.0.description>Nie mogę iść razem z {0}, ale udało się nam porządnie pożegnać, zanim ruszył(a) dalej. Dobrze było znów się zobaczyć.</PF_FarewellToPasserby.stages.0.description>
+
+  <PF_MissedGoodbye.stages.0.label>brak pożegnania z {0}</PF_MissedGoodbye.stages.0.label>
+  <PF_MissedGoodbye.stages.0.description>{0} był(a) tylko przejazdem i zniknął(ęła), zanim zdążyłem(am) się pożegnać. Kto wie, kiedy znów się zobaczymy.</PF_MissedGoodbye.stages.0.description>
+
 </LanguageData>

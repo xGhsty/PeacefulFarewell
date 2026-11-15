@@ -146,6 +146,7 @@ namespace PeacefulFarewell
             public Pawn relatedPawn;
             public Lord visitingLord;
             public Faction targetFaction;
+            public bool passerby;
         }
 
         public static bool TryFindRequestCandidate(Map map, out RequestCandidate candidate)
@@ -227,7 +228,8 @@ namespace PeacefulFarewell
                         colonist = colonist,
                         relatedPawn = closePawn,
                         visitingLord = lord,
-                        targetFaction = lord.faction
+                        targetFaction = lord.faction,
+                        passerby = IsPasserbyLord(lord)
                     });
                 }
             }
@@ -257,7 +259,7 @@ namespace PeacefulFarewell
                 return false;
             }
             if (!(lord.LordJob is LordJob_VisitColony) && !(lord.LordJob is LordJob_TradeWithColony)
-                && !IsHospitalityGuestLord(lord))
+                && !IsHospitalityGuestLord(lord) && !IsPasserbyLord(lord))
             {
                 return false;
             }
@@ -266,6 +268,14 @@ namespace PeacefulFarewell
                 return false;
             }
             return lord.ownedPawns.Any((Pawn p) => p.RaceProps.Humanlike);
+        }
+
+        // Vanilla travelers (IncidentWorker_TravelerGroup) just cross the map:
+        // LordToil_Travel to a far edge, then LordToil_ExitMap - which
+        // IsLordLeaving already treats as "gone".
+        public static bool IsPasserbyLord(Lord lord)
+        {
+            return lord?.LordJob is LordJob_TravelAndExit;
         }
 
         // Hospitality guests run under the mod's own
@@ -773,16 +783,30 @@ namespace PeacefulFarewell
         }
 
         // Interrupts the colonist's current work (resumed afterwards).
-        public static void StartVisitTalk(Pawn colonist, Pawn relative)
+        // Passersby: the colonist runs over, and the traveler stops right
+        // away and waits for them instead of walking on towards the map edge.
+        public static void StartVisitTalk(Pawn colonist, Pawn relative, bool passerby = false)
         {
             Job job = JobMaker.MakeJob(PF_JobDefOf.PF_TalkWithVisitingRelative, relative);
+            if (passerby)
+            {
+                job.locomotionUrgency = LocomotionUrgency.Sprint;
+            }
             colonist.jobs.StartJob(job, JobCondition.InterruptForced, null, resumeCurJobAfterwards: true);
+            if (passerby && colonist.CurJobDef == PF_JobDefOf.PF_TalkWithVisitingRelative)
+            {
+                TryMakeVisitorListen(relative, colonist, PasserbyListenExpiryTicks);
+            }
         }
+
+        // Covers the run over (JobDriver_TalkWithVisitingRelative gives up
+        // after an hour) plus the talk itself.
+        private const int PasserbyListenExpiryTicks = 2 * GenDate.TicksPerHour;
 
         // Has the visitor stop and face the colonist while they talk - only
         // when they're doing something unimportant (wandering, standing
         // around), never over a player-ordered or non-interruptible job.
-        public static void TryMakeVisitorListen(Pawn relative, Pawn colonist)
+        public static void TryMakeVisitorListen(Pawn relative, Pawn colonist, int expiryTicks = GenDate.TicksPerHour)
         {
             if (relative == null || relative.Downed || relative.InMentalState || !relative.Awake() || relative.jobs == null)
             {
@@ -795,7 +819,7 @@ namespace PeacefulFarewell
             }
 
             Job listen = JobMaker.MakeJob(PF_JobDefOf.PF_ListenToVisitingRelative, colonist);
-            listen.expiryInterval = GenDate.TicksPerHour;
+            listen.expiryInterval = expiryTicks;
             relative.jobs.StartJob(listen, JobCondition.InterruptForced, null, resumeCurJobAfterwards: true);
         }
 
@@ -864,6 +888,8 @@ namespace PeacefulFarewell
         //  - mood: an unhappy colonist is easier to tempt away
         //  - people in the colony they'd miss
         // breakdown is for the debug log.
+        private static readonly FloatRange PasserbyImpulsePull = new FloatRange(-30f, 10f);
+
         public static float ComputeVisitPull(PF_VisitMeeting meeting, out string breakdown)
         {
             Pawn colonist = meeting.colonist;
@@ -875,8 +901,13 @@ namespace PeacefulFarewell
             int colonyFriends = CountVisitColonyFriends(colonist);
             float colonyPull = -6f * colonyFriends;
 
-            float total = bondPull + meeting.talkPoints + opinionPull + moodPull + colonyPull;
-            breakdown = $"bond={bondPull:F0}, talks={meeting.talkPoints:F0} ({meeting.talksDone} talks, {meeting.snubs} snubs), opinion={opinionPull:F1}, mood={moodPull:F1}, colonyFriends={colonyFriends} ({colonyPull:F0}) => {total:F1} / {VisitPullThreshold:F0}";
+            // Deciding on the spot after one chance meeting is a gamble - a
+            // random swing, leaning towards staying, so even a spouse passing
+            // by isn't a guaranteed request.
+            float impulsePull = meeting.passerby ? PasserbyImpulsePull.RandomInRange : 0f;
+
+            float total = bondPull + meeting.talkPoints + opinionPull + moodPull + colonyPull + impulsePull;
+            breakdown = $"bond={bondPull:F0}, talks={meeting.talkPoints:F0} ({meeting.talksDone} talks, {meeting.snubs} snubs), opinion={opinionPull:F1}, mood={moodPull:F1}, colonyFriends={colonyFriends} ({colonyPull:F0}), impulse={impulsePull:F1} => {total:F1} / {VisitPullThreshold:F0}";
             return total;
         }
 
@@ -911,6 +942,79 @@ namespace PeacefulFarewell
                 return;
             }
             GainMemoryWithSubject(colonist, PF_ThoughtDefOf.PF_GoodToSeeVisitor, relative);
+        }
+
+        // Talked with a passerby and decided to stay (no letter at all).
+        public static void GiveGoodToSeePasserbyThought(Pawn colonist, Pawn relative)
+        {
+            if (colonist?.needs?.mood == null || relative == null || colonist.Dead)
+            {
+                return;
+            }
+            GainMemoryWithSubject(colonist, PF_ThoughtDefOf.PF_GoodToSeePasserby, relative);
+        }
+
+        // Asked to go with a passerby, was refused, but caught them in time
+        // to say goodbye (JobDriver_SayGoodbyeToPasserby).
+        public static void GiveFarewellToPasserbyThought(Pawn colonist, Pawn relative)
+        {
+            if (colonist?.needs?.mood == null || relative == null || colonist.Dead)
+            {
+                return;
+            }
+            GainMemoryWithSubject(colonist, PF_ThoughtDefOf.PF_FarewellToPasserby, relative);
+        }
+
+        // The passerby left before the colonist could say goodbye - the
+        // letter was left unanswered, or the goodbye run fell through.
+        public static void GiveMissedGoodbyeThought(Pawn colonist, Pawn relative)
+        {
+            if (colonist?.needs?.mood == null || relative == null || colonist.Dead)
+            {
+                return;
+            }
+            GainMemoryWithSubject(colonist, PF_ThoughtDefOf.PF_MissedGoodbye, relative);
+        }
+
+        public static void StartSayGoodbyeToPasserby(Pawn colonist, Pawn relative)
+        {
+            if (colonist == null || colonist.Dead)
+            {
+                return;
+            }
+            if (relative == null || relative.Dead || !relative.Spawned || !colonist.Spawned || relative.Map != colonist.Map
+                || colonist.Downed || colonist.InMentalState || !colonist.CanReach(relative, PathEndMode.Touch, Danger.Some))
+            {
+                GiveMissedGoodbyeThought(colonist, relative);
+                return;
+            }
+
+            Job job = JobMaker.MakeJob(PF_JobDefOf.PF_SayGoodbyeToPasserby, relative);
+            job.locomotionUrgency = LocomotionUrgency.Sprint;
+            if (!colonist.jobs.TryTakeOrderedJob(job, JobTag.Misc))
+            {
+                GiveMissedGoodbyeThought(colonist, relative);
+            }
+        }
+
+        // The undecided join letter a passerby meeting produced, if it's
+        // still sitting in the letter stack.
+        public static ChoiceLetter_JoinRequest FindPendingPasserbyLetter(Pawn colonist, Pawn relative)
+        {
+            List<Letter> letters = Find.LetterStack?.LettersListForReading;
+            if (letters == null)
+            {
+                return null;
+            }
+            foreach (Letter letter in letters)
+            {
+                if (letter is ChoiceLetter_JoinRequest request && request.passerby && !request.decided
+                    && request.colonist == colonist && request.relatedPawn == relative)
+                {
+                    return request;
+                }
+            }
+            return null;
         }
 
         public static void StartJoinJob(Pawn colonist, Pawn relatedPawn, Lord visitingLord, Faction targetFaction)

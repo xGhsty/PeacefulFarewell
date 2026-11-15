@@ -23,7 +23,7 @@ namespace PeacefulFarewell
                 {
                     return base.LabelCap;
                 }
-                string gendered = PF_GenderText.ResolveLabelForSubject(def, subject);
+                string gendered = PF_GenderText.ResolveLabelForBoth(def, subject, pawn);
                 string text = gendered ?? CurStage.label;
                 return text.Formatted(subjectLabel).CapitalizeFirst();
             }
@@ -37,7 +37,7 @@ namespace PeacefulFarewell
                 {
                     return base.Description;
                 }
-                string gendered = PF_GenderText.ResolveDescriptionForSubject(def, subject);
+                string gendered = PF_GenderText.ResolveDescriptionForBoth(def, subject, pawn);
                 string text = gendered ?? CurStage.description;
                 return text.Formatted(subjectLabel);
             }

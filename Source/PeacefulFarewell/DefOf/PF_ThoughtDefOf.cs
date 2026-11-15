@@ -28,6 +28,9 @@ namespace PeacefulFarewell
         public static ThoughtDef PF_ReunitedFriend;
         public static ThoughtDef PF_GoodToSeeVisitor;
         public static ThoughtDef PF_SnubbedByVisitor;
+        public static ThoughtDef PF_GoodToSeePasserby;
+        public static ThoughtDef PF_FarewellToPasserby;
+        public static ThoughtDef PF_MissedGoodbye;
 
         static PF_ThoughtDefOf()
         {

@@ -10,6 +10,7 @@ namespace PeacefulFarewell
         public static InteractionDef PF_VisitTalk_Stories;
         public static InteractionDef PF_VisitTalk_Invite;
         public static InteractionDef PF_VisitTalk_Snub;
+        public static InteractionDef PF_PasserbyGoodbye;
 
         static PF_InteractionDefOf()
         {

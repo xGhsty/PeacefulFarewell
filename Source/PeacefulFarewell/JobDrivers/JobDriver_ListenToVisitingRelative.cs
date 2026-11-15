@@ -52,7 +52,7 @@ namespace PeacefulFarewell
             return colonist != null
                 && colonist.Spawned
                 && colonist.Map == pawn.Map
-                && colonist.CurJobDef == PF_JobDefOf.PF_TalkWithVisitingRelative
+                && (colonist.CurJobDef == PF_JobDefOf.PF_TalkWithVisitingRelative || colonist.CurJobDef == PF_JobDefOf.PF_SayGoodbyeToPasserby)
                 && colonist.CurJob.targetA.Thing == pawn;
         }
     }

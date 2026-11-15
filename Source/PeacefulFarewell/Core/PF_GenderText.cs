@@ -66,6 +66,15 @@ namespace PeacefulFarewell
             return both ?? ResolveDescriptionForSubject(def, subject);
         }
 
+        // Same as ResolveDescriptionForBoth, for labels that speak in the
+        // first person about the holder (e.g. "nie zdazylem/am sie pozegnac
+        // z {0}").
+        public static string ResolveLabelForBoth(ThoughtDef def, Pawn subject, Pawn owner)
+        {
+            string both = ResolveCached(def.defName + "_Subj" + GenderSuffix(subject) + "_Owner" + GenderSuffix(owner) + "_label");
+            return both ?? ResolveLabelForSubject(def, subject);
+        }
+
         // Null is a valid cached outcome (key doesn't exist for this
         // language), so a separate ContainsKey check is used instead of
         // TryGetValue-and-treat-null-as-miss.
