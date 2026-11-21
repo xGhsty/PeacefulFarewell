@@ -39,6 +39,9 @@ namespace PeacefulFarewell
         private bool inviteSaid;
         private bool snubSaid;
         private FarewellUtility.VisitTalkOutcome rolledOutcome;
+        // The outcome went to PF_GameComponent already - FinishTalk or the
+        // finish action, whichever comes first.
+        private bool reported;
 
         private Pawn Relative => job.targetA.Thing as Pawn;
 
@@ -56,6 +59,22 @@ namespace PeacefulFarewell
             {
                 Lord lord = Relative?.GetLord();
                 return lord != null && FarewellUtility.IsLordLeaving(lord);
+            });
+            // Cut short (hunger, another job, the visitor walked off...)
+            // after some lines were already said: that still was a talk.
+            // Before, only a talk that ran to the end counted, so the
+            // colonist kept coming back to "talk" to someone they just had.
+            AddFinishAction(delegate(JobCondition condition)
+            {
+                if (!reported)
+                {
+                    reported = true;
+                    FarewellUtility.VisitTalkOutcome outcome = CurrentOutcome();
+                    if (outcome != FarewellUtility.VisitTalkOutcome.None)
+                    {
+                        PF_GameComponent.NotifyVisitTalkFinished(pawn, Relative, outcome);
+                    }
+                }
             });
 
             Toil approach = new Toil();
@@ -85,6 +104,9 @@ namespace PeacefulFarewell
                     pawn.pather.StartPath(Relative, PathEndMode.Touch);
                 }
             };
+            // The visitor fell asleep before the colonist got there - give up,
+            // PF_GameComponent retries once they're awake (CanStartVisitTalk).
+            approach.AddFailCondition(() => Relative != null && !Relative.Awake());
             yield return approach;
 
             Toil talk = new Toil();
@@ -115,6 +137,14 @@ namespace PeacefulFarewell
             };
             talk.tickIntervalAction = delegate(int delta)
             {
+                // Fell asleep mid-talk: end it here. Lines already said
+                // still count; none said -> it's retried later.
+                if (Relative != null && !Relative.Awake())
+                {
+                    FinishTalk();
+                    return;
+                }
+
                 // Visitors don't always stand still - follow them a few
                 // steps rather than talking across the map.
                 if (!IsInTalkRange())
@@ -214,27 +244,25 @@ namespace PeacefulFarewell
         // normal warm talk, and a talk with no lines at all doesn't count.
         private void FinishTalk()
         {
-            FarewellUtility.VisitTalkOutcome outcome;
-            if (snubSaid)
-            {
-                outcome = FarewellUtility.VisitTalkOutcome.Snub;
-            }
-            else if (inviteSaid)
-            {
-                outcome = FarewellUtility.VisitTalkOutcome.Invited;
-            }
-            else if (linesSaid > 0)
-            {
-                outcome = FarewellUtility.VisitTalkOutcome.Warm;
-            }
-            else
-            {
-                outcome = FarewellUtility.VisitTalkOutcome.None;
-            }
+            FarewellUtility.VisitTalkOutcome outcome = CurrentOutcome();
+            reported = true;
 
             Pawn relative = Relative;
             EndJobWith(JobCondition.Succeeded);
             PF_GameComponent.NotifyVisitTalkFinished(pawn, relative, outcome);
+        }
+
+        private FarewellUtility.VisitTalkOutcome CurrentOutcome()
+        {
+            if (snubSaid)
+            {
+                return FarewellUtility.VisitTalkOutcome.Snub;
+            }
+            if (inviteSaid)
+            {
+                return FarewellUtility.VisitTalkOutcome.Invited;
+            }
+            return linesSaid > 0 ? FarewellUtility.VisitTalkOutcome.Warm : FarewellUtility.VisitTalkOutcome.None;
         }
 
         public override void ExposeData()
@@ -247,6 +275,7 @@ namespace PeacefulFarewell
             Scribe_Values.Look(ref inviteSaid, "inviteSaid");
             Scribe_Values.Look(ref snubSaid, "snubSaid");
             Scribe_Values.Look(ref rolledOutcome, "rolledOutcome");
+            Scribe_Values.Look(ref reported, "reported");
         }
     }
 }

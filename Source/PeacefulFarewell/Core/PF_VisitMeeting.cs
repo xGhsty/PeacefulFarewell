@@ -34,6 +34,14 @@ namespace PeacefulFarewell
         // decides - see PF_GameComponent.TalksNeeded.
         public bool passerby;
 
+        // Talks started that ended with nothing said (didn't catch up,
+        // visitor walked off, ...). Reset by a talk that counted; too many
+        // and the colonist gives up for this visit - see
+        // PF_GameComponent.MaxFailedTalkAttempts.
+        public int failedAttempts;
+        // A talk job was started and hasn't been counted yet.
+        public bool talkAttemptPending;
+
         // Not saved. Set by the debug "Hurry visitor talks" action so the
         // next talk skips the soft checks in CanStartVisitTalk; lastBlockReason
         // keeps the debug log from repeating the same reason every check.
@@ -52,11 +60,13 @@ namespace PeacefulFarewell
             Scribe_Values.Look(ref snubs, "snubs");
             Scribe_Values.Look(ref concluded, "concluded");
             Scribe_Values.Look(ref passerby, "passerby");
+            Scribe_Values.Look(ref failedAttempts, "failedAttempts");
+            Scribe_Values.Look(ref talkAttemptPending, "talkAttemptPending");
         }
 
         public override string ToString()
         {
-            return $"{colonist?.LabelShort ?? "null"} <-> {relative?.LabelShort ?? "null"} ({faction?.Name ?? "null"}): passerby={passerby}, talks={talksDone}, points={talkPoints}, snubs={snubs}, concluded={concluded}";
+            return $"{colonist?.LabelShort ?? "null"} <-> {relative?.LabelShort ?? "null"} ({faction?.Name ?? "null"}): passerby={passerby}, talks={talksDone}, failed={failedAttempts}, points={talkPoints}, snubs={snubs}, concluded={concluded}";
         }
     }
 }

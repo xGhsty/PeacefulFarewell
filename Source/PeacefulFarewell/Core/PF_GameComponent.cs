@@ -78,8 +78,8 @@ namespace PeacefulFarewell
         // Scribe working lists - dictionaries keyed by a Pawn reference need
         // them to survive the load passes; without them the dictionaries came
         // back empty after every load.
-        private readonly List<Pawn>[] tmpKeys = new List<Pawn>[6];
-        private readonly List<int>[] tmpTicks = new List<int>[5];
+        private readonly List<Pawn>[] tmpKeys = new List<Pawn>[7];
+        private readonly List<int>[] tmpTicks = new List<int>[6];
         private List<PF_WorkAndScheduleSnapshot> tmpSnapshots;
 
         // Random per-save phase for the hourly check, so it doesn't always
@@ -102,7 +102,34 @@ namespace PeacefulFarewell
         // Passersby are on the map for a few hours at most - the colonist
         // goes right away and retries quickly.
         private static readonly IntRange PasserbyFirstTalkDelayTicks = new IntRange(0, VisitMeetingTickInterval);
-        private const int PasserbyTalkRetryTicks = 500;
+        private const int PasserbyTalkRetryTicks = 1000;
+
+        // A talk that ended with nothing said counts as a failed attempt;
+        // after this many in a row the colonist gives up for this visit
+        // instead of running after the visitor over and over.
+        private const int MaxFailedPasserbyTalkAttempts = 2;
+        private const int MaxFailedVisitTalkAttempts = 4;
+
+        // Not every passing group gets noticed - rolled once per group and
+        // colonist (an unnoticed one gets a concluded meeting right away, so
+        // the hourly scan doesn't roll again for the same group).
+        private const float PasserbyNoticeChance = 0.5f;
+
+        // After meeting (or ignoring) one passerby, a colonist doesn't chase
+        // the next traveler group for a while - on busy maps groups with
+        // someone they know can come by several times a day.
+        private const int PasserbyMeetingCooldownTicks = 2 * GenDate.TicksPerDay;
+        private Dictionary<Pawn, int> passerbyCooldownUntilTick = new Dictionary<Pawn, int>();
+
+        private static int MaxFailedTalkAttempts(PF_VisitMeeting meeting)
+        {
+            return meeting.passerby ? MaxFailedPasserbyTalkAttempts : MaxFailedVisitTalkAttempts;
+        }
+
+        private static int TalkRetryTicks(PF_VisitMeeting meeting)
+        {
+            return meeting.passerby ? PasserbyTalkRetryTicks : VisitTalkRetryTicks;
+        }
 
         private static int TalksNeeded(PF_VisitMeeting meeting)
         {
@@ -127,6 +154,7 @@ namespace PeacefulFarewell
             LookPawnDict(ref wanderlustDeniedCooldownUntilTick, "wanderlustDeniedCooldownUntilTick", LookMode.Value, ref tmpKeys[3], ref tmpTicks[3]);
             LookPawnDict(ref savedWorkAndSchedule, "savedWorkAndSchedule", LookMode.Deep, ref tmpKeys[4], ref tmpSnapshots);
             LookPawnDict(ref wanderlustReturnCooldownUntilTick, "wanderlustReturnCooldownUntilTick", LookMode.Value, ref tmpKeys[5], ref tmpTicks[4]);
+            LookPawnDict(ref passerbyCooldownUntilTick, "passerbyCooldownUntilTick", LookMode.Value, ref tmpKeys[6], ref tmpTicks[5]);
 
             Scribe_Collections.Look(ref everReturnedFromWanderlust, "everReturnedFromWanderlust", LookMode.Reference);
             Scribe_Collections.Look(ref visitMeetings, "visitMeetings", LookMode.Deep);
@@ -484,17 +512,21 @@ namespace PeacefulFarewell
 
         // No dice roll any more: every colonist with a close relation/friend
         // among the visitors gets a meeting, and the talks decide.
-        private void CheckVisitorRequest(Map map)
+        private void CheckVisitorRequest(Map map, bool debugForce = false)
         {
             // Colonists already in a meeting are skipped before the expensive
             // relation/friendship checks rather than after - otherwise every
             // hourly check re-ran them for the whole visit.
-            foreach (FarewellUtility.RequestCandidate candidate in FarewellUtility.FindRequestCandidates(map, HasVisitMeeting))
+            foreach (FarewellUtility.RequestCandidate candidate in FarewellUtility.FindRequestCandidates(map, HasVisitMeeting, forTalks: true))
             {
                 // A colonist can qualify for several visiting groups at once -
                 // the first one wins. Also skips colonists whose meeting
                 // already ended in a decision during this visit.
                 if (HasVisitMeeting(candidate.colonist))
+                {
+                    continue;
+                }
+                if (candidate.passerby && !debugForce && OnCooldown(passerbyCooldownUntilTick, candidate.colonist))
                 {
                     continue;
                 }
@@ -508,10 +540,20 @@ namespace PeacefulFarewell
                     passerby = candidate.passerby,
                     nextTalkTick = Find.TickManager.TicksGame + (candidate.passerby ? PasserbyFirstTalkDelayTicks : FirstVisitTalkDelayTicks).RandomInRange
                 };
+                if (candidate.passerby)
+                {
+                    SetCooldown(passerbyCooldownUntilTick, candidate.colonist, PasserbyMeetingCooldownTicks);
+                    // Didn't notice them: kept as a concluded meeting until
+                    // the group is gone, so no second roll for it.
+                    if (!debugForce && !Rand.Chance(PasserbyNoticeChance))
+                    {
+                        meeting.concluded = true;
+                    }
+                }
                 visitMeetings.Add(meeting);
 
                 if (PF_Log.DebugMode)
-                    PF_Log.Message($"Visit meeting started: {meeting}");
+                    PF_Log.Message(meeting.concluded ? $"Passerby not noticed: {meeting}" : $"Visit meeting started: {meeting}");
             }
         }
 
@@ -558,13 +600,35 @@ namespace PeacefulFarewell
                     continue;
                 }
 
-                if (meeting.concluded || now < meeting.nextTalkTick)
+                if (meeting.concluded)
                 {
                     continue;
                 }
+                // While a talk (or the run over to it) is going on, keep
+                // pushing the retry back - so a failed attempt waits the full
+                // retry delay from when it ended, not from when it started
+                // (the approach alone can take longer than the delay).
                 if (meeting.colonist.CurJobDef == PF_JobDefOf.PF_TalkWithVisitingRelative)
                 {
+                    meeting.nextTalkTick = System.Math.Max(meeting.nextTalkTick, now + TalkRetryTicks(meeting));
                     continue;
+                }
+                if (now < meeting.nextTalkTick)
+                {
+                    continue;
+                }
+                // The previous attempt ended without a talk that counted
+                // (NotifyVisitTalkFinished clears the flag when one does).
+                if (meeting.talkAttemptPending)
+                {
+                    meeting.talkAttemptPending = false;
+                    meeting.failedAttempts++;
+                    if (meeting.failedAttempts >= MaxFailedTalkAttempts(meeting))
+                    {
+                        meeting.concluded = true;
+                        PartWithoutDecision(meeting);
+                        continue;
+                    }
                 }
                 if (!FarewellUtility.CanStartVisitTalk(meeting.colonist, meeting.relative, meeting.debugForceNextTalk, out string blockReason))
                 {
@@ -576,8 +640,9 @@ namespace PeacefulFarewell
 
                 meeting.lastBlockReason = null;
                 meeting.debugForceNextTalk = false;
-                meeting.nextTalkTick = now + (meeting.passerby ? PasserbyTalkRetryTicks : VisitTalkRetryTicks);
+                meeting.nextTalkTick = now + TalkRetryTicks(meeting);
                 FarewellUtility.StartVisitTalk(meeting.colonist, meeting.relative, meeting.passerby);
+                meeting.talkAttemptPending = meeting.colonist.CurJobDef == PF_JobDefOf.PF_TalkWithVisitingRelative;
 
                 if (PF_Log.DebugMode)
                     PF_Log.Message($"Visit talk started: {meeting}, colonist job now={meeting.colonist.CurJobDef?.defName ?? "null"}");
@@ -651,6 +716,8 @@ namespace PeacefulFarewell
                 return;
             }
 
+            meeting.talkAttemptPending = false;
+            meeting.failedAttempts = 0;
             meeting.talksDone++;
             meeting.talkPoints += FarewellUtility.VisitTalkPoints(outcome);
             if (outcome == FarewellUtility.VisitTalkOutcome.Snub)
@@ -674,14 +741,18 @@ namespace PeacefulFarewell
 
             float pull = FarewellUtility.ComputeVisitPull(meeting, out string breakdown);
             bool wantsToLeave = pull >= FarewellUtility.VisitPullThreshold;
-            bool canAsk = wantsToLeave
-                && meeting.faction != null
-                && !meeting.faction.HostileTo(Faction.OfPlayer)
-                && !FarewellUtility.HasPendingRequestLetter(meeting.colonist)
+            // Family or close friends in the colony keep the colonist here no
+            // matter how the talks went - they just enjoyed the visit.
+            bool joinAllowed = FarewellUtility.CanBeOfferedJoin(meeting.colonist, meeting.relative, out string joinBlock);
+            bool tiedToColony = !joinAllowed && !FarewellUtility.HasPendingRequestLetter(meeting.colonist)
                 && !IsJoinRequestOnCooldown(meeting.colonist);
+            bool canAsk = wantsToLeave
+                && joinAllowed
+                && meeting.faction != null
+                && !meeting.faction.HostileTo(Faction.OfPlayer);
 
             if (PF_Log.DebugMode)
-                PF_Log.Message($"Visit meeting decision for {meeting.colonist.LabelShort}: {breakdown} -> {(canAsk ? "asks to leave" : wantsToLeave ? "wants to leave, but can't ask now" : "stays")}");
+                PF_Log.Message($"Visit meeting decision for {meeting.colonist.LabelShort}: {breakdown} -> {(canAsk ? "asks to leave" : wantsToLeave ? $"wants to leave, but can't ask ({joinBlock ?? "faction"})" : "stays")}");
 
             if (canAsk)
             {
@@ -689,7 +760,7 @@ namespace PeacefulFarewell
                 return;
             }
 
-            if (!wantsToLeave && meeting.snubs == 0)
+            if ((!wantsToLeave || tiedToColony) && meeting.snubs == 0)
             {
                 GiveGoodToSeeThought(meeting);
             }
@@ -718,7 +789,7 @@ namespace PeacefulFarewell
                 return 0;
             }
 
-            component.CheckVisitorRequest(map);
+            component.CheckVisitorRequest(map, debugForce: true);
             int count = 0;
             foreach (PF_VisitMeeting meeting in component.visitMeetings)
             {

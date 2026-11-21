@@ -21,7 +21,14 @@ namespace PeacefulFarewell
         private static void HurryVisitorTalks()
         {
             int count = PF_GameComponent.DebugHurryVisitTalks(Find.CurrentMap);
-            Messages.Message(count > 0 ? $"{count} visit meeting(s) due for a talk now." : "No visit meetings on this map.", count > 0 ? MessageTypeDefOf.TaskCompletion : MessageTypeDefOf.RejectInput, historical: false);
+            Messages.Message(count > 0 ? $"{count} visit meeting(s) due for a talk now." : "No visit meetings on this map - see the log for why.", count > 0 ? MessageTypeDefOf.TaskCompletion : MessageTypeDefOf.RejectInput, historical: false);
+            if (count == 0)
+            {
+                System.Collections.Generic.List<PF_VisitMeeting> meetings = PF_GameComponent.GetVisitMeetings();
+                Log.Message("[PeacefulFarewell] Hurry visitor talks found nothing.\n"
+                    + FarewellUtility.DiagnoseRequestCandidates(Find.CurrentMap)
+                    + $"Existing meetings ({meetings.Count}, concluded ones are not hurried):\n" + string.Join("\n", meetings));
+            }
         }
 
         [DebugAction(Category, "Log visit meetings", allowedGameStates = AllowedGameStates.Playing)]

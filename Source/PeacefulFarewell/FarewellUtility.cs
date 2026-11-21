@@ -167,7 +167,13 @@ namespace PeacefulFarewell
         // request right now - one entry per (visiting lord, colonist).
         // skipColonist: lets the caller drop colonists up front (e.g. ones
         // already in a visit meeting) before the per-visitor relation checks.
-        public static List<RequestCandidate> FindRequestCandidates(Map map, System.Predicate<Pawn> skipColonist = null)
+        // forTalks: candidates for a visit meeting (PF_VisitMeeting) rather
+        // than for an immediate join letter. Talks happen with anyone close
+        // among the visitors - the join-request filters (family/friends in
+        // the colony, cooldown, pending letter) are applied later, when the
+        // talks end (see CanBeOfferedJoin). Before, they also stopped the
+        // colonist from even going over to talk.
+        public static List<RequestCandidate> FindRequestCandidates(Map map, System.Predicate<Pawn> skipColonist = null, bool forTalks = false)
         {
             List<RequestCandidate> options = new List<RequestCandidate>();
 
@@ -199,7 +205,7 @@ namespace PeacefulFarewell
                     {
                         continue;
                     }
-                    if (PF_GameComponent.IsJoinRequestOnCooldown(colonist) || HasPendingRequestLetter(colonist))
+                    if (!forTalks && (PF_GameComponent.IsJoinRequestOnCooldown(colonist) || HasPendingRequestLetter(colonist)))
                     {
                         continue;
                     }
@@ -212,13 +218,7 @@ namespace PeacefulFarewell
                     {
                         continue;
                     }
-                    if (HasFamilyInColony(colonist))
-                    {
-                        continue;
-                    }
-                    // Several real friends in the colony outweigh one
-                    // visiting friend/relative - don't offer the choice.
-                    if (CountStrongFriendsInColony(colonist, colonist.Map) >= 2)
+                    if (!forTalks && !CanBeOfferedJoin(colonist, closePawn, out _))
                     {
                         continue;
                     }
@@ -235,9 +235,136 @@ namespace PeacefulFarewell
             }
 
             if (PF_Log.DebugMode)
-                PF_Log.Message($"FindRequestCandidates on {map}: lordsTotal={lordsTotal}, lordsEligible={lordsEligible}, colonistsChecked={colonistsChecked}, options={options.Count}, minImportance={PeacefulFarewellMod.Settings.minRelationImportance}");
+                PF_Log.Message($"FindRequestCandidates on {map} (forTalks={forTalks}): lordsTotal={lordsTotal}, lordsEligible={lordsEligible}, colonistsChecked={colonistsChecked}, options={options.Count}, minImportance={PeacefulFarewellMod.Settings.minRelationImportance}");
 
             return options;
+        }
+
+        // The colony-side reasons a colonist is never offered a join request
+        // to go with `relative`. `reason` is for the debug log.
+        // A visiting partner (spouse/fiance/lover) outranks blood family and
+        // friends in the colony: those don't block the request then, they
+        // only weigh against it in ComputeVisitPull. A partner in the colony
+        // still blocks it outright.
+        public static bool CanBeOfferedJoin(Pawn colonist, Pawn relative, out string reason)
+        {
+            if (PF_GameComponent.IsJoinRequestOnCooldown(colonist))
+            {
+                reason = "join request on cooldown (denied earlier)";
+                return false;
+            }
+            if (HasPendingRequestLetter(colonist))
+            {
+                reason = "has a pending request letter";
+                return false;
+            }
+
+            bool partnerVisiting = IsPartnerBond(GetJoinBond(colonist, relative, out _));
+            if (HasFamilyInColony(colonist, partnersOnly: partnerVisiting))
+            {
+                reason = partnerVisiting
+                    ? "has a partner (spouse/lover/fiance) in the colony"
+                    : "has family (spouse/lover/fiance/parent/child/sibling) in the colony";
+                return false;
+            }
+            // Several real friends in the colony outweigh one visiting
+            // friend/relative - don't offer the choice. Not a partner, though.
+            if (!partnerVisiting)
+            {
+                int strongFriends = CountStrongFriendsInColony(colonist, colonist.Map);
+                if (strongFriends >= 2)
+                {
+                    reason = $"{strongFriends} strong friends in the colony";
+                    return false;
+                }
+            }
+            reason = null;
+            return true;
+        }
+
+        public static bool IsPartnerBond(JoinBond bond)
+        {
+            return bond == JoinBond.Spouse || bond == JoinBond.Fiance || bond == JoinBond.Lover;
+        }
+
+        // Debug: explains, per visiting group and per colonist who has
+        // someone among the visitors, why FindRequestCandidates did or
+        // didn't produce a candidate. Mirrors its filters one by one.
+        public static string DiagnoseRequestCandidates(Map map)
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            if (map == null || !map.IsPlayerHome)
+            {
+                return "Map is not a player home.";
+            }
+
+            sb.AppendLine($"Lords on map: {map.lordManager.lords.Count}");
+            foreach (Lord lord in map.lordManager.lords)
+            {
+                string jobType = lord.LordJob?.GetType().FullName ?? "null";
+                string toil = lord.CurLordToil?.GetType().Name ?? "null";
+                int humanlike = lord.ownedPawns.Count((Pawn p) => p.RaceProps.Humanlike);
+                sb.AppendLine($"- Lord faction={lord.faction?.Name ?? "null"}, job={jobType}, toil={toil}, pawns={lord.ownedPawns.Count} (humanlike {humanlike})");
+
+                string lordReason = null;
+                if (lord.faction == null || lord.faction == Faction.OfPlayer) lordReason = "no faction / player faction";
+                else if (lord.faction.HostileTo(Faction.OfPlayer)) lordReason = "faction hostile";
+                else if (lord.faction.Hidden) lordReason = "faction hidden";
+                else if (!(lord.LordJob is LordJob_VisitColony) && !(lord.LordJob is LordJob_TradeWithColony)
+                    && !IsHospitalityGuestLord(lord) && !IsPasserbyLord(lord)) lordReason = "lord job type not recognized as a visit";
+                else if (IsLordLeaving(lord)) lordReason = "group is already leaving";
+                else if (humanlike == 0) lordReason = "no humanlike pawns";
+
+                if (lordReason != null)
+                {
+                    // Still list relations, so a "lover is here but the group
+                    // was skipped" case is obvious.
+                    sb.AppendLine($"    SKIPPED: {lordReason}");
+                }
+
+                foreach (Pawn colonist in map.mapPawns.FreeColonistsSpawned)
+                {
+                    foreach (Pawn visitor in lord.ownedPawns)
+                    {
+                        if (!visitor.RaceProps.Humanlike)
+                        {
+                            continue;
+                        }
+                        List<PawnRelationDef> rels = PawnRelationUtility.GetRelations(colonist, visitor).ToList();
+                        if (rels.Count == 0)
+                        {
+                            continue;
+                        }
+                        sb.AppendLine($"    {colonist.LabelShort} <-> {visitor.LabelShort}: relations=[{string.Join(", ", rels.Select((PawnRelationDef r) => $"{r.defName}({r.importance})"))}], opinion={colonist.relations.OpinionOf(visitor)}");
+                    }
+                }
+
+                if (lordReason != null)
+                {
+                    continue;
+                }
+
+                List<Pawn> visitors = lord.ownedPawns.ToList();
+                foreach (Pawn colonist in map.mapPawns.FreeColonistsSpawned)
+                {
+                    Pawn closePawn = FindClosestRelation(colonist, visitors);
+                    if (closePawn == null)
+                    {
+                        continue;
+                    }
+
+                    string reason;
+                    if (!IsEligibleColonist(colonist)) reason = $"no talks: colonist not eligible (downed={colonist.Downed}, drafted={colonist.Drafted}, farewellJob={IsRunningFarewellJob(colonist)})";
+                    else if (!colonist.DevelopmentalStage.Adult()) reason = "no talks: colonist not adult";
+                    else if (!CanBeOfferedJoin(colonist, closePawn, out string joinBlock)) reason = $"talks OK, but no join letter afterwards: {joinBlock}";
+                    else reason = "talks OK, join letter possible";
+
+                    sb.AppendLine($"    {colonist.LabelShort} -> {closePawn.LabelShort}: {reason}");
+                }
+            }
+
+            sb.AppendLine($"minRelationImportance setting = {PeacefulFarewellMod.Settings.minRelationImportance}");
+            return sb.ToString();
         }
 
         // Vanilla visitors leave through LordToil_ExitMap, but trader
@@ -367,13 +494,34 @@ namespace PeacefulFarewell
             PawnRelationDefOf.Sibling,
         };
 
-        private static bool HasFamilyInColony(Pawn pawn)
+        // partnersOnly: count only spouse/lover/fiance, not blood family.
+        private static bool HasFamilyInColony(Pawn pawn, bool partnersOnly = false)
         {
-            if (pawn.relations == null)
+            return CountFamilyInColony(pawn, partnersOnly ? PartnerRelations : StayForFamilyRelations, stopAtFirst: true) > 0;
+        }
+
+        // Parents, children and siblings in the colony - see the family
+        // penalty in ComputeVisitPull.
+        internal static int CountBloodFamilyInColony(Pawn pawn)
+        {
+            return CountFamilyInColony(pawn, BloodFamilyRelations, stopAtFirst: false);
+        }
+
+        private static readonly HashSet<PawnRelationDef> BloodFamilyRelations = new HashSet<PawnRelationDef>
+        {
+            PawnRelationDefOf.Child,
+            PawnRelationDefOf.Parent,
+            PawnRelationDefOf.Sibling,
+        };
+
+        private static int CountFamilyInColony(Pawn pawn, HashSet<PawnRelationDef> relations, bool stopAtFirst)
+        {
+            if (pawn.relations == null || pawn.Map == null)
             {
-                return false;
+                return 0;
             }
 
+            int count = 0;
             foreach (Pawn other in pawn.Map.mapPawns.FreeColonistsSpawned)
             {
                 if (other == pawn || other.Dead)
@@ -385,14 +533,19 @@ namespace PeacefulFarewell
                 // kinships like Sibling (computed from shared parents).
                 foreach (PawnRelationDef relationDef in PawnRelationUtility.GetRelations(pawn, other))
                 {
-                    if (StayForFamilyRelations.Contains(relationDef))
+                    if (relations.Contains(relationDef))
                     {
-                        return true;
+                        count++;
+                        if (stopAtFirst)
+                        {
+                            return count;
+                        }
+                        break;
                     }
                 }
             }
 
-            return false;
+            return count;
         }
 
         // "Good friend" bar (relations tab parity) for a real, mutual bond.
@@ -651,7 +804,7 @@ namespace PeacefulFarewell
         // A colonist's own opinion bar for "someone here I'd miss" when
         // weighing what they'd leave behind. Lower than the 40 "strong
         // friend" bar - two of those already exclude a colonist from the
-        // candidate pool outright (see FindRequestCandidates).
+        // join request outright (see CanBeOfferedJoin).
         private const float VisitColonyFriendOpinion = 20f;
         private const int VisitColonyFriendsCap = 5;
 
@@ -890,16 +1043,29 @@ namespace PeacefulFarewell
         // breakdown is for the debug log.
         private static readonly FloatRange PasserbyImpulsePull = new FloatRange(-30f, 10f);
 
+        // Per parent/child/sibling left behind when following a partner. Kept
+        // mild: the talks (visitTalksBeforeDecision) already have to go well,
+        // and these relatives no longer also count as colony friends.
+        private const float BloodFamilyPull = -5f;
+        private const int BloodFamilyPenaltyCap = 2;
+
         public static float ComputeVisitPull(PF_VisitMeeting meeting, out string breakdown)
         {
             Pawn colonist = meeting.colonist;
             Pawn relative = meeting.relative;
 
-            float bondPull = JoinBondPull(GetJoinBond(colonist, relative, out _));
+            JoinBond bond = GetJoinBond(colonist, relative, out _);
+            float bondPull = JoinBondPull(bond);
             float opinionPull = (RealFriendOpinionOf(colonist, relative) - 30f) * 0.5f;
             float moodPull = colonist.needs?.mood != null ? (0.5f - colonist.needs.mood.CurLevel) * 60f : 0f;
-            int colonyFriends = CountVisitColonyFriends(colonist);
+            bool partnerVisiting = IsPartnerBond(bond);
+            int colonyFriends = CountVisitColonyFriends(colonist, skipBloodFamily: partnerVisiting);
             float colonyPull = -6f * colonyFriends;
+
+            // Only reachable for a visiting partner - otherwise blood family
+            // in the colony rules the request out (CanBeOfferedJoin).
+            int bloodFamily = partnerVisiting ? Mathf.Min(CountBloodFamilyInColony(colonist), BloodFamilyPenaltyCap) : 0;
+            colonyPull += BloodFamilyPull * bloodFamily;
 
             // Deciding on the spot after one chance meeting is a gamble - a
             // random swing, leaning towards staying, so even a spouse passing
@@ -907,11 +1073,13 @@ namespace PeacefulFarewell
             float impulsePull = meeting.passerby ? PasserbyImpulsePull.RandomInRange : 0f;
 
             float total = bondPull + meeting.talkPoints + opinionPull + moodPull + colonyPull + impulsePull;
-            breakdown = $"bond={bondPull:F0}, talks={meeting.talkPoints:F0} ({meeting.talksDone} talks, {meeting.snubs} snubs), opinion={opinionPull:F1}, mood={moodPull:F1}, colonyFriends={colonyFriends} ({colonyPull:F0}), impulse={impulsePull:F1} => {total:F1} / {VisitPullThreshold:F0}";
+            breakdown = $"bond={bondPull:F0}, talks={meeting.talkPoints:F0} ({meeting.talksDone} talks, {meeting.snubs} snubs), opinion={opinionPull:F1}, mood={moodPull:F1}, colonyFriends={colonyFriends}, bloodFamily={bloodFamily} ({colonyPull:F0}), impulse={impulsePull:F1} => {total:F1} / {VisitPullThreshold:F0}";
             return total;
         }
 
-        private static int CountVisitColonyFriends(Pawn colonist)
+        // skipBloodFamily: parents/children/siblings are penalized separately
+        // (BloodFamilyPull), so they don't count a second time as friends.
+        private static int CountVisitColonyFriends(Pawn colonist, bool skipBloodFamily = false)
         {
             if (colonist.Map == null)
             {
@@ -922,6 +1090,10 @@ namespace PeacefulFarewell
             foreach (Pawn other in colonist.Map.mapPawns.FreeColonistsSpawned)
             {
                 if (other == colonist || other.Dead)
+                {
+                    continue;
+                }
+                if (skipBloodFamily && PawnRelationUtility.GetRelations(colonist, other).Any((PawnRelationDef r) => BloodFamilyRelations.Contains(r)))
                 {
                     continue;
                 }
